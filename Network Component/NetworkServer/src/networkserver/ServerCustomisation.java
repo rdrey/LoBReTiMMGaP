@@ -13,7 +13,8 @@ import networkserver.Threads.ServerDaemonThread;
  */
 public class ServerCustomisation <T extends ServerDaemonThread>
 {
-
+    //Public variables
+    public static final int threadWriteOutBufferSize = 16;
     
     //Stores an the type of class, so we can instantiate them
     private Class<T> ServerDaemonThreadType;

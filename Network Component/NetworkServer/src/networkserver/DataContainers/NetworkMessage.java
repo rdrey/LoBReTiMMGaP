@@ -11,9 +11,19 @@ import java.util.HashMap;
  */
 public class NetworkMessage implements Serializable
 {
+    //Used internally for network message classification.
+    public enum MessageType
+    {
+        UPDATE_MESSAGE,
+        REQUEST_MESSAGE,
+        PARTIAL_GAMESTATE_UPDATE_MESSAGE,
+        GAMESTATE_UPDATE_MESSAGE
+    }
+
     private HashMap<String, String> strings;
     private HashMap<String, Integer> ints;
     private HashMap<String, Object> objects;
+    private MessageType messageType;
 
     private String primeMessage;
 
@@ -65,5 +75,16 @@ public class NetworkMessage implements Serializable
     public String getMessage()
     {
         return primeMessage;
+    }
+
+    //Used internally for network message classification. Don't use this.
+    public void setMessageType(MessageType mType)
+    {
+        messageType = mType;
+    }
+
+    public MessageType getMessageType()
+    {
+        return messageType;
     }
 }
