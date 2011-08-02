@@ -12,12 +12,15 @@ import java.util.HashMap;
 public class NetworkMessage implements Serializable
 {
     //Used internally for network message classification.
-    public enum MessageType
+    public enum MessageType //Comments show where the type can be received
     {
-        UPDATE_MESSAGE,
-        REQUEST_MESSAGE,
-        PARTIAL_GAMESTATE_UPDATE_MESSAGE,
-        GAMESTATE_UPDATE_MESSAGE
+        UPDATE_MESSAGE, //Client and Server
+        REQUEST_MESSAGE,//Client and Server
+        PARTIAL_GAMESTATE_UPDATE_MESSAGE, //Client only
+        GAMESTATE_UPDATE_MESSAGE, //Client Only
+        GAMESTATE_REQUEST_MESSAGE, //Server only
+        TERMINATION_REQUEST_MESSAGE //Server Only
+
     }
 
     private HashMap<String, String> strings;

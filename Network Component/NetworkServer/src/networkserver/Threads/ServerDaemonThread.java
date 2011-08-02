@@ -1,13 +1,18 @@
 package networkserver.Threads;
 
+import java.awt.AWTEvent;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.ObjectInputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.BufferOverflowException;
 import java.util.Vector;
+import javax.swing.event.EventListenerList;
 import networkserver.DataContainers.NetworkMessage;
 import networkserver.DataContainers.PlayerRegistrationMessage;
+import networkserver.EventListeners.*;
+import networkserver.Events.NetworkEvent;
 import networkserver.Peer2Peer.ClientPeer;
 
 /**
@@ -20,6 +25,8 @@ public abstract class ServerDaemonThread extends Thread{
     private ServerDaemonWriteoutThread out;
     private ObjectInputStream in;
     private boolean stopOperation = false;
+
+    private EventListenerList listeners = new EventListenerList();
 
     /*
      * Any class extending this should have a parameterless constructor, so that
@@ -43,7 +50,7 @@ public abstract class ServerDaemonThread extends Thread{
      * Called once joining information for the player has been received. Use
      * this to add player information to the game engine/world.
      */
-    public abstract void registerPlayer(String playerName, int playerID);
+    public abstract void registerPlayer(String playerName, int playerID, InetAddress clientAddress);
 
     /*
      * Called after RegisterPlayer, meant to send game state initialization
@@ -56,6 +63,12 @@ public abstract class ServerDaemonThread extends Thread{
      * peer to peer connections with (or an empty list to disable P2P connections)
      */
     public abstract Vector<ClientPeer> getPeerList();
+
+    private void sendInitialPeerList()
+    {
+        Vector<ClientPeer> peers = getPeerList();
+        //Now send these to the client somehow
+    }
 
 
     /*
@@ -104,7 +117,8 @@ public abstract class ServerDaemonThread extends Thread{
 
     @Override
     public void run()
-    {
+    {      
+        
         //Do running stuff        
         while(!stopOperation)
         {
@@ -121,7 +135,8 @@ public abstract class ServerDaemonThread extends Thread{
             }
             catch(IOException e)
             {
-                System.err.println("Error occured while reading from thread : "+e);                
+                System.err.println("Error occured while reading from thread : "+e);
+                fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
                 this.shutdownThread();                
                 break;
             }
@@ -140,19 +155,35 @@ public abstract class ServerDaemonThread extends Thread{
             switch(msg.getMessageType())
             {
                 case UPDATE_MESSAGE:
+                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  UpdateReceivedListener.class);
                     break;
                 case REQUEST_MESSAGE:
+                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  RequestReceivedListener.class);
                     break;
                 case PARTIAL_GAMESTATE_UPDATE_MESSAGE:
+                    //Not used on server side. This flag is used to notify the client of incoming partial game state
                     break;
                 case GAMESTATE_UPDATE_MESSAGE:
+                    //Similarly, this is used exclusivly on the client side.
                     break;
+                case GAMESTATE_REQUEST_MESSAGE:
+                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  GameStateRequestReceivedListener.class);
+                    break;
+                case TERMINATION_REQUEST_MESSAGE:
+                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  TerminationRequestReceivedListener.class);
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
 
             }
         }
         else if(message instanceof PlayerRegistrationMessage)
         {
-            
+            PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;
+            registerPlayer(regMessage.playerName, regMessage.playerID, socket.getInetAddress());
+            sendInitialState();
+            sendInitialPeerList();
+            fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, "Connection successfully established"),  ConnectionEstablishedListener.class);
         }
         else
         {
@@ -188,6 +219,98 @@ public abstract class ServerDaemonThread extends Thread{
         stopOperation = true;
         this.interrupt();
         
+    }
+
+    /*************************************** EVENTS ***************************/
+    public void addConnectionEstablishedListener(ConnectionEstablishedListener listener)
+    {
+        listeners.add(ConnectionEstablishedListener.class, listener);
+    }
+
+    public void removeConnectionEstablishedListener(ConnectionEstablishedListener listener)
+    {
+        listeners.remove(ConnectionEstablishedListener.class, listener);
+    }
+
+    public void addConnectionLostListener(ConnectionLostListener listener)
+    {
+        listeners.add(ConnectionLostListener.class, listener);
+    }
+
+    public void removeConnectionLostListener(ConnectionLostListener listener)
+    {
+        listeners.remove(ConnectionLostListener.class, listener);
+    }
+
+    public void addUpdateReceivedListener(UpdateReceivedListener listener)
+    {
+        listeners.add(UpdateReceivedListener.class, listener);
+    }
+
+    public void removeUpdateReceivedListener(UpdateReceivedListener listener)
+    {
+        listeners.remove(UpdateReceivedListener.class, listener);
+    }
+
+    public void addRequestReceivedListener(RequestReceivedListener listener)
+    {
+        listeners.add(RequestReceivedListener.class, listener);
+    }
+
+    public void removeRequestReceivedListener(RequestReceivedListener listener)
+    {
+        listeners.remove(RequestReceivedListener.class, listener);
+    }
+
+    public void addGameStateRequestReceivedListener(GameStateRequestReceivedListener listener)
+    {
+        listeners.add(GameStateRequestReceivedListener.class, listener);
+    }
+
+    public void removeGameStateRequestReceivedListener(GameStateRequestReceivedListener listener)
+    {
+        listeners.remove(GameStateRequestReceivedListener.class, listener);
+    }
+
+    public void addTerminationRequestReceivedListener(TerminationRequestReceivedListener listener)
+    {
+        listeners.add(TerminationRequestReceivedListener.class, listener);
+    }
+
+    public void removeTerminationRequestReceivedListener(TerminationRequestReceivedListener listener)
+    {
+        listeners.remove(TerminationRequestReceivedListener.class, listener);
+    }
+
+    /**
+     * Used to fire off a network event in a generalised manner. Takes the event to
+     * be fired (all events are expected to be children of NetworkEvent) and the
+     * class of the listener to be notified of the event.
+     * @param <T>
+     * @param event
+     * @param t
+     */
+    private <T extends NetworkEventListener> void fireEvent(NetworkEvent event, Class<T> t)
+    {
+        Object[] listenerArray = listeners.getListenerList();
+
+        //Loop through the listeners, notifying those of the correct type.
+        for(int i = 0; i < listenerArray.length; i+=2)
+        {
+            if(listenerArray[i] == t)
+            {
+                /*
+                 * This might seem a little confusing at first, so here's an explaination.
+                 * The listener list stores event listeners in pairs of
+                 * {listener.class, instance of listener}. This means that
+                 * i will be the class of the listener, which we compare with our
+                 * given class type T. If it matches we cast the instance of the
+                 * listner as our given class type T (which we have checked, it actually
+                 * is) and then run its EventOccured method.
+                 */
+                t.cast(listenerArray[i+1]).EventOccured(event);
+            }
+        }
     }
 
 }

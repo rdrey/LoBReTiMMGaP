@@ -6,9 +6,17 @@ package networkserver.Events;
  */
 public class NetworkEvent extends java.awt.AWTEvent {
 
-    public NetworkEvent(Object source, int id)
+    Object message;
+
+    public NetworkEvent(Object source, int id, Object message)
     {
         super(source, id);
+        this.message = message;
+    }
+
+    public Object getMessage()
+    {
+        return message;
     }
 
 }
