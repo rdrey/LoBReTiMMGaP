@@ -222,6 +222,22 @@ public abstract class ServerDaemonThread extends Thread{
     }
 
     /*************************************** EVENTS ***************************/
+
+    public <T extends NetworkEventListener> void addNetworkListener(Class<T> t, T listener)
+    {
+        listeners.add(t, listener);
+    }
+    
+    public <T extends NetworkEventListener> void removeNetworkListener(Class<T> t, T listener)
+    {
+        listeners.remove(t, listener);
+    }
+
+    /* Convenience Listeners below for those that dont know how to use the above
+     * Generic methods.
+     */
+
+
     public void addConnectionEstablishedListener(ConnectionEstablishedListener listener)
     {
         listeners.add(ConnectionEstablishedListener.class, listener);
@@ -286,9 +302,9 @@ public abstract class ServerDaemonThread extends Thread{
      * Used to fire off a network event in a generalised manner. Takes the event to
      * be fired (all events are expected to be children of NetworkEvent) and the
      * class of the listener to be notified of the event.
-     * @param <T>
-     * @param event
-     * @param t
+     * @param <T> The type of listener that we wish to fire events on.
+     * @param event The event we would like to propagate to the event listeners
+     * @param t The class type of the listerns we wish to fire events on.
      */
     private <T extends NetworkEventListener> void fireEvent(NetworkEvent event, Class<T> t)
     {
