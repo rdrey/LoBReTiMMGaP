@@ -44,30 +44,40 @@ public abstract class ServerDaemonThread extends Thread{
         socket = acceptedSocket;
         in = new ObjectInputStream(socket.getInputStream());
         out = new ServerDaemonWriteoutThread(acceptedSocket);
+        out.start();
     }
 
     /*
-     * Called once joining information for the player has been received. Use
+     * Called once joining information for the player has been received.
+     * First method called after the client has connected. Use
      * this to add player information to the game engine/world.
      */
-    public abstract void registerPlayer(String playerName, int playerID, InetAddress clientAddress);
+    protected abstract void registerPlayer(String playerName, int playerID, InetAddress clientAddress);
 
     /*
      * Called after RegisterPlayer, meant to send game state initialization
      * information to the client.
      */
-    public abstract void sendInitialState();
+    protected abstract void sendInitialState();
 
     /*
      * Method which must return a list of peers that the client can establish
-     * peer to peer connections with (or an empty list to disable P2P connections)
+     * peer to peer connections with (or an empty list to disable P2P connections).
+     * Guarenteed to only be called after registerPlayer.
      */
-    public abstract Vector<ClientPeer> getPeerList();
+    protected abstract Vector<ClientPeer> getPeerList();
 
-    private void sendInitialPeerList()
+    
+
+    private void sendPeerList()
     {
         Vector<ClientPeer> peers = getPeerList();
-        //Now send these to the client somehow
+        //Now send these to the client
+        NetworkMessage message = new NetworkMessage("Peer list transfer");
+        message.setMessageType(NetworkMessage.MessageType.PEER_LIST_MESSAGE);
+        message.addDataObject("peerList", peers);
+        writeOut(message);
+
     }
 
 
@@ -117,12 +127,10 @@ public abstract class ServerDaemonThread extends Thread{
 
     @Override
     public void run()
-    {      
-        
+    {        
         //Do running stuff        
         while(!stopOperation)
         {
-            
             try
             {
                 Object data = in.readObject();                
@@ -172,8 +180,12 @@ public abstract class ServerDaemonThread extends Thread{
                 case TERMINATION_REQUEST_MESSAGE:
                     fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  TerminationRequestReceivedListener.class);
                     break;
+                case PEER_LIST_REQUEST_MESSAGE:
+                    sendPeerList();
+                    break;
                 default:
-                    throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
+                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  UnknownMessageTypeReceivedListener.class);
+                    //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
 
             }
         }
@@ -182,7 +194,7 @@ public abstract class ServerDaemonThread extends Thread{
             PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;
             registerPlayer(regMessage.playerName, regMessage.playerID, socket.getInetAddress());
             sendInitialState();
-            sendInitialPeerList();
+            sendPeerList();
             fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, "Connection successfully established"),  ConnectionEstablishedListener.class);
         }
         else
@@ -221,7 +233,7 @@ public abstract class ServerDaemonThread extends Thread{
         
     }
 
-    /*************************************** EVENTS ***************************/
+    /*************************************** EVENTS HANDELING***************************/
 
     public <T extends NetworkEventListener> void addNetworkListener(Class<T> t, T listener)
     {
@@ -233,7 +245,7 @@ public abstract class ServerDaemonThread extends Thread{
         listeners.remove(t, listener);
     }
 
-    /* Convenience Listeners below for those that dont know how to use the above
+    /* Convenience Listener methods below for those that dont know how to use the above
      * Generic methods.
      */
 
@@ -296,6 +308,16 @@ public abstract class ServerDaemonThread extends Thread{
     public void removeTerminationRequestReceivedListener(TerminationRequestReceivedListener listener)
     {
         listeners.remove(TerminationRequestReceivedListener.class, listener);
+    }
+
+    public void addUnknownMessageTypeReceivedListener(UnknownMessageTypeReceivedListener listener)
+    {
+        listeners.add(UnknownMessageTypeReceivedListener.class, listener);
+    }
+
+    public void removeUnknownMessageTypeReceivedListener(UnknownMessageTypeReceivedListener listener)
+    {
+        listeners.remove(UnknownMessageTypeReceivedListener.class, listener);
     }
 
     /**

@@ -3,6 +3,7 @@ package networkserver.DataContainers;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import networkserver.ServerCustomisation;
 
 /**
  * Used to pass information between the client and the server
@@ -19,7 +20,9 @@ public class NetworkMessage implements Serializable
         PARTIAL_GAMESTATE_UPDATE_MESSAGE, //Client only
         GAMESTATE_UPDATE_MESSAGE, //Client Only
         GAMESTATE_REQUEST_MESSAGE, //Server only
-        TERMINATION_REQUEST_MESSAGE //Server Only
+        TERMINATION_REQUEST_MESSAGE, //Server Only
+        PEER_LIST_MESSAGE, //Client only
+        PEER_LIST_REQUEST_MESSAGE //Server Only
 
     }
 
@@ -33,6 +36,9 @@ public class NetworkMessage implements Serializable
     public NetworkMessage(String message)
     {
         primeMessage = message;
+        strings = new HashMap<String, String>(ServerCustomisation.initialNetworkMessageMapSize);
+        ints = new HashMap<String, Integer>(ServerCustomisation.initialNetworkMessageMapSize);
+        objects = new HashMap<String, Object>(ServerCustomisation.initialNetworkMessageMapSize);
     }
    
     public void addDataString(String key, String value)

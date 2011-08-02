@@ -46,6 +46,7 @@ public class ServerCoreThread  extends Thread {
                 Socket con = socket.accept();                
                 System.out.println("Client accepted: "+ con);                
                 ServerDaemonThread daemonThread = customSettings.buildInstance();
+                daemonThread.setSocket(con);
                 daemonThread.start();
                 
             }catch(IOException e)
