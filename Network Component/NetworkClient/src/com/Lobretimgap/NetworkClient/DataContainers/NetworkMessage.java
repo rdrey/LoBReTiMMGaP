@@ -1,9 +1,11 @@
 
-package networkserver.DataContainers;
+package com.Lobretimgap.NetworkClient.DataContainers;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import networkserver.ServerCustomisation;
+
+import com.Lobretimgap.NetworkClient.NetworkVariables;
+
 
 /**
  * Used to pass information between the client and the server
@@ -13,11 +15,11 @@ import networkserver.ServerCustomisation;
 public class NetworkMessage implements Serializable
 {
     /**
-     * Used to ensure that the server object and client object are treated as identical objects.
-     */
-    private static final long serialVersionUID = 4259455514140197693L;
-        
-    //Used internally for network message classification.
+	 * Used to ensure that the server object and client object are treated as identical objects.
+	 */
+	private static final long serialVersionUID = 4259455514140197693L;
+
+	//Used internally for network message classification.
     public enum MessageType //Comments show where the type can be received
     {
         UPDATE_MESSAGE, //Client and Server
@@ -41,9 +43,9 @@ public class NetworkMessage implements Serializable
     public NetworkMessage(String message)
     {
         primeMessage = message;
-        strings = new HashMap<String, String>(ServerCustomisation.initialNetworkMessageMapSize);
-        ints = new HashMap<String, Integer>(ServerCustomisation.initialNetworkMessageMapSize);
-        objects = new HashMap<String, Object>(ServerCustomisation.initialNetworkMessageMapSize);
+        strings = new HashMap<String, String>(NetworkVariables.initialNetworkMessageMapSize);
+        ints = new HashMap<String, Integer>(NetworkVariables.initialNetworkMessageMapSize);
+        objects = new HashMap<String, Object>(NetworkVariables.initialNetworkMessageMapSize);
     }
    
     public void addDataString(String key, String value)

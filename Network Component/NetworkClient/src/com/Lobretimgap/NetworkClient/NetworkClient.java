@@ -1,6 +1,7 @@
 package com.Lobretimgap.NetworkClient;
 
 import android.app.Activity;
+
 import android.os.Bundle;
 import android.widget.ScrollView;
 import android.widget.TextView;
