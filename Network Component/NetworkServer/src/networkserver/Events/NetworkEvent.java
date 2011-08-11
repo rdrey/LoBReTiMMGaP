@@ -4,13 +4,13 @@ package networkserver.Events;
  * @date 2011/08/02
  * @author Lawrence Webley
  */
-public class NetworkEvent extends java.awt.AWTEvent {
+public class NetworkEvent extends java.util.EventObject {
 
     Object message;
 
-    public NetworkEvent(Object source, int id, Object message)
+    public NetworkEvent(Object source, Object message)
     {
-        super(source, id);
+        super(source);
         this.message = message;
     }
 

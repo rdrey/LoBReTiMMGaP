@@ -4,7 +4,6 @@ import java.awt.AWTEvent;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.ObjectInputStream;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.BufferOverflowException;
 import java.util.Vector;
@@ -145,7 +144,7 @@ public abstract class ServerDaemonThread extends Thread{
             catch(IOException e)
             {
                 System.err.println("Error occured while reading from thread : "+e);
-                fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
+                fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
                 this.shutdownThread();                
                 break;
             }
@@ -164,10 +163,10 @@ public abstract class ServerDaemonThread extends Thread{
             switch(msg.getMessageType())
             {
                 case UPDATE_MESSAGE:
-                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  UpdateReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, message),  UpdateReceivedListener.class);
                     break;
                 case REQUEST_MESSAGE:
-                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  RequestReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, message),  RequestReceivedListener.class);
                     break;
                 case PARTIAL_GAMESTATE_UPDATE_MESSAGE:
                     //Not used on server side. This flag is used to notify the client of incoming partial game state
@@ -176,16 +175,16 @@ public abstract class ServerDaemonThread extends Thread{
                     //Similarly, this is used exclusivly on the client side.
                     break;
                 case GAMESTATE_REQUEST_MESSAGE:
-                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  GameStateRequestReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, message),  GameStateRequestReceivedListener.class);
                     break;
                 case TERMINATION_REQUEST_MESSAGE:
-                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  TerminationRequestReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, message),  TerminationRequestReceivedListener.class);
                     break;
                 case PEER_LIST_REQUEST_MESSAGE:
                     sendPeerList();
                     break;
                 default:
-                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  UnknownMessageTypeReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, message),  UnknownMessageTypeReceivedListener.class);
                     //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
 
             }
@@ -198,7 +197,7 @@ public abstract class ServerDaemonThread extends Thread{
             
             sendInitialState();
             sendPeerList();
-            fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, "Connection successfully established"),  ConnectionEstablishedListener.class);
+            fireEvent(new NetworkEvent(this, "Connection successfully established"),  ConnectionEstablishedListener.class);
         }
         else
         {
