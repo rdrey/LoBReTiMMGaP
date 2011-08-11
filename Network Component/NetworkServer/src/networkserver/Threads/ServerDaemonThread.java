@@ -14,6 +14,7 @@ import networkserver.DataContainers.PlayerRegistrationMessage;
 import networkserver.EventListeners.*;
 import networkserver.Events.NetworkEvent;
 import networkserver.Peer2Peer.ClientPeer;
+import networkserver.ServerVariables;
 
 /**
  * @date 2011/08/02
@@ -52,7 +53,7 @@ public abstract class ServerDaemonThread extends Thread{
      * First method called after the client has connected. Use
      * this to add player information to the game engine/world.
      */
-    protected abstract void registerPlayer(String playerName, int playerID, InetAddress clientAddress);
+    protected abstract void registerPlayer(String playerName, int playerID);
 
     /*
      * Called after RegisterPlayer, meant to send game state initialization
@@ -192,7 +193,9 @@ public abstract class ServerDaemonThread extends Thread{
         else if(message instanceof PlayerRegistrationMessage)
         {
             PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;
-            registerPlayer(regMessage.playerName, regMessage.playerID, socket.getInetAddress());
+            ServerVariables.playerNetworkAddressList.put(new Integer(regMessage.playerID), socket.getInetAddress());
+            registerPlayer(regMessage.playerName, regMessage.playerID);            
+            
             sendInitialState();
             sendPeerList();
             fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, "Connection successfully established"),  ConnectionEstablishedListener.class);
@@ -221,6 +224,8 @@ public abstract class ServerDaemonThread extends Thread{
         try
         {
             out.shutdownThread();
+            stopOperation = true;
+            this.interrupt();
             socket.close();
         }
         catch(IOException e)
@@ -228,8 +233,7 @@ public abstract class ServerDaemonThread extends Thread{
             //We dont really care if the socket failed to close correctly.
             System.err.println("Socket failed to close correctly. \n"+e);
         }
-        stopOperation = true;
-        this.interrupt();
+        
         
     }
 

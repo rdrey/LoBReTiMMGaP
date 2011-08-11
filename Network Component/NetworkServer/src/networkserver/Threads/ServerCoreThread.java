@@ -14,7 +14,7 @@ import networkserver.ServerCustomisation;
  */
 public class ServerCoreThread  extends Thread {
 
-    public final int port = 2828;
+    public final int port = 10282;
     private ServerSocket socket;
     ServerCustomisation customSettings;
 
