@@ -26,6 +26,9 @@ public abstract class ServerDaemonThread extends Thread{
     private ObjectInputStream in;
     private boolean stopOperation = false;
 
+    public int playerID;
+    public String playerName;
+
     private EventListenerList listeners = new EventListenerList();
 
     /*
@@ -47,31 +50,48 @@ public abstract class ServerDaemonThread extends Thread{
         out.start();
     }
 
-    /*
+    /**
      * Called once joining information for the player has been received.
      * First method called after the client has connected. Use
      * this to add player information to the game engine/world.
      */
-    protected abstract void registerPlayer(String playerName, int playerID);
+    protected abstract void registerPlayer(PlayerRegistrationMessage initialMessage);
+    
 
-    /*
-     * Called after RegisterPlayer, meant to send game state initialization
-     * information to the client.
+    /**
+     * Called after RegisterPlayer. This is used to obtain the initial game state
+     * in the form of a networkMessage. This is then immediatly passed on to the
+     * client.
      */
-    protected abstract void sendInitialState();
+    protected  abstract NetworkMessage getInitialState();
 
-    /*
+    /**
      * Method which must return a list of peers that the client can establish
      * peer to peer connections with (or an empty list to disable P2P connections).
      * Guarenteed to only be called after registerPlayer.
      */
-    protected abstract Vector<ClientPeer> getPeerList();
+    protected abstract Vector<ClientPeer> getPeerList(int playerId, String playerName);
 
-    
+    /**
+     * Called after RegisterPlayer, meant to send game state initialization
+     * information to the client.
+     */
+    private  void sendInitialState()
+    {
+        NetworkMessage message = getInitialState();
+        message.setMessageType(NetworkMessage.MessageType.INITIAL_GAME_STATE_MESSAGE);
+        writeOut(message);
+    }
 
     private void sendPeerList()
     {
-        Vector<ClientPeer> peers = getPeerList();
+        Vector<ClientPeer> peers = getPeerList(playerID, playerName);
+        //Set the network address on peers, in case implementer didnt.
+        for(int i = 0; i < peers.size(); i++)
+        {
+            int playerId = peers.elementAt(i).playerId;
+            peers.elementAt(i).networkAddress = ServerVariables.playerNetworkAddressList.get(new Integer(playerId));
+        }
         //Now send these to the client
         NetworkMessage message = new NetworkMessage("Peer list transfer");
         message.setMessageType(NetworkMessage.MessageType.PEER_LIST_MESSAGE);
@@ -163,10 +183,13 @@ public abstract class ServerDaemonThread extends Thread{
             switch(msg.getMessageType())
             {
                 case UPDATE_MESSAGE:
-                    fireEvent(new NetworkEvent(this, message),  UpdateReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, msg),  UpdateReceivedListener.class);
                     break;
                 case REQUEST_MESSAGE:
-                    fireEvent(new NetworkEvent(this, message),  RequestReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, msg),  RequestReceivedListener.class);
+                    break;
+                case INITIAL_GAME_STATE_MESSAGE:
+                    //Dealt with on the client side.
                     break;
                 case PARTIAL_GAMESTATE_UPDATE_MESSAGE:
                     //Not used on server side. This flag is used to notify the client of incoming partial game state
@@ -175,16 +198,19 @@ public abstract class ServerDaemonThread extends Thread{
                     //Similarly, this is used exclusivly on the client side.
                     break;
                 case GAMESTATE_REQUEST_MESSAGE:
-                    fireEvent(new NetworkEvent(this, message),  GameStateRequestReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, msg),  GameStateRequestReceivedListener.class);
                     break;
                 case TERMINATION_REQUEST_MESSAGE:
-                    fireEvent(new NetworkEvent(this, message),  TerminationRequestReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, msg),  TerminationRequestReceivedListener.class);
+                    break;
+                case PEER_LIST_MESSAGE:
+                    //Client uses this to update its peer list.
                     break;
                 case PEER_LIST_REQUEST_MESSAGE:
                     sendPeerList();
                     break;
                 default:
-                    fireEvent(new NetworkEvent(this, message),  UnknownMessageTypeReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, msg),  UnknownMessageTypeReceivedListener.class);
                     //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
 
             }
@@ -193,7 +219,10 @@ public abstract class ServerDaemonThread extends Thread{
         {
             PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;
             ServerVariables.playerNetworkAddressList.put(new Integer(regMessage.playerID), socket.getInetAddress());
-            registerPlayer(regMessage.playerName, regMessage.playerID);            
+            playerID = regMessage.playerID;
+            playerName = regMessage.playerName;
+            registerPlayer(regMessage);
+
             
             sendInitialState();
             sendPeerList();

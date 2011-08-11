@@ -8,16 +8,19 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.BufferOverflowException;
+import java.util.Vector;
 
 import android.util.Log;
 
 import com.Lobretimgap.NetworkClient.NetworkVariables;
 import com.Lobretimgap.NetworkClient.Utility.EventListenerList;
 import com.Lobretimgap.NetworkClient.DataContainers.NetworkMessage;
+import com.Lobretimgap.NetworkClient.DataContainers.PlayerRegistrationMessage;
 import com.Lobretimgap.NetworkClient.EventListeners.*;
 import com.Lobretimgap.NetworkClient.Events.*;
+import com.Lobretimgap.NetworkClient.Peer2Peer.*;
 
-public class CoreNetworkThread extends Thread 
+public abstract class CoreNetworkThread extends Thread 
 {
 	private Socket socket;
 	private NetworkWriteThread out;
@@ -25,10 +28,12 @@ public class CoreNetworkThread extends Thread
     private boolean stopOperation = false;
     
     private EventListenerList listeners = new EventListenerList();
+    
+    public Vector<ClientPeer> peers;
 	
 	public CoreNetworkThread()
 	{
-		
+		peers = new Vector<ClientPeer>();
 	}
 	
 	public boolean connect()
@@ -51,11 +56,40 @@ public class CoreNetworkThread extends Thread
 			Log.e(NetworkVariables.TAG, "Error while initializing connection to server.", e);	
 			return false;
 		}
-		
+		Log.i(NetworkVariables.TAG, "Connection to server has been established.");
 		return true;
 	}
 	
-	/*
+	
+	
+	/**
+	 * This method must be implemented so that the network component knows what type of initialisation 
+	 * information must be sent to the server. The only absolutely required fields in the PlayerRegistrationMessage
+	 * are the playerName and playerId. These are used to uniquely identify the player, and are used for
+	 * network component logic.
+	 * 
+	 * You should also use this message as a way of transferring any other initial information to the game server, 
+	 * such as initial position, starting game/character states, etc.
+	 * 
+	 * @return A PlayerRegistrationMessage object which the server will use to instantiate the player on its side. 
+	 */
+	public abstract PlayerRegistrationMessage getPlayerRegistrationInformation();
+	
+	/**
+	 * Will be called once the initial game state from the server is received.
+	 * This message should process this initial game information and appropriatly
+	 * configure the local game state.
+	 * @param message A network message representing the initial game state received
+	 * from the server.
+	 */
+	public abstract void processInitialGameState(NetworkMessage message);
+	
+	private void registerWithServer(PlayerRegistrationMessage message)
+	{
+		writeOut(message);
+	}
+	
+	/**
      * Sends an update message to the server. Can be anything the implementer
      * chooses. Used for general communication with the server.
      */
@@ -65,7 +99,7 @@ public class CoreNetworkThread extends Thread
         writeOut(message);
     }
 
-    /*
+    /**
      * This method should be used to request information from the server. The message
      * sent to the client should generally be one that requires a response, such as
      * what your rank is.
@@ -75,10 +109,56 @@ public class CoreNetworkThread extends Thread
         message.setMessageType(NetworkMessage.MessageType.REQUEST_MESSAGE);
         writeOut(message);
     }
+    
+    /**
+     * If the local gamestate should become compromised in some way, and the local game would like to get a 
+     * fresh copy of the game state, this method should be used to request it from the server.
+     */
+    public void sendGameStateRequest(NetworkMessage message) throws BufferOverflowException
+    {
+    	message.setMessageType(NetworkMessage.MessageType.GAMESTATE_REQUEST_MESSAGE);
+        writeOut(message);
+    }
+    
+    /**
+     * Before ending the game session, a termination message should be sent to the server. 
+     * Things that need to be saved at the server (high scores, items, saved games) should
+     * be transferred at this point. After calling this method, the network component will
+     * begin to shut down, and will become unavailable.
+     */
+    public void sendTerminationRequest(NetworkMessage message) throws BufferOverflowException
+    {
+    	message.setMessageType(NetworkMessage.MessageType.TERMINATION_REQUEST_MESSAGE);
+        writeOut(message);
+        shutdownThread();
+    }
 	
+    /**
+     * By default, the network component will deal with the P2P connections invisibly, updating as it sees
+     * fit. If the implementer would like to force the peer list to be updated for some reason (a player has
+     * rapidly changed location, like a teleport or change of map or something) then this method can 
+     * be called to force the peer list to be refreshed from the server.
+     * 
+     * Note that if the game state has recently radically changed, and this is why we are forcing a peer list 
+     * update, you should make sure that the prerequisite game state information has already been sent to the 
+     * server, otherwise the peer list received might still be inaccurate.
+     */
+    public void forcePeerListUpdate()
+    {
+    	requestPeerList();
+    }
+    
+    private void requestPeerList()
+    {
+    	NetworkMessage message = new NetworkMessage("Requesting new peer list.");
+    	message.setMessageType(NetworkMessage.MessageType.PEER_LIST_REQUEST_MESSAGE);
+        writeOut(message);
+    }
+    
 	@Override
     public void run()
-    {        
+	{		
+		registerWithServer(getPlayerRegistrationInformation());
         //Do running stuff        
         while(!stopOperation)
         {
@@ -106,9 +186,57 @@ public class CoreNetworkThread extends Thread
         }
     }
 	
-	private void processNetworkMessage(Object data)
+	private void processNetworkMessage(Object message)
 	{
+		if(message instanceof NetworkMessage)
+        {
+            NetworkMessage msg = (NetworkMessage)message;
+            switch(msg.getMessageType())
+            {
+                case UPDATE_MESSAGE:
+                    fireEvent(new NetworkEvent(this, msg),  UpdateReceivedListener.class);
+                    break;
+                case REQUEST_MESSAGE:
+                    fireEvent(new NetworkEvent(this, msg),  RequestReceivedListener.class);
+                    break;
+                case INITIAL_GAME_STATE_MESSAGE:
+                	processInitialGameState(msg);
+                	break;
+                case PARTIAL_GAMESTATE_UPDATE_MESSAGE:
+                	fireEvent(new NetworkEvent(this, msg),  PartialGamestateReceivedListener.class);
+                    break;
+                case GAMESTATE_UPDATE_MESSAGE:
+                	fireEvent(new NetworkEvent(this, msg),  GamestateReceivedListener.class);
+                    break;
+                case GAMESTATE_REQUEST_MESSAGE:
+                    //Used exclusively on the server side
+                    break;
+                case TERMINATION_REQUEST_MESSAGE:
+                    //similarly, dealt with on the server side
+                    break;
+                case PEER_LIST_MESSAGE:                	
+                	handlePeerListUpdate(msg);
+                	break;
+                case PEER_LIST_REQUEST_MESSAGE:
+                    //Also dealt with on the server side.
+                    break;
+                default:
+                    fireEvent(new NetworkEvent(this, msg),  UnknownMessageTypeReceivedListener.class);
+                    //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
+
+            }
+        }
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void handlePeerListUpdate(NetworkMessage msg)
+	{
+		//Terminate communication with existing peers
 		
+		//And now replace them with a new set of peers. 
+		peers = (Vector<ClientPeer>)msg.getDataObject("peerList");
+		
+		//Now try to connect to the new list of peers
 	}
 	
 	/*

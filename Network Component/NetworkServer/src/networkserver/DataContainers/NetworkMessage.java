@@ -22,6 +22,7 @@ public class NetworkMessage implements Serializable
     {
         UPDATE_MESSAGE, //Client and Server
         REQUEST_MESSAGE,//Client and Server
+        INITIAL_GAME_STATE_MESSAGE, //Client only
         PARTIAL_GAMESTATE_UPDATE_MESSAGE, //Client only
         GAMESTATE_UPDATE_MESSAGE, //Client Only
         GAMESTATE_REQUEST_MESSAGE, //Server only
