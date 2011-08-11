@@ -1,5 +1,6 @@
 package networkserver;
 
+import networkserver.Threads.CustomDaemonThread;
 import networkserver.Threads.ServerCoreThread;
 
 /**
@@ -18,8 +19,8 @@ public class Main
         //Start the core server thread. In an implementation, the game engine could
         //start this thread, or it could be started by this thread.
 
-        /*ServerCoreThread sct = new ServerCoreThread<CustomDaemonThread>(new ServerCustomisation(CustomDaemonThread.class));
-       sct.start(); */
+       ServerCoreThread sct = new ServerCoreThread(new ServerCustomisation<CustomDaemonThread>(CustomDaemonThread.class));
+       sct.start(); 
     }
 
 }
