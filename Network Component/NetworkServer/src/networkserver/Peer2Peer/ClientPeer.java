@@ -14,10 +14,10 @@ import java.net.InetAddress;
  */
 public class ClientPeer implements Serializable {
     /**
-	 *
-	 */
-	private static final long serialVersionUID = -4363673355596267473L;
-	public String playerName;
+     *  Makes sure that this object has the same serial version as the remote one.
+     */
+    private static final long serialVersionUID = -4363673355596267473L;
+    public String playerName;
     public int playerId;
     public InetAddress networkAddress;
 
