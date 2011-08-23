@@ -1,15 +1,17 @@
 package com.Lobretimgap.NetworkClient;
 
 import java.nio.BufferOverflowException;
-
 import networkTransferObjects.NetworkMessage;
+import com.Lobretimgap.NetworkClient.EventListeners.NetworkEventListeer;
 import android.os.Binder;
-
-import com.Lobretimgap.NetworkClient.EventListeners.NetworkEventListener;
-import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
-
-public class NetworkComBinder extends Binder {
-	
+import com.Lobretimgap.NetworkClient.EventListeners.*;
+import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
+import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;import android.os.Binder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
+import android.util.Log;
+public class NetworkComBinder extends Binder {	
 	private CoreNetworkThread networkThread;
 	private boolean isConnected = false;
 	
@@ -183,5 +185,104 @@ public class NetworkComBinder extends Binder {
 		networkThread.removeNetworkListener(t, listener);
 	}		
 	
+	/** 
+	 * Enum describing the types of messages that might be sent to the messenger.
+	 * Compare them using EventType.values()[i]
+	 * @author Lawrence
+	 *
+	 */
+	public enum EventType
+	{
+		CONNECTION_ESTABLISHED,
+		CONNECTION_LOST,
+		GAMESTATE_RECEIVED,
+		PARTIAL_GAMESTATE_RECEIVED,
+		REQUEST_RECEIVED,
+		UNKNOWN_MESSAGE_TYPE_RECEIVED,
+		UPDATE_RECEIVED
+		
+	}
+	
+	/**
+	 * An android utility function that registers a messenger for all the available network events.
+	 * The event object will be passed to the Messenger whenever any event occurs, using the 
+	 * message.what parameter to describe what type of event it is. The message.what parameter is
+	 * and integer representation of the EventType enum in this class.
+	 * @param eventMessenger
+	 */
+	public void registerMessenger(final Messenger eventMessenger)
+	{
+		addListener(ConnectionEstablishedListener.class, new ConnectionEstablishedListener() {			
+			public void EventOccured(NetworkEvent e) {					
+				try {
+					eventMessenger.send(Message.obtain(null, EventType.CONNECTION_ESTABLISHED.ordinal(), e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}				 			
+			}
+		});
+		
+		addListener(ConnectionLostListener.class, new ConnectionLostListener() {			
+			public void EventOccured(NetworkEvent e) {
+				try {
+					eventMessenger.send(Message.obtain(null, EventType.CONNECTION_LOST.ordinal(), e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}					
+			}
+		});
+		
+		addListener(GamestateReceivedListener.class, new GamestateReceivedListener() {			
+			public void EventOccured(NetworkEvent e) {
+				try {
+					eventMessenger.send(Message.obtain(null, EventType.GAMESTATE_RECEIVED.ordinal(), e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}					
+			}
+		});	
+		
+		addListener(PartialGamestateReceivedListener.class, new PartialGamestateReceivedListener() {			
+			public void EventOccured(NetworkEvent e) {
+				try {
+					eventMessenger.send(Message.obtain(null, EventType.PARTIAL_GAMESTATE_RECEIVED.ordinal(), e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}					
+			}
+		});		
+		
+		
+		addListener(RequestReceivedListener.class, new RequestReceivedListener() {			
+			public void EventOccured(NetworkEvent e) {
+				try {
+					eventMessenger.send(Message.obtain(null, EventType.REQUEST_RECEIVED.ordinal(), e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}					
+			}
+		});
+		
+		addListener(UnknownMessageTypeReceivedListener.class, new UnknownMessageTypeReceivedListener() {			
+			public void EventOccured(NetworkEvent e) {
+				try {
+					eventMessenger.send(Message.obtain(null, EventType.UNKNOWN_MESSAGE_TYPE_RECEIVED.ordinal(), e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}					
+			}
+		});
+		
+		addListener(UpdateReceivedListener.class, new UpdateReceivedListener() {			
+			public void EventOccured(NetworkEvent e) {
+				try {
+					eventMessenger.send(Message.obtain(null, EventType.UPDATE_RECEIVED.ordinal(), e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}					
+			}
+		});		
+		
+	}
 	
 }
