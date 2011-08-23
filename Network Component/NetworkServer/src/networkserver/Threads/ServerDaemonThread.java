@@ -45,8 +45,8 @@ public abstract class ServerDaemonThread extends Thread{
     public void setSocket(Socket acceptedSocket) throws IOException
     {
         socket = acceptedSocket;
-        in = new ObjectInputStream(socket.getInputStream());
         out = new ServerDaemonWriteoutThread(acceptedSocket);
+        in = new ObjectInputStream(socket.getInputStream());        
         out.start();
     }
 
