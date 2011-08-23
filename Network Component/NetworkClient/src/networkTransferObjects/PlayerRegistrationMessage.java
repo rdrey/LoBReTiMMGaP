@@ -1,5 +1,5 @@
 
-package com.Lobretimgap.NetworkClient.DataContainers;
+package networkTransferObjects;
 
 import java.io.Serializable;
 import java.util.HashMap;

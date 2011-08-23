@@ -10,12 +10,13 @@ import java.net.UnknownHostException;
 import java.nio.BufferOverflowException;
 import java.util.Vector;
 
+import networkTransferObjects.NetworkMessage;
+import networkTransferObjects.PlayerRegistrationMessage;
+
 import android.util.Log;
 
 import com.Lobretimgap.NetworkClient.NetworkVariables;
 import com.Lobretimgap.NetworkClient.Utility.EventListenerList;
-import com.Lobretimgap.NetworkClient.DataContainers.NetworkMessage;
-import com.Lobretimgap.NetworkClient.DataContainers.PlayerRegistrationMessage;
 import com.Lobretimgap.NetworkClient.EventListeners.*;
 import com.Lobretimgap.NetworkClient.Events.*;
 import com.Lobretimgap.NetworkClient.Peer2Peer.*;

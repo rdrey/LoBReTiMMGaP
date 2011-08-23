@@ -2,7 +2,8 @@ package com.Lobretimgap.NetworkClient;
 
 import java.nio.BufferOverflowException;
 
-import com.Lobretimgap.NetworkClient.DataContainers.NetworkMessage;
+import networkTransferObjects.NetworkMessage;
+
 import com.Lobretimgap.NetworkClient.EventListeners.NetworkEventListener;
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
 
