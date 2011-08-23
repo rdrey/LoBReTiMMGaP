@@ -1,11 +1,10 @@
 
-package networkserver.DataContainers;
+package com.Lobretimgap.NetworkClient.DataContainers;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import networkserver.ServerCustomisation;
 
-
+import com.Lobretimgap.NetworkClient.NetworkVariables;
 
 /**
  * A once off message sent to the server which should contain any initialisation information
@@ -22,22 +21,22 @@ public class PlayerRegistrationMessage implements Serializable{
 	private static final long serialVersionUID = 6520835168631802917L;
 	public String playerName;
     public int playerID;
-
+    
     private HashMap<String, String> strings;
     private HashMap<String, Integer> ints;
     private HashMap<String, Object> objects;
-
+    
     public PlayerRegistrationMessage(int playerId, String playerName)
     {
     	playerID = playerId;
     	this.playerName = playerName;
-
-    	strings = new HashMap<String, String>(ServerCustomisation.initialNetworkMessageMapSize);
-        ints = new HashMap<String, Integer>(ServerCustomisation.initialNetworkMessageMapSize);
-        objects = new HashMap<String, Object>(ServerCustomisation.initialNetworkMessageMapSize);
-    }
-
-
+    	
+    	strings = new HashMap<String, String>(NetworkVariables.initialNetworkMessageMapSize);
+        ints = new HashMap<String, Integer>(NetworkVariables.initialNetworkMessageMapSize);
+        objects = new HashMap<String, Object>(NetworkVariables.initialNetworkMessageMapSize);
+    }   
+        
+   
     public void addDataString(String key, String value)
     {
         strings.put(key, value);
