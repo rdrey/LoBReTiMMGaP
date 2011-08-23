@@ -181,6 +181,7 @@ public class NetworkComBinder extends Binder {
 	public <T extends NetworkEventListener> void removeListener(Class<T> t, T listener)
 	{
 		networkThread.removeNetworkListener(t, listener);
-	}
+	}		
+	
 	
 }
