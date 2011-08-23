@@ -6,6 +6,8 @@
 package networkserver.Threads;
 
 import java.util.Vector;
+import networkserver.DataContainers.NetworkMessage;
+import networkserver.DataContainers.PlayerRegistrationMessage;
 import networkserver.Peer2Peer.ClientPeer;
 
 /**
@@ -13,20 +15,21 @@ import networkserver.Peer2Peer.ClientPeer;
  * @author Lawrence Webley
  */
 public class CustomDaemonThread extends ServerDaemonThread
-{
-    public void registerPlayer(String playerName, int playerId)
-    {
-        
+{  
+
+    @Override
+    protected void registerPlayer(PlayerRegistrationMessage initialMessage) {
+        System.out.println("Player registed: ID="+initialMessage.playerID+", Name="+initialMessage.playerName);
     }
 
-    public void sendInitialState()
-    {
-
+    @Override
+    protected NetworkMessage getInitialState() {
+        return new NetworkMessage("Initial state not yet configured.");
     }
 
-    protected Vector<ClientPeer> getPeerList()
-    {
-        return null;
+    @Override
+    protected Vector<ClientPeer> getPeerList(int playerId, String playerName) {
+        return new Vector<ClientPeer>();
     }
 
 }
