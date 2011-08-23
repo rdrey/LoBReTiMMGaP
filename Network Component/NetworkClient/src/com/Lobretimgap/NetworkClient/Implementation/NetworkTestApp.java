@@ -2,6 +2,7 @@ package com.Lobretimgap.NetworkClient.Implementation;
 
 import com.Lobretimgap.NetworkClient.NetworkComBinder;
 import com.Lobretimgap.NetworkClient.NetworkComService;
+import com.Lobretimgap.NetworkClient.NetworkVariables;
 import com.Lobretimgap.NetworkClient.EventListeners.ConnectionEstablishedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.ConnectionLostListener;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
@@ -12,7 +13,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
+import android.util.Log;
 import android.widget.TextView;
 
 public class NetworkTestApp extends Activity {
@@ -50,19 +56,7 @@ public class NetworkTestApp extends Activity {
 			networkBound = true;
 			tv.append("Service connected! Starting connection...\n");
 			
-			binder.addListener(ConnectionEstablishedListener.class, new ConnectionEstablishedListener() {				
-				
-				public void EventOccured(NetworkEvent e) {					
-					tv.append("Event Received: Connection Established to server!\n");					
-				}
-			});
-			
-			binder.addListener(ConnectionLostListener.class, new ConnectionLostListener() {
-				
-				public void EventOccured(NetworkEvent e) {
-					tv.append("Event Received: Connection to server was lost...!\n");					
-				}
-			});
+			bindHandlers();			
 			
 			if(binder.ConnectToServer())
 			{
@@ -75,6 +69,55 @@ public class NetworkTestApp extends Activity {
 			
 		}
 	};
+	
+	class eventHandler extends Handler{
+		
+		public void handleMessage(Message msg) 
+		{
+			tv.append("Event Received: ");
+			switch (msg.what)
+			{
+				case CONNECTION_ESTABLISHED:
+					tv.append("Connection established with host!\n");
+					break;
+					
+				case CONNECTION_LOST:
+					tv.append("Connect to host lost...\n");
+					break;
+					
+				default:
+					super.handleMessage(msg);
+			}
+		}
+	}
+	
+	final Messenger eventMessenger = new Messenger(new eventHandler());
+	
+	final int CONNECTION_ESTABLISHED = 0;
+	final int CONNECTION_LOST = 1;
+	
+	private void bindHandlers()
+	{
+		binder.addListener(ConnectionEstablishedListener.class, new ConnectionEstablishedListener() {			
+			public void EventOccured(NetworkEvent e) {					
+				try {
+					eventMessenger.send(Message.obtain(null, CONNECTION_ESTABLISHED, e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}				 			
+			}
+		});
+		
+		binder.addListener(ConnectionLostListener.class, new ConnectionLostListener() {			
+			public void EventOccured(NetworkEvent e) {
+				try {
+					eventMessenger.send(Message.obtain(null, CONNECTION_LOST, e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}					
+			}
+		});
+	}
 	
 	public void onStop()
 	{

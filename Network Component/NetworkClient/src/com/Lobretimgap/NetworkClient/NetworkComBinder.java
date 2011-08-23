@@ -3,11 +3,10 @@ package com.Lobretimgap.NetworkClient;
 import java.nio.BufferOverflowException;
 
 import networkTransferObjects.NetworkMessage;
+import android.os.Binder;
 
 import com.Lobretimgap.NetworkClient.EventListeners.NetworkEventListener;
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
-
-import android.os.Binder;
 
 public class NetworkComBinder extends Binder {
 	
@@ -169,7 +168,8 @@ public class NetworkComBinder extends Binder {
 	public <T extends NetworkEventListener> void addListener(Class<T> t, T listener)
 	{
 		networkThread.addNetworkListener(t, listener);
-	}
+	}	
+	
 	
 	/**
 	 * Removes a network event listener.
