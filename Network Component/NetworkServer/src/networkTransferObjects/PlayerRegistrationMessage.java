@@ -1,5 +1,5 @@
 
-package networkserver.DataContainers;
+package networkTransferObjects;
 
 import java.io.Serializable;
 import java.util.HashMap;
