@@ -26,6 +26,7 @@ public abstract class CoreNetworkThread extends Thread
 	private NetworkWriteThread out;
 	private ObjectInputStream in;
     private boolean stopOperation = false;
+    public boolean isRunning = false;
     
     private EventListenerList listeners = new EventListenerList();
     
@@ -158,6 +159,7 @@ public abstract class CoreNetworkThread extends Thread
 	@Override
     public void run()
 	{		
+		isRunning = true;
 		registerWithServer(getPlayerRegistrationInformation());
         //Do running stuff        
         while(!stopOperation)
@@ -256,6 +258,7 @@ public abstract class CoreNetworkThread extends Thread
     {
         try
         {
+        	isRunning = false;
             out.shutdownThread();
             stopOperation = true;
             this.interrupt();
