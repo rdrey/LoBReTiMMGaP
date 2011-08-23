@@ -47,6 +47,8 @@ public abstract class CoreNetworkThread extends Thread
 			in = new ObjectInputStream(socket.getInputStream());
 			out = new NetworkWriteThread(socket);
 			out.start();
+			
+			fireEvent(new NetworkEvent(this, "Connection successfully established!"), ConnectionEstablishedListener.class);
 		}
 		catch(UnknownHostException e)
 		{
@@ -238,6 +240,7 @@ public abstract class CoreNetworkThread extends Thread
 		
 		//And now replace them with a new set of peers. 
 		peers = (Vector<ClientPeer>)msg.getDataObject("peerList");
+		Log.d(NetworkVariables.TAG, "New Peer list received.");
 		
 		//Now try to connect to the new list of peers
 	}

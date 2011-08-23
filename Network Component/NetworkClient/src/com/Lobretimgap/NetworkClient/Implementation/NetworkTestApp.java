@@ -3,6 +3,7 @@ package com.Lobretimgap.NetworkClient.Implementation;
 import com.Lobretimgap.NetworkClient.NetworkComBinder;
 import com.Lobretimgap.NetworkClient.NetworkComService;
 import com.Lobretimgap.NetworkClient.EventListeners.ConnectionEstablishedListener;
+import com.Lobretimgap.NetworkClient.EventListeners.ConnectionLostListener;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 
 import android.app.Activity;
@@ -53,6 +54,13 @@ public class NetworkTestApp extends Activity {
 				
 				public void EventOccured(NetworkEvent e) {					
 					tv.append("Event Received: Connection Established to server!\n");					
+				}
+			});
+			
+			binder.addListener(ConnectionLostListener.class, new ConnectionLostListener() {
+				
+				public void EventOccured(NetworkEvent e) {
+					tv.append("Event Received: Connection to server was lost...!\n");					
 				}
 			});
 			
