@@ -2,16 +2,16 @@ package com.Lobretimgap.NetworkClient;
 
 import java.nio.BufferOverflowException;
 import networkTransferObjects.NetworkMessage;
-import com.Lobretimgap.NetworkClient.EventListeners.NetworkEventListeer;
 import android.os.Binder;
 import com.Lobretimgap.NetworkClient.EventListeners.*;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
-import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;import android.os.Binder;
+import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 public class NetworkComBinder extends Binder {	
+	
 	private CoreNetworkThread networkThread;
 	private boolean isConnected = false;
 	

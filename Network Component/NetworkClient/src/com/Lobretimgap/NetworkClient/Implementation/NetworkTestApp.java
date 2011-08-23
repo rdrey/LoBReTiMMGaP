@@ -56,7 +56,7 @@ public class NetworkTestApp extends Activity {
 			networkBound = true;
 			tv.append("Service connected! Starting connection...\n");
 			
-			bindHandlers();			
+			binder.registerMessenger(eventMessenger);
 			
 			if(binder.ConnectToServer())
 			{
@@ -75,7 +75,8 @@ public class NetworkTestApp extends Activity {
 		public void handleMessage(Message msg) 
 		{
 			tv.append("Event Received: ");
-			switch (msg.what)
+			
+			switch (NetworkComBinder.EventType.values()[msg.what])
 			{
 				case CONNECTION_ESTABLISHED:
 					tv.append("Connection established with host!\n");
@@ -92,32 +93,7 @@ public class NetworkTestApp extends Activity {
 	}
 	
 	final Messenger eventMessenger = new Messenger(new eventHandler());
-	
-	final int CONNECTION_ESTABLISHED = 0;
-	final int CONNECTION_LOST = 1;
-	
-	private void bindHandlers()
-	{
-		binder.addListener(ConnectionEstablishedListener.class, new ConnectionEstablishedListener() {			
-			public void EventOccured(NetworkEvent e) {					
-				try {
-					eventMessenger.send(Message.obtain(null, CONNECTION_ESTABLISHED, e));
-				} catch (RemoteException e1) {					
-					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
-				}				 			
-			}
-		});
 		
-		binder.addListener(ConnectionLostListener.class, new ConnectionLostListener() {			
-			public void EventOccured(NetworkEvent e) {
-				try {
-					eventMessenger.send(Message.obtain(null, CONNECTION_LOST, e));
-				} catch (RemoteException e1) {					
-					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
-				}					
-			}
-		});
-	}
 	
 	public void onStop()
 	{
