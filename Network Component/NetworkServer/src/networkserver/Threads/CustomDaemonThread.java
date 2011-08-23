@@ -6,8 +6,8 @@
 package networkserver.Threads;
 
 import java.util.Vector;
-import networkserver.DataContainers.NetworkMessage;
-import networkserver.DataContainers.PlayerRegistrationMessage;
+import networkTransferObjects.NetworkMessage;
+import networkTransferObjects.PlayerRegistrationMessage;
 import networkserver.Peer2Peer.ClientPeer;
 
 /**

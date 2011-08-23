@@ -1,7 +1,7 @@
 package com.Lobretimgap.NetworkClient;
 
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
-import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThreadImpl;
+import com.Lobretimgap.NetworkClient.Implementation.CoreNetworkThreadImpl;
 
 public class NetworkVariables {
 	public static final String TAG = "NetworkClient";
