@@ -196,6 +196,7 @@ public class NetworkComBinder extends Binder {
 		CONNECTION_ESTABLISHED,
 		CONNECTION_LOST,
 		GAMESTATE_RECEIVED,
+		LATENCY_UPDATE_RECEIVED,
 		PARTIAL_GAMESTATE_RECEIVED,
 		REQUEST_RECEIVED,
 		UNKNOWN_MESSAGE_TYPE_RECEIVED,
@@ -236,6 +237,16 @@ public class NetworkComBinder extends Binder {
 			public void EventOccured(NetworkEvent e) {
 				try {
 					eventMessenger.send(Message.obtain(null, EventType.GAMESTATE_RECEIVED.ordinal(), e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}					
+			}
+		});	
+		
+		addListener(LatencyUpdateListener.class, new LatencyUpdateListener() {			
+			public void EventOccured(NetworkEvent e) {
+				try {
+					eventMessenger.send(Message.obtain(null, EventType.LATENCY_UPDATE_RECEIVED.ordinal(), e));
 				} catch (RemoteException e1) {					
 					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
 				}					
