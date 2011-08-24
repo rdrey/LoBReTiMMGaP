@@ -1,12 +1,5 @@
 package com.Lobretimgap.NetworkClient.Implementation;
 
-import com.Lobretimgap.NetworkClient.NetworkComBinder;
-import com.Lobretimgap.NetworkClient.NetworkComService;
-import com.Lobretimgap.NetworkClient.NetworkVariables;
-import com.Lobretimgap.NetworkClient.EventListeners.ConnectionEstablishedListener;
-import com.Lobretimgap.NetworkClient.EventListeners.ConnectionLostListener;
-import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
-
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -17,13 +10,15 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
-import android.util.Log;
 import android.widget.TextView;
+
+import com.Lobretimgap.NetworkClient.NetworkComBinder;
+import com.Lobretimgap.NetworkClient.NetworkComService;
 
 public class NetworkTestApp extends Activity {
 	
 	private TextView tv;
+	@SuppressWarnings("unused")
 	private boolean networkBound = false;
 	private NetworkComBinder binder;
 

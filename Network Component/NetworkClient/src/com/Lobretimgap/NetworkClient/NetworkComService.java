@@ -18,9 +18,9 @@ public class NetworkComService <T extends CoreNetworkThread> extends Service{
 			networkThread = NetworkVariables.getInstance();
 			binder = new NetworkComBinder(networkThread);
 		} catch (IllegalAccessException e) {
-			Log.e(NetworkVariables.TAG, "Error thrown in Network thread instantiation", e);			
+			Log.e(NetworkVariables.TAG, "Error thrown in Network thread instantiation: " + e.getMessage(), e);			
 		} catch (InstantiationException e) {
-			Log.e(NetworkVariables.TAG, "Error thrown in Network thread instantiation", e);
+			Log.e(NetworkVariables.TAG, "Error thrown in Network thread instantiation: " + e.getMessage(), e);
 		}		
 	}
 		
