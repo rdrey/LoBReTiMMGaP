@@ -1,5 +1,6 @@
 package com.Lobretimgap.NetworkClient.Implementation;
 
+import networkTransferObjects.NetworkMessage;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -14,6 +15,7 @@ import android.widget.TextView;
 
 import com.Lobretimgap.NetworkClient.NetworkComBinder;
 import com.Lobretimgap.NetworkClient.NetworkComService;
+import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 
 public class NetworkTestApp extends Activity {
 	
@@ -62,6 +64,8 @@ public class NetworkTestApp extends Activity {
 				tv.append("Failed to connect to server....\n");
 			}
 			
+			
+			
 		}
 	};
 	
@@ -80,6 +84,8 @@ public class NetworkTestApp extends Activity {
 				case CONNECTION_LOST:
 					tv.append("Connect to host lost...\n");
 					break;
+				case LATENCY_UPDATE_RECEIVED:
+					tv.append("Latency reported as: " + ((NetworkEvent)msg.obj).getMessage());
 					
 				default:
 					super.handleMessage(msg);

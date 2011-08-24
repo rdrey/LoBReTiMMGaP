@@ -156,7 +156,7 @@ public class NetworkComBinder extends Binder {
 		{
 			return false;
 		}
-	}
+	}	
 	
 	/**
 	 * Use this method to sign up for various events from the network thread. This is the 
