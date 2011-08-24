@@ -29,6 +29,8 @@ public abstract class CoreNetworkThread extends Thread
     private boolean stopOperation = false;
     public boolean isRunning = false;
     
+    private long latencyStartTime, latencyEndTime;
+    
     private EventListenerList listeners = new EventListenerList();
     
     public Vector<ClientPeer> peers;
@@ -85,6 +87,18 @@ public abstract class CoreNetworkThread extends Thread
 	 * from the server.
 	 */
 	public abstract void processInitialGameState(NetworkMessage message);
+	
+	/**
+	 * Will make a request to the server to check out what kind of latency there is between android device and server.
+	 * Response will come as a latencyUpdateEvent.
+	 */
+	public void requestNetworkLatency()
+	{
+		NetworkMessage msg = new NetworkMessage("Requesting Latency check");
+		msg.setMessageType(NetworkMessage.MessageType.LATENCY_REQUEST_MESSAGE);
+		writeOut(msg);
+		latencyStartTime = System.currentTimeMillis();
+	}
 	
 	private void registerWithServer(PlayerRegistrationMessage message)
 	{
@@ -223,6 +237,19 @@ public abstract class CoreNetworkThread extends Thread
                 case PEER_LIST_REQUEST_MESSAGE:
                     //Also dealt with on the server side.
                     break;
+                case LATENCY_REQUEST_MESSAGE:
+                	//Respond by sending a latency response message asap.
+                	NetworkMessage latMsg = new NetworkMessage("Latency Response");
+                	latMsg.setMessageType(NetworkMessage.MessageType.LATENCY_RESPONSE_MESSAGE);
+                	writeOut(latMsg);
+                	break;
+                case LATENCY_RESPONSE_MESSAGE:
+                	//WE have received a response to an earlier latency request.
+                	latencyEndTime = System.currentTimeMillis();
+                	if(latencyStartTime < latencyEndTime)
+                	{
+                		fireEvent(new NetworkEvent(this, (latencyEndTime - latencyStartTime)),  LatencyUpdateListener.class);
+                	}
                 default:
                     fireEvent(new NetworkEvent(this, msg),  UnknownMessageTypeReceivedListener.class);
                     //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
