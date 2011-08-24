@@ -1,5 +1,8 @@
 package com.Lobretimgap.NetworkClient.Implementation;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import networkTransferObjects.NetworkMessage;
 import android.app.Activity;
 import android.content.ComponentName;
@@ -23,6 +26,9 @@ public class NetworkTestApp extends Activity {
 	@SuppressWarnings("unused")
 	private boolean networkBound = false;
 	private NetworkComBinder binder;
+	
+	private final Timer timer = new Timer();
+	private final int recurranceDelay = 5; //in seconds
 
 	public void onCreate(Bundle bundle)
 	{
@@ -62,11 +68,20 @@ public class NetworkTestApp extends Activity {
 			else
 			{
 				tv.append("Failed to connect to server....\n");
-			}		
+			}	
 			
-			binder.requestLatency();		
+			timer.schedule(new TimerTask() {
+				@Override
+				public void run() {				
+					if(networkBound)
+						binder.requestLatency();
+				}
+				
+			}, recurranceDelay * 1000, recurranceDelay * 1000);
+			
 		}
-	};
+	};	
+	
 	
 	class eventHandler extends Handler{
 		
