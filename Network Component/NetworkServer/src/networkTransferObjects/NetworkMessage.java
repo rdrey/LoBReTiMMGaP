@@ -28,7 +28,9 @@ public class NetworkMessage implements Serializable
         GAMESTATE_REQUEST_MESSAGE, //Server only
         TERMINATION_REQUEST_MESSAGE, //Server Only
         PEER_LIST_MESSAGE, //Client only
-        PEER_LIST_REQUEST_MESSAGE //Server Only
+        PEER_LIST_REQUEST_MESSAGE, //Server Only
+        LATENCY_REQUEST_MESSAGE, //Server & Client.
+        LATENCY_RESPONSE_MESSAGE //Server & Client
 
     }
 
