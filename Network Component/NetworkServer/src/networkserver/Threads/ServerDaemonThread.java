@@ -236,9 +236,11 @@ public abstract class ServerDaemonThread extends Thread{
                     {
                             fireEvent(new NetworkEvent(this, (latencyEndTime - latencyStartTime)),  LatencyUpdateListener.class);
                     }
+                    break;
                 default:
                     fireEvent(new NetworkEvent(this, msg),  UnknownMessageTypeReceivedListener.class);
                     //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
+                    break;
 
             }
         }
