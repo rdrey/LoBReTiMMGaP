@@ -40,6 +40,15 @@ public class NetworkComBinder extends Binder {
 	}
 	
 	/**
+	 * Requests the latency from the network component. Result is 
+	 * returned as a network event.
+	 */
+	public void requestLatency()
+	{
+		networkThread.requestNetworkLatency();
+	}
+	
+	/**
 	 * Attempts to send a game update message to the server.
 	 * @param msg The message to send to the game server
 	 * @return True if message send succeeded, false otherwise.
