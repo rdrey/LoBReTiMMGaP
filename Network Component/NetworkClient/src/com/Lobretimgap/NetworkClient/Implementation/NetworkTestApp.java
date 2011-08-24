@@ -62,10 +62,9 @@ public class NetworkTestApp extends Activity {
 			else
 			{
 				tv.append("Failed to connect to server....\n");
-			}
+			}		
 			
-			
-			
+			binder.requestLatency();		
 		}
 	};
 	
@@ -84,11 +83,12 @@ public class NetworkTestApp extends Activity {
 				case CONNECTION_LOST:
 					tv.append("Connect to host lost...\n");
 					break;
-				case LATENCY_UPDATE_RECEIVED:
-					tv.append("Latency reported as: " + ((NetworkEvent)msg.obj).getMessage());
 					
+				case LATENCY_UPDATE_RECEIVED:
+					tv.append("Latency reported as: " + ((NetworkEvent)msg.obj).getMessage()+"ms\n");
+					break;					
 				default:
-					super.handleMessage(msg);
+					tv.append("Unrecognised event of type "+ NetworkComBinder.EventType.values()[msg.what] + " received.");
 			}
 		}
 	}
