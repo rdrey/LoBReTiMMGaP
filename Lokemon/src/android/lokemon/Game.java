@@ -11,6 +11,7 @@ import java.io.*;
 import com.Lobretimgap.NetworkClient.NetworkComBinder;
 import com.Lobretimgap.NetworkClient.NetworkComService;
 import com.Lobretimgap.NetworkClient.NetworkVariables;
+import networkTransferObjects.NetworkMessage;
 
 public class Game {
 	
@@ -20,7 +21,7 @@ public class Game {
 	private boolean connected;
 	private boolean networkBound;
 	private NetworkComBinder binder;
-	private ServiceConnection service;
+	private ServiceConnection ser;
 	private final Messenger eventMessenger = new Messenger(new eventHandler());
 	
 	private Game()
@@ -58,7 +59,8 @@ public class Game {
 	
 	public static void endGame(Activity current)
 	{
-		
+		if(game.binder != null)game.binder.sendTerminationRequest(new NetworkMessage("Bye bye!"));
+		else Log.e(NetworkVariables.TAG, "Binder is null");
 	}
 	
 	public static void pauseGame(Activity current)
@@ -70,10 +72,11 @@ public class Game {
 	{
 		// bind network component
 		Intent intent = new Intent(current, NetworkComService.class);
-		service = new ServiceConnection() {
+		ser = new ServiceConnection() {
 			
 			public void onServiceDisconnected(ComponentName name) {
-				networkBound = false;			
+				networkBound = false;
+				Log.i(NetworkVariables.TAG, "Service disconnected");
 			}
 			
 			public void onServiceConnected(ComponentName name, IBinder service) {
@@ -82,10 +85,10 @@ public class Game {
 				binder = (NetworkComBinder)service;
 				networkBound = true;
 				binder.registerMessenger(eventMessenger);
-				connected = binder.ConnectToServer();		
+				binder.ConnectToServer();		
 			}
 		};
-		current.bindService(intent, service, Context.BIND_AUTO_CREATE);
+		current.bindService(intent, ser, Context.BIND_AUTO_CREATE);
 	}
 	
 	private class eventHandler extends Handler{
@@ -100,7 +103,11 @@ public class Game {
 					break;	
 				case CONNECTION_LOST:
 					connected = false;
-					break;					
+					break;
+				case CONNECTION_FAILED:
+					connected = false;
+					GameScreen.status.setText("Connection failed");
+					break;
 			}
 		}
 	}

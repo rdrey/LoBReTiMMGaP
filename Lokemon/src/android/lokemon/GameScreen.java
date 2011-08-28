@@ -21,5 +21,10 @@ public class GameScreen extends Activity {
     	super.onStart();
     	Game.startGame(this);
     }
-
+    
+    public void onStop()
+    {
+    	Game.endGame(this);
+    	super.onStop();
+    }
 }
