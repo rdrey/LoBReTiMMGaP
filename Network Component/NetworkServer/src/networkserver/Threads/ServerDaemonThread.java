@@ -4,16 +4,16 @@ import java.awt.AWTEvent;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.ObjectInputStream;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.BufferOverflowException;
 import java.util.Vector;
 import javax.swing.event.EventListenerList;
-import networkserver.DataContainers.NetworkMessage;
-import networkserver.DataContainers.PlayerRegistrationMessage;
+import networkTransferObjects.NetworkMessage;
+import networkTransferObjects.PlayerRegistrationMessage;
 import networkserver.EventListeners.*;
 import networkserver.Events.NetworkEvent;
 import networkserver.Peer2Peer.ClientPeer;
+import networkserver.ServerVariables;
 
 /**
  * @date 2011/08/02
@@ -25,6 +25,11 @@ public abstract class ServerDaemonThread extends Thread{
     private ServerDaemonWriteoutThread out;
     private ObjectInputStream in;
     private boolean stopOperation = false;
+
+    public int playerID;
+    public String playerName;
+
+    private long latencyStartTime, latencyEndTime;
 
     private EventListenerList listeners = new EventListenerList();
 
@@ -42,36 +47,65 @@ public abstract class ServerDaemonThread extends Thread{
     public void setSocket(Socket acceptedSocket) throws IOException
     {
         socket = acceptedSocket;
-        in = new ObjectInputStream(socket.getInputStream());
         out = new ServerDaemonWriteoutThread(acceptedSocket);
+        in = new ObjectInputStream(socket.getInputStream());        
         out.start();
     }
 
-    /*
+    /**
      * Called once joining information for the player has been received.
      * First method called after the client has connected. Use
      * this to add player information to the game engine/world.
      */
-    protected abstract void registerPlayer(String playerName, int playerID, InetAddress clientAddress);
+    protected abstract void registerPlayer(PlayerRegistrationMessage initialMessage);
+    
 
-    /*
-     * Called after RegisterPlayer, meant to send game state initialization
-     * information to the client.
+    /**
+     * Called after RegisterPlayer. This is used to obtain the initial game state
+     * in the form of a networkMessage. This is then immediatly passed on to the
+     * client.
      */
-    protected abstract void sendInitialState();
+    protected  abstract NetworkMessage getInitialState();
 
-    /*
+    /**
      * Method which must return a list of peers that the client can establish
      * peer to peer connections with (or an empty list to disable P2P connections).
      * Guarenteed to only be called after registerPlayer.
      */
-    protected abstract Vector<ClientPeer> getPeerList();
+    protected abstract Vector<ClientPeer> getPeerList(int playerId, String playerName);
 
-    
+    /**
+     * Will make a request to the server to check out what kind of latency there is between android device and server.
+     * Response will come as a latencyUpdateEvent.
+     */
+    public void requestNetworkLatency()
+    {
+        NetworkMessage msg = new NetworkMessage("Requesting Latency check");
+        msg.setMessageType(NetworkMessage.MessageType.LATENCY_REQUEST_MESSAGE);
+        writeOut(msg);
+        latencyStartTime = System.currentTimeMillis();
+    }
+
+    /**
+     * Called after RegisterPlayer, meant to send game state initialization
+     * information to the client.
+     */
+    private  void sendInitialState()
+    {
+        NetworkMessage message = getInitialState();
+        message.setMessageType(NetworkMessage.MessageType.INITIAL_GAME_STATE_MESSAGE);
+        writeOut(message);
+    }
 
     private void sendPeerList()
     {
-        Vector<ClientPeer> peers = getPeerList();
+        Vector<ClientPeer> peers = getPeerList(playerID, playerName);
+        //Set the network address on peers, in case implementer didnt.
+        for(int i = 0; i < peers.size(); i++)
+        {
+            int playerId = peers.elementAt(i).playerId;
+            peers.elementAt(i).networkAddress = ServerVariables.playerNetworkAddressList.get(new Integer(playerId));
+        }
         //Now send these to the client
         NetworkMessage message = new NetworkMessage("Peer list transfer");
         message.setMessageType(NetworkMessage.MessageType.PEER_LIST_MESSAGE);
@@ -144,7 +178,7 @@ public abstract class ServerDaemonThread extends Thread{
             catch(IOException e)
             {
                 System.err.println("Error occured while reading from thread : "+e);
-                fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
+                fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
                 this.shutdownThread();                
                 break;
             }
@@ -163,10 +197,13 @@ public abstract class ServerDaemonThread extends Thread{
             switch(msg.getMessageType())
             {
                 case UPDATE_MESSAGE:
-                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  UpdateReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, msg),  UpdateReceivedListener.class);
                     break;
                 case REQUEST_MESSAGE:
-                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  RequestReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, msg),  RequestReceivedListener.class);
+                    break;
+                case INITIAL_GAME_STATE_MESSAGE:
+                    //Dealt with on the client side.
                     break;
                 case PARTIAL_GAMESTATE_UPDATE_MESSAGE:
                     //Not used on server side. This flag is used to notify the client of incoming partial game state
@@ -175,27 +212,52 @@ public abstract class ServerDaemonThread extends Thread{
                     //Similarly, this is used exclusivly on the client side.
                     break;
                 case GAMESTATE_REQUEST_MESSAGE:
-                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  GameStateRequestReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, msg),  GameStateRequestReceivedListener.class);
                     break;
                 case TERMINATION_REQUEST_MESSAGE:
-                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  TerminationRequestReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, msg),  TerminationRequestReceivedListener.class);
+                    break;
+                case PEER_LIST_MESSAGE:
+                    //Client uses this to update its peer list.
                     break;
                 case PEER_LIST_REQUEST_MESSAGE:
                     sendPeerList();
                     break;
+                case LATENCY_REQUEST_MESSAGE:
+                    //Respond by sending a latency response message asap.
+                    NetworkMessage latMsg = new NetworkMessage("Latency Response");
+                    latMsg.setMessageType(NetworkMessage.MessageType.LATENCY_RESPONSE_MESSAGE);
+                    writeOut(latMsg);
+                    break;
+                case LATENCY_RESPONSE_MESSAGE:
+                    //WE have received a response to an earlier latency request.
+                    latencyEndTime = System.currentTimeMillis();
+                    if(latencyStartTime < latencyEndTime)
+                    {
+                            fireEvent(new NetworkEvent(this, (latencyEndTime - latencyStartTime)),  LatencyUpdateListener.class);
+                    }
+                    break;
                 default:
-                    fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, message),  UnknownMessageTypeReceivedListener.class);
+                    fireEvent(new NetworkEvent(this, msg),  UnknownMessageTypeReceivedListener.class);
                     //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
+                    break;
 
             }
         }
         else if(message instanceof PlayerRegistrationMessage)
         {
             PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;
-            registerPlayer(regMessage.playerName, regMessage.playerID, socket.getInetAddress());
+            playerID = ServerVariables.playerNetworkAddressList.size();
+            ServerVariables.playerNetworkAddressList.add(socket.getInetAddress());            
+            playerName = regMessage.playerName;
+            PlayerRegistrationMessage reply = new PlayerRegistrationMessage(playerID);
+            writeOut(reply);
+            registerPlayer(regMessage);
+
+            
             sendInitialState();
             sendPeerList();
-            fireEvent(new NetworkEvent(this, AWTEvent.RESERVED_ID_MAX + 1, "Connection successfully established"),  ConnectionEstablishedListener.class);
+            fireEvent(new NetworkEvent(this, "Connection successfully established"),  ConnectionEstablishedListener.class);
         }
         else
         {
@@ -221,6 +283,8 @@ public abstract class ServerDaemonThread extends Thread{
         try
         {
             out.shutdownThread();
+            stopOperation = true;
+            this.interrupt();
             socket.close();
         }
         catch(IOException e)
@@ -228,8 +292,7 @@ public abstract class ServerDaemonThread extends Thread{
             //We dont really care if the socket failed to close correctly.
             System.err.println("Socket failed to close correctly. \n"+e);
         }
-        stopOperation = true;
-        this.interrupt();
+        
         
     }
 
