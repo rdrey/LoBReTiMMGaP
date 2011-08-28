@@ -14,7 +14,7 @@ import networkserver.ServerCustomisation;
  */
 public class ServerCoreThread  extends Thread {
 
-    public final int port = 2828;
+    
     private ServerSocket socket;
     ServerCustomisation customSettings;
 
@@ -23,7 +23,7 @@ public class ServerCoreThread  extends Thread {
         try
         {
             customSettings = customisation;
-            socket = new ServerSocket(port);
+            socket = new ServerSocket(ServerCustomisation.port);
         }catch(IOException e)
         {
             System.err.println("Error aquiring port: "+e);
