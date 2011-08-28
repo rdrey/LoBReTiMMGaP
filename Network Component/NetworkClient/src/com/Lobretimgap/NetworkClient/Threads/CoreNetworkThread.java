@@ -43,7 +43,7 @@ public abstract class CoreNetworkThread extends Thread
 	}
 	
 	/**
-	 * Asyncronously connects to the server
+	 * Asynchronously connects to the server
 	 */
 	public void connect()
 	{
@@ -61,6 +61,8 @@ public abstract class CoreNetworkThread extends Thread
 			in = new ObjectInputStream(socket.getInputStream());
 			out = new NetworkWriteThread(socket);		
 			out.start();
+			
+			fireEvent(new NetworkEvent(this, "Connection successfully established!"), ConnectionEstablishedListener.class);
 		}
 		catch(UnknownHostException e)
 		{
@@ -200,33 +202,44 @@ public abstract class CoreNetworkThread extends Thread
 		{
 			connectToServer();
 		}
-		isRunning = true;
-		registerWithServer(getPlayerRegistrationInformation());
-        //Do running stuff        
-        while(!stopOperation)
-        {
-            try
-            {
-                Object data = in.readObject();                
-                processNetworkMessage(data);
-            }
-            catch(InterruptedIOException e)
-            {
-                //We expect that something wants the threads attention. This is
-                //used to immediately end the thread in shutdownThread().
-            }
-            catch(IOException e)
-            {
-                System.err.println("Error occured while reading from thread : "+e);
-                fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
-                this.shutdownThread();                
-                break;
-            }
-            catch(ClassNotFoundException e)
-            {
-                System.err.println("Unrecognised class object received from client - ignoring");
-            } 
-        }
+		if(connected)
+		{
+			isRunning = true;
+			registerWithServer(getPlayerRegistrationInformation());
+	        //Do running stuff        
+	        while(!stopOperation)
+	        {
+	            try
+	            {
+	                Object data = in.readObject();                
+	                processNetworkMessage(data);
+	            }
+	            catch(InterruptedIOException e)
+	            {
+	                //We expect that something wants the threads attention. This is
+	                //used to immediately end the thread in shutdownThread().
+	            }
+	            catch(IOException e)
+	            {
+	                System.err.println("Error occured while reading from thread : "+e);
+	                fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
+	                this.shutdownThread();                
+	                break;
+	            }
+	            catch(ClassNotFoundException e)
+	            {
+	                System.err.println("Unrecognised class object received from client - ignoring");
+	            } 
+	            catch(NullPointerException e)
+	            {
+	            	Log.e(NetworkVariables.TAG, "Null Pointer Exception in run loop.", e);
+	            }
+	        }
+		}
+		else
+		{
+			shutdownThread();
+		}
     }
 	
 	private void processNetworkMessage(Object message)
@@ -297,6 +310,7 @@ public abstract class CoreNetworkThread extends Thread
 		
 		//And now replace them with a new set of peers. 
 		peers = (Vector<ClientPeer>)msg.getDataObject("peerList");
+		Log.d(NetworkVariables.TAG, "New Peer list received.");
 		
 		//Now try to connect to the new list of peers
 	}
@@ -308,21 +322,31 @@ public abstract class CoreNetworkThread extends Thread
     {
         //Later perhaps we can more gracefully deal with this. Perhaps add wait
         //a little while and then try again?
-        if(!out.writeMessage(object))
-        {
-            throw new BufferOverflowException();
-        }
+    	try
+    	{
+	        if(!out.writeMessage(object))
+	        {
+	            throw new BufferOverflowException();
+	        }
+    	}
+    	catch(NullPointerException e)
+    	{
+    		//No idea why this sometimes happens
+    	}
     }
+    	
 
     public void shutdownThread()
     {
         try
         {
         	isRunning = false;
-            out.shutdownThread();
+        	if(out != null)
+        		out.shutdownThread();
             stopOperation = true;
             this.interrupt();
-            socket.close();
+            if(socket != null)
+            	socket.close();
             connected = false;
         }
         catch(IOException e)
