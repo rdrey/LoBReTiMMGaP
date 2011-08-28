@@ -28,6 +28,7 @@ public abstract class CoreNetworkThread extends Thread
 	private ObjectInputStream in;
     private boolean stopOperation = false;
     public boolean isRunning = false;
+    private int playerId;
     
     private long latencyStartTime, latencyEndTime;
     
@@ -257,6 +258,10 @@ public abstract class CoreNetworkThread extends Thread
                     break;
 
             }
+        } else if(message instanceof PlayerRegistrationMessage)
+        {
+        	playerId = ((PlayerRegistrationMessage)message).playerID;
+        	Log.i(NetworkVariables.TAG, "Received player ID of "+playerId+" from the server.");
         }
 	}
 	

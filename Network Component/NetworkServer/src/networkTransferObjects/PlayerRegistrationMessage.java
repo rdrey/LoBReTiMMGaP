@@ -21,18 +21,25 @@ public class PlayerRegistrationMessage implements Serializable{
 	 */
 	private static final long serialVersionUID = 6520835168631802917L;
 	public String playerName;
-    public int playerID;
+        public int playerID;
 
     private HashMap<String, String> strings;
     private HashMap<String, Integer> ints;
     private HashMap<String, Object> objects;
 
-    public PlayerRegistrationMessage(int playerId, String playerName)
-    {
-    	playerID = playerId;
+    public PlayerRegistrationMessage(String playerName)
+    {    	
     	this.playerName = playerName;
 
     	strings = new HashMap<String, String>(ServerCustomisation.initialNetworkMessageMapSize);
+        ints = new HashMap<String, Integer>(ServerCustomisation.initialNetworkMessageMapSize);
+        objects = new HashMap<String, Object>(ServerCustomisation.initialNetworkMessageMapSize);
+    }
+    
+    public PlayerRegistrationMessage(int playerId)
+    {
+        playerID = playerId;
+        strings = new HashMap<String, String>(ServerCustomisation.initialNetworkMessageMapSize);
         ints = new HashMap<String, Integer>(ServerCustomisation.initialNetworkMessageMapSize);
         objects = new HashMap<String, Object>(ServerCustomisation.initialNetworkMessageMapSize);
     }
