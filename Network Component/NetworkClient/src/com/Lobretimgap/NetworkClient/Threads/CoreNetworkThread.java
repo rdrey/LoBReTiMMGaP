@@ -28,6 +28,7 @@ public abstract class CoreNetworkThread extends Thread
 	private ObjectInputStream in;
     private boolean stopOperation = false;
     public boolean isRunning = false;
+    private boolean connected = false;
     private int playerId;
     
     private long latencyStartTime, latencyEndTime;
@@ -41,14 +42,24 @@ public abstract class CoreNetworkThread extends Thread
 		peers = new Vector<ClientPeer>();
 	}
 	
-	public boolean connect()
+	/**
+	 * Asyncronously connects to the server
+	 */
+	public void connect()
 	{
+		if(!connected)
+			this.start();
+	}
+	
+	private void connectToServer()
+	{
+		boolean success = true;
 		try
 		{
 			Inet4Address hostAddress = (Inet4Address)InetAddress.getByName(NetworkVariables.hostname);
 			socket = new Socket(hostAddress, NetworkVariables.port);
 			in = new ObjectInputStream(socket.getInputStream());
-			out = new NetworkWriteThread(socket);
+			out = new NetworkWriteThread(socket);		
 			out.start();
 			
 			fireEvent(new NetworkEvent(this, "Connection successfully established!"), ConnectionEstablishedListener.class);
@@ -56,15 +67,25 @@ public abstract class CoreNetworkThread extends Thread
 		catch(UnknownHostException e)
 		{
 			Log.e(NetworkVariables.TAG, "Failed to resolve host.", e);	
-			return false;
+			success = false;
 		}
 		catch(IOException e)
 		{
 			Log.e(NetworkVariables.TAG, "Error while initializing connection to server.", e);	
-			return false;
+			success = false;
+		}
+		finally
+		{
+			if(!success)
+			{
+				fireEvent(new NetworkEvent(this, "Failed to connect to server... See log for details."), ConnectionFailedListener.class);				
+			}
+			else
+			{
+				connected = true;
+			}
 		}
 		Log.i(NetworkVariables.TAG, "Connection to server has been established.");
-		return true;
 	}
 	
 	
@@ -176,7 +197,11 @@ public abstract class CoreNetworkThread extends Thread
     
 	@Override
     public void run()
-	{		
+	{
+		if(!connected)
+		{
+			connectToServer();
+		}
 		isRunning = true;
 		registerWithServer(getPlayerRegistrationInformation());
         //Do running stuff        
@@ -301,6 +326,7 @@ public abstract class CoreNetworkThread extends Thread
             stopOperation = true;
             this.interrupt();
             socket.close();
+            connected = false;
         }
         catch(IOException e)
         {
