@@ -216,6 +216,7 @@ public class NetworkComBinder extends Binder {
 		addListener(ConnectionEstablishedListener.class, new ConnectionEstablishedListener() {			
 			public void EventOccured(NetworkEvent e) {					
 				try {
+					isConnected = true;
 					eventMessenger.send(Message.obtain(null, EventType.CONNECTION_ESTABLISHED.ordinal(), e));
 				} catch (RemoteException e1) {					
 					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
@@ -226,6 +227,7 @@ public class NetworkComBinder extends Binder {
 		addListener(ConnectionLostListener.class, new ConnectionLostListener() {			
 			public void EventOccured(NetworkEvent e) {
 				try {
+					isConnected = false;
 					eventMessenger.send(Message.obtain(null, EventType.CONNECTION_LOST.ordinal(), e));
 				} catch (RemoteException e1) {					
 					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);

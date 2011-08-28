@@ -29,26 +29,25 @@ public final class R {
         public static final int squirtle_selected=0x7f02000f;
     }
     public static final class id {
-        public static final int avatar_label=0x7f050004;
-        public static final int avatars=0x7f050005;
-        public static final int back_button=0x7f050009;
-        public static final int battle=0x7f050000;
-        public static final int bulbasaur=0x7f05000c;
-        public static final int charmander=0x7f05000d;
-        public static final int continue_button=0x7f050012;
-        public static final int leaf=0x7f050006;
-        public static final int new_button=0x7f050013;
-        public static final int next_button=0x7f050008;
-        public static final int nick_field=0x7f050003;
-        public static final int nick_label=0x7f050002;
-        public static final int poke_description=0x7f05000f;
-        public static final int poke_label=0x7f05000a;
-        public static final int poke_stats=0x7f050010;
-        public static final int pokemon=0x7f05000b;
-        public static final int red=0x7f050007;
-        public static final int squirtle=0x7f05000e;
-        public static final int status=0x7f050001;
-        public static final int welcome_text=0x7f050011;
+        public static final int avatar_label=0x7f050003;
+        public static final int avatars=0x7f050004;
+        public static final int back_button=0x7f050008;
+        public static final int bulbasaur=0x7f05000b;
+        public static final int charmander=0x7f05000c;
+        public static final int continue_button=0x7f050011;
+        public static final int leaf=0x7f050005;
+        public static final int new_button=0x7f050012;
+        public static final int next_button=0x7f050007;
+        public static final int nick_field=0x7f050002;
+        public static final int nick_label=0x7f050001;
+        public static final int poke_description=0x7f05000e;
+        public static final int poke_label=0x7f050009;
+        public static final int poke_stats=0x7f05000f;
+        public static final int pokemon=0x7f05000a;
+        public static final int red=0x7f050006;
+        public static final int squirtle=0x7f05000d;
+        public static final int status=0x7f050000;
+        public static final int welcome_text=0x7f050010;
     }
     public static final class layout {
         public static final int game=0x7f030000;

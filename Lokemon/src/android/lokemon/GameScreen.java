@@ -6,7 +6,7 @@ import android.widget.TextView;
 
 public class GameScreen extends Activity {
 	
-	public static TextView status;
+	private TextView status;
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -24,7 +24,12 @@ public class GameScreen extends Activity {
     
     public void onStop()
     {
-    	Game.endGame(this);
+    	Game.endGame();
     	super.onStop();
+    }
+    
+    public void setStatusText(String text)
+    {
+    	status.setText(text);
     }
 }

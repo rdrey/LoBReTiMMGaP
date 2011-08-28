@@ -2,6 +2,7 @@ package com.Lobretimgap.NetworkClient.Lokemon;
 
 import networkTransferObjects.NetworkMessage;
 import networkTransferObjects.PlayerRegistrationMessage;
+import android.lokemon.Game;
 import android.lokemon.Trainer;
 import android.util.Log;
 
@@ -18,6 +19,7 @@ public class CoreNetworkThreadLokemon extends CoreNetworkThread {
 	@Override
 	public void processInitialGameState(NetworkMessage message) {
 		Log.d(NetworkVariables.TAG, "Received initial game state. Message: "+message.getMessage());
+		if (Integer.parseInt(message.getMessage()) > 1) Game.game.initiateBattle(); 
 	}
 
 }
