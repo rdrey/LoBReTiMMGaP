@@ -1,0 +1,94 @@
+[
+	{
+		"index":0,
+		"name":"Tackle"
+	},
+	{
+		"index":1,
+		"name":"Growl"
+	},
+	{
+		"index":2,
+		"name":"Leech Seed"
+	},
+	{
+		"index":3,
+		"name":"Vine Whip"
+	},
+	{
+		"index":4,
+		"name":"Poison Powder"
+	},
+	{
+		"index":5,
+		"name":"Razor Leaf"
+	},
+	{
+		"index":6,
+		"name":"Growth"
+	},
+	{
+		"index":7,
+		"name":"Sleep Powder"
+	},
+	{
+		"index":8,
+		"name":"Solar Beam"
+	},
+	{
+		"index":9,
+		"name":"Scratch"
+	},
+	{
+		"index":10,
+		"name":"Ember"
+	},
+	{
+		"index":11,
+		"name":"Leer"
+	},
+	{
+		"index":12,
+		"name":"Rage"
+	},
+	{
+		"index":13,
+		"name":"Slash"
+	},
+	{
+		"index":14,
+		"name":"Flamethrower"
+	},
+	{
+		"index":15,
+		"name":"Fire Spin"
+	},
+	{
+		"index":16,
+		"name":"Tail Whip"
+	},
+	{
+		"index":17,
+		"name":"Bubble"
+	},
+	{
+		"index":18,
+		"name":"Water Gun"
+	},
+	{
+		"index":19,
+		"name":"Bite"
+	},
+	{
+		"index":20,
+		"name":"Withdraw"
+	},
+	{
+		"index":21,
+		"name":"Skull Bash"
+	},
+	{
+		"index":22,
+		"name":"Hydro Pump"
+	}
+]

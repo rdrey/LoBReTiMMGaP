@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent" android:layout_gravity="center">
+    <TextView android:layout_alignParentTop="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/nick_label" android:text="Enter your trainer name:" android:layout_marginBottom="8dip" android:layout_marginTop="8dip" android:visibility="gone"></TextView>
+    <EditText android:layout_below="@+id/nick_label" android:layout_alignLeft="@+id/nick_label" android:id="@+id/nick_field" android:layout_width="224dip" android:layout_height="48dip" android:visibility="gone"></EditText>
+    <TextView android:layout_below="@+id/nick_field" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignLeft="@+id/nick_field" android:id="@+id/avatar_label" android:text="Select an avatar:" android:layout_marginTop="8dip" android:layout_marginBottom="8dip" android:visibility="gone"></TextView>
+    <RadioGroup android:layout_below="@+id/avatar_label" android:layout_height="wrap_content" android:layout_alignLeft="@+id/avatar_label" android:id="@+id/avatars" android:orientation="horizontal" android:layout_width="match_parent" android:visibility="gone">
+        <RadioButton android:layout_height="wrap_content" android:layout_width="wrap_content" android:checked="true" android:id="@+id/leaf" android:button="@drawable/leaf_radio" android:layout_weight="0.5"></RadioButton>
+        <RadioButton android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/red" android:button="@drawable/red_radio" android:layout_weight="0.5"></RadioButton>
+    </RadioGroup>
+    <Button android:layout_alignParentBottom="true" android:layout_height="wrap_content" android:id="@+id/next_button" android:layout_marginBottom="8dip" android:layout_marginTop="8dip" android:text="Next" android:layout_marginRight="8dip" android:layout_marginLeft="8dip" android:layout_alignParentRight="true" android:layout_width="80dip"></Button>
+    <Button android:layout_alignParentBottom="true" android:layout_height="wrap_content" android:id="@+id/back_button" android:layout_marginBottom="8dip" android:layout_marginLeft="8dip" android:layout_marginRight="8dip" android:layout_marginTop="8dip" android:layout_alignParentLeft="true" android:text="Back" android:layout_width="80dip"></Button>
+    <TextView android:layout_height="wrap_content" android:layout_alignParentLeft="true" android:layout_width="wrap_content" android:id="@+id/poke_label" android:text="Select your first Pokémon:" android:layout_marginBottom="8dip" android:layout_marginTop="8dip"></TextView>
+    <RadioGroup android:layout_height="wrap_content" android:layout_below="@+id/poke_label" android:layout_alignLeft="@+id/poke_label" android:id="@+id/pokemon" android:orientation="horizontal" android:layout_width="match_parent">
+        <RadioButton android:layout_height="wrap_content" android:layout_width="wrap_content" android:checked="true" android:id="@+id/bulbasaur" android:layout_weight="0.333" android:button="@drawable/bulbasaur_radio"></RadioButton>
+        <RadioButton android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/charmander" android:layout_weight="0.333" android:button="@drawable/charmander_radio"></RadioButton>
+        <RadioButton android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/squirtle" android:layout_weight="0.333" android:button="@drawable/squirtle_radio"></RadioButton>
+    </RadioGroup>
+    <TextView android:layout_height="wrap_content" android:layout_alignParentLeft="true" android:id="@+id/poke_description" android:layout_alignLeft="@+id/pokemon" android:layout_below="@+id/pokemon" android:layout_marginBottom="8dip" android:layout_marginTop="8dip" android:text="Pokémon description" android:layout_width="match_parent" android:gravity="center_horizontal"></TextView>
+    <TextView android:layout_height="wrap_content" android:layout_below="@+id/poke_description" android:layout_width="wrap_content" android:layout_alignLeft="@+id/poke_description" android:layout_alignRight="@+id/poke_description" android:id="@+id/poke_stats" android:gravity="center" android:text="Pokémon stats"></TextView>
+</RelativeLayout>
