@@ -7,7 +7,6 @@ import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
-import android.widget.TextView.BufferType;
 
 public class IntroScreen extends Activity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
 
@@ -76,7 +75,6 @@ public class IntroScreen extends Activity implements View.OnClickListener, Compo
     			// create new player
     			new Trainer(((EditText)first[1]).getText().toString(), (bulbasaur.isChecked()?0:(charmander.isChecked()?3:6)));
     			Trainer.saveTrainer(this);
-    			// register player with server
     			Intent intent = new Intent(v.getContext(), GameScreen.class);
                 startActivityForResult(intent, 0);
     			

@@ -32,6 +32,7 @@ public class LaunchScreen extends Activity implements View.OnClickListener{
     
     public void onStart () 
     {
+    	Game.loadGameData(this);
     	// check if a player already exists
         if (Trainer.player == null)
         {
@@ -53,14 +54,12 @@ public class LaunchScreen extends Activity implements View.OnClickListener{
     	if (v == new_button)
     	{
     		Log.d("Input", "'New game' pressed");
-    		Game.loadGameData(this);
     		Intent intent = new Intent(v.getContext(), IntroScreen.class);
             startActivityForResult(intent, 0);
     	}
     	else if (v == continue_button)
     	{
     		Log.d("Input", "'Continue' pressed");
-    		Game.loadGameData(this);
     		Intent intent = new Intent(v.getContext(), GameScreen.class);
             startActivityForResult(intent, 0);
     	}
