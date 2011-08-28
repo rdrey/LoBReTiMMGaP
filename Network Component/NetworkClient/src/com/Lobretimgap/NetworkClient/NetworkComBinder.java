@@ -23,21 +23,11 @@ public class NetworkComBinder extends Binder {
 	
 	/**
 	 * Uses the connection information in NetworkVariables to try 
-	 * and establish a connection with the server.
-	 * @return True if succeded in establishing the connection, false otherwise.
+	 * and establish a connection with the server.	
 	 */
-	public boolean ConnectToServer()
+	public void ConnectToServer()
 	{
-		if(networkThread.connect())
-		{
-			isConnected = true;
-			networkThread.start();
-			return true;
-		}
-		else
-		{
-			return false;
-		}		
+		networkThread.connect();
 	}
 	
 	/**
@@ -204,6 +194,7 @@ public class NetworkComBinder extends Binder {
 	{
 		CONNECTION_ESTABLISHED,
 		CONNECTION_LOST,
+		CONNECTION_FAILED,
 		GAMESTATE_RECEIVED,
 		LATENCY_UPDATE_RECEIVED,
 		PARTIAL_GAMESTATE_RECEIVED,
@@ -236,6 +227,16 @@ public class NetworkComBinder extends Binder {
 			public void EventOccured(NetworkEvent e) {
 				try {
 					eventMessenger.send(Message.obtain(null, EventType.CONNECTION_LOST.ordinal(), e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}					
+			}
+		});
+		
+		addListener(ConnectionFailedListener.class, new ConnectionFailedListener() {			
+			public void EventOccured(NetworkEvent e) {
+				try {
+					eventMessenger.send(Message.obtain(null, EventType.CONNECTION_FAILED.ordinal(), e));
 				} catch (RemoteException e1) {					
 					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
 				}					
