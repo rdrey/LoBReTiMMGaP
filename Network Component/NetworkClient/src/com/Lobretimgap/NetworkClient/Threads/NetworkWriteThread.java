@@ -3,6 +3,7 @@ package com.Lobretimgap.NetworkClient.Threads;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.BufferOverflowException;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import networkTransferObjects.NetworkMessage;
@@ -13,6 +14,7 @@ import com.Lobretimgap.NetworkClient.NetworkVariables;
 import com.dyuproject.protostuff.LinkedBuffer;
 import com.dyuproject.protostuff.ProtostuffIOUtil;
 import com.dyuproject.protostuff.Schema;
+import com.dyuproject.protostuff.runtime.RuntimeSchema;
 
 /**
  * This thread allows the user to write an object to the client asynchronously.
@@ -40,30 +42,30 @@ public class NetworkWriteThread extends Thread
 
     //Tries to add the message to the queue of messages waiting to be sent to
     //the client. If the message queue is full, it will return false, otherwise true.
-    public boolean writeMessage(NetworkMessage message)
+    public void writeMessage(NetworkMessage message) throws BufferOverflowException
     {
     	if(message != null)
     	{
-    		return messageQueue.offer(message);
-    	}
-    	else
-    	{
-    		return false;
-    	}
+    		if(!messageQueue.offer(message))
+    		{
+    			if(!socket.isClosed())
+    				throw new BufferOverflowException();
+    		}
+    	}    	
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+   
 	@Override
     public void run()
     {
         while(!stopOperation)
         {
             try
-            {
-                NetworkMessage msg = messageQueue.take();
-                Schema schema = msg.getSchema();
-
+            {            	
+                NetworkMessage msg = messageQueue.take();                
+                Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class);
                 ProtostuffIOUtil.writeTo(os, msg, schema, buffer);
+                
             }
             catch(IOException e)
             {

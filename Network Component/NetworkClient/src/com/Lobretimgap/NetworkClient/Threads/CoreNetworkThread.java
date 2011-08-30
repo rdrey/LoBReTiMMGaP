@@ -4,11 +4,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.ObjectInputStream;
+import java.lang.reflect.Array;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.BufferOverflowException;
+import java.util.Arrays;
 import java.util.Vector;
 
 import networkTransferObjects.NetworkMessage;
@@ -77,7 +79,7 @@ public abstract class CoreNetworkThread extends Thread
 		}
 		catch(IOException e)
 		{
-			Log.e(NetworkVariables.TAG, "Error while initializing connection to server.", e);	
+			Log.e(NetworkVariables.TAG, "Unable to connect to server.");	
 			success = false;
 		}
 		finally
@@ -212,16 +214,41 @@ public abstract class CoreNetworkThread extends Thread
 		if(connected)
 		{
 			isRunning = true;
-			registerWithServer(getPlayerRegistrationInformation());
+			//registerWithServer(getPlayerRegistrationInformation());
 	        //Do running stuff        
 	        while(!stopOperation)
 	        {
 	            try
 	            {
-	            	NetworkMessage msg = null;
-	            	Schema schema = RuntimeSchema.getSchema(NetworkMessage.class);
-	            	ProtostuffIOUtil.mergeFrom(in, msg, schema, buffer);                             
-	                processNetworkMessage(msg);
+	            	NetworkMessage msg = new NetworkMessage();	            	
+	            	Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class);	            	
+                                	
+	            	 byte [] bytes = new byte[32];
+	                 int bytesRead = 0;
+	                 do{
+	                     if(bytesRead == bytes.length)
+	                     {
+	                         byte [] newBytes = copyOf(bytes, 2*bytes.length);
+	                         bytes = newBytes;
+	                     }
+	                     bytesRead += in.read(bytes, bytesRead, bytes.length - bytesRead);
+	                 }while(bytesRead == bytes.length);                    
+                    
+                    
+                    //If this isnt the end of the stream
+                    if(bytesRead != -1)
+                    {
+                    	Log.i(NetworkVariables.TAG, "Mid receive, byte buffer at "+bytesRead);
+                        ProtostuffIOUtil.mergeFrom(copyOf(bytes, bytesRead), msg, schema);                        
+                        processNetworkMessage(msg);
+                    }
+                    else
+                    {
+                        System.err.println("End of stream!");
+                        fireEvent(new NetworkEvent(this, "Connection to Server lost!\n"),  ConnectionLostListener.class);                        shutdownThread();
+                        
+                    }
+	                
 	            }
 	            catch(InterruptedIOException e)
 	            {
@@ -231,7 +258,7 @@ public abstract class CoreNetworkThread extends Thread
 	            catch(IOException e)
 	            {
 	                System.err.println("Error occured while reading from thread : "+e);
-	                fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
+	                fireEvent(new NetworkEvent(this, "Connection to Server lost!\n" + e),  ConnectionLostListener.class);
 	                this.shutdownThread();                
 	                break;
 	            }            
@@ -250,6 +277,31 @@ public abstract class CoreNetworkThread extends Thread
 			shutdownThread();
 		}
     }
+	
+	/**
+	 * Reimplementation of Arrays.copyOf, since android version 8 has not yet included it. 
+	 * It appears in android 9 onwards.
+	 * @param original
+	 * @param newLength
+	 * @return
+	 */
+	private byte[] copyOf(byte [] original, int newLength)
+	{
+		byte [] fresh = new byte[newLength];
+		for(int i = 0; (i < fresh.length) && (i < original.length);i++)
+		{
+			fresh[i] = original[i];
+		}
+		
+		if(fresh.length > original.length)
+		{
+			for(int i = original.length; i < fresh.length; i++)
+			{
+				fresh[i] = 0;
+			}
+		}		
+		return fresh;
+	}
 	
 	private void processNetworkMessage(NetworkMessage message)
 	{
@@ -334,10 +386,14 @@ public abstract class CoreNetworkThread extends Thread
         //a little while and then try again?
     	try
     	{
-	        if(!out.writeMessage(object))
-	        {
-	            throw new BufferOverflowException();
-	        }
+    		if(object != null)
+    		{
+    			out.writeMessage(object);
+    		}
+    		else
+    		{
+    			Log.w(NetworkVariables.TAG, "Attempted to write null object!");
+    		}
     	}
     	catch(NullPointerException e)
     	{

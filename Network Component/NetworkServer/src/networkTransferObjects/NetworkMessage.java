@@ -1,9 +1,6 @@
 
 package networkTransferObjects;
 
-import com.dyuproject.protostuff.Schema;
-import com.dyuproject.protostuff.runtime.RuntimeSchema;
-
 /**
  * Used to pass information between the client and the server
  * @date 2011/08/02
@@ -37,6 +34,11 @@ public class NetworkMessage
         primeMessage = message;
     }
 
+    public NetworkMessage()
+    {
+        primeMessage = "";
+    }
+
     public String getMessage()
     {
         return primeMessage;
@@ -52,15 +54,5 @@ public class NetworkMessage
     {
         return messageType;
     }
-
-    /**
-     * Gets the class serialization schema for network serialization.
-     * You MUST override this method if you decide to extend this class.
-     * @return The schema to seralize this class with
-     */
-    @SuppressWarnings("rawtypes")
-	public Schema getSchema()
-    {
-        return RuntimeSchema.getSchema(NetworkMessage.class);
-    }
+    
 }

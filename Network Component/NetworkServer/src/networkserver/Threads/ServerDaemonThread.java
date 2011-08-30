@@ -4,11 +4,12 @@ import com.dyuproject.protostuff.LinkedBuffer;
 import com.dyuproject.protostuff.ProtostuffIOUtil;
 import com.dyuproject.protostuff.Schema;
 import com.dyuproject.protostuff.runtime.RuntimeSchema;
+import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.Socket;
 import java.nio.BufferOverflowException;
+import java.util.Arrays;
 import java.util.Vector;
 import javax.swing.event.EventListenerList;
 import networkTransferObjects.NetworkMessage;
@@ -26,9 +27,9 @@ public abstract class ServerDaemonThread extends Thread{
 
     private Socket socket;
     private ServerDaemonWriteoutThread out;
-    private InputStream in;
+    private BufferedInputStream in;
     private boolean stopOperation = false;
-    LinkedBuffer buffer = LinkedBuffer.allocate(512);
+    LinkedBuffer buffer = LinkedBuffer.allocate(2048);
 
     public int playerID;
     public String playerName;
@@ -53,7 +54,7 @@ public abstract class ServerDaemonThread extends Thread{
     {
         socket = acceptedSocket;
         out = new ServerDaemonWriteoutThread(acceptedSocket);
-        in = socket.getInputStream();        
+        in = new BufferedInputStream(socket.getInputStream());
         out.start();
     }
 
@@ -173,10 +174,33 @@ public abstract class ServerDaemonThread extends Thread{
             try
             {
                 
-                NetworkMessage msg = null;
-            	Schema schema = RuntimeSchema.getSchema(NetworkMessage.class);
-            	ProtostuffIOUtil.mergeFrom(in, msg, schema, buffer);
-                processNetworkMessage(msg);
+                NetworkMessage msg = new NetworkMessage();
+            	Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class); 
+                
+                byte [] bytes = new byte[32];
+                int bytesRead = 0;
+                do{
+                    if(bytesRead == bytes.length)
+                    {
+                        byte [] newBytes = Arrays.copyOf(bytes, 2*bytes.length);
+                        bytes = newBytes;
+                    }
+                    bytesRead += in.read(bytes, bytesRead, bytes.length - bytesRead);
+                }while(bytesRead == bytes.length);
+
+                if(bytesRead != -1)
+                {
+                    System.out.println("Mid receive, byte buffer at "+bytesRead);
+                    ProtostuffIOUtil.mergeFrom(Arrays.copyOf(bytes, bytesRead), msg, schema);                    
+                    processNetworkMessage(msg);
+                }
+                else
+                {
+                    System.err.println("End of stream!");
+                    shutdownThread();
+                }
+                
+                
             }
             catch(InterruptedIOException e)
             {
@@ -189,6 +213,11 @@ public abstract class ServerDaemonThread extends Thread{
                 fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
                 this.shutdownThread();                
                 break;
+            }
+            catch(NullPointerException e)
+            {
+                System.err.println("Null Pointer Exception: +"+ e.getMessage());
+                stopOperation = true;
             }
             finally
             {

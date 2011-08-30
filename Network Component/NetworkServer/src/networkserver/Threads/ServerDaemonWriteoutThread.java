@@ -3,6 +3,7 @@ package networkserver.Threads;
 import com.dyuproject.protostuff.LinkedBuffer;
 import com.dyuproject.protostuff.ProtostuffIOUtil;
 import com.dyuproject.protostuff.Schema;
+import com.dyuproject.protostuff.runtime.RuntimeSchema;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -49,9 +50,8 @@ public class ServerDaemonWriteoutThread extends Thread
             try
             {
                 NetworkMessage msg = messageQueue.take();
-                Schema schema = msg.getSchema();
-
-                ProtostuffIOUtil.writeTo(os, msg, schema, buffer);
+                Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class);                
+                ProtostuffIOUtil.writeTo(os, msg, schema, buffer);                
             }
             catch(IOException e)
             {

@@ -28,7 +28,7 @@ public class NetworkTestApp extends Activity {
 	private NetworkComBinder binder;
 	
 	private final Timer timer = new Timer();
-	private final int recurranceDelay = 5; //in seconds
+	private final int recurranceDelay = 1; //in seconds
 
 	public void onCreate(Bundle bundle)
 	{
@@ -70,7 +70,7 @@ public class NetworkTestApp extends Activity {
 						binder.requestLatency();
 				}
 				
-			}, recurranceDelay * 1000, recurranceDelay * 1000);
+			}, recurranceDelay * 1000, recurranceDelay * 200);
 			
 		}
 	};	
@@ -89,7 +89,7 @@ public class NetworkTestApp extends Activity {
 					break;
 					
 				case CONNECTION_LOST:
-					tv.append("Connect to host lost...\n");
+					tv.append("Connection to host lost...\n");
 					break;
 					
 				case CONNECTION_FAILED:
