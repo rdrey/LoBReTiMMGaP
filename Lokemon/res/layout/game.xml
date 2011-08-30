@@ -3,5 +3,16 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="match_parent">
-    <TextView android:text="TextView" android:id="@+id/status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentBottom="true"></TextView>
+    <AbsoluteLayout android:layout_height="match_parent" android:layout_width="match_parent" android:id="@+id/absoluteLayout1" android:layout_alignParentRight="true">
+        <TextView android:id="@+id/status" android:layout_y="4dip" android:layout_height="wrap_content" android:layout_x="4dip" android:layout_width="wrap_content" android:text="TextView"></TextView>
+        <ImageView android:layout_x="21dip" android:src="@drawable/charmander" android:layout_y="222dip" android:id="@+id/my_poke" android:layout_width="wrap_content" android:layout_height="wrap_content"></ImageView>
+        <Button android:id="@+id/run_button" android:layout_y="468dip" android:layout_height="wrap_content" android:layout_x="16dip" android:text="Run" android:layout_width="80dip"></Button>
+        <Button android:id="@+id/attack_button" android:layout_y="468dip" android:layout_height="wrap_content" android:layout_x="224dip" android:text="Attack" android:layout_width="80dip"></Button>
+        <ImageView android:layout_x="194dip" android:src="@drawable/bulbasaur" android:layout_y="57dip" android:id="@+id/opp_poke" android:layout_width="wrap_content" android:layout_height="wrap_content"></ImageView>
+        <TextView android:id="@+id/opp_name" android:layout_y="172dip" android:layout_height="wrap_content" android:layout_x="194dip" android:layout_width="wrap_content" android:text="TextView"></TextView>
+        <TextView android:id="@+id/my_name" android:layout_y="338dip" android:layout_height="wrap_content" android:layout_x="21dip" android:layout_width="wrap_content" android:text="TextView"></TextView>
+        <Spinner android:layout_x="110dip" android:layout_y="468dip" android:layout_width="100dip" android:layout_height="wrap_content" android:id="@+id/moves_spinner" android:entries="@array/moves"></Spinner>
+        <TextView android:layout_y="360dip" android:layout_height="wrap_content" android:layout_x="21dip" android:layout_width="wrap_content" android:text="TextView" android:id="@+id/my_health"></TextView>
+        <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="TextView" android:layout_x="194dip" android:layout_y="194dip" android:id="@+id/opp_health"></TextView>
+    </AbsoluteLayout>
 </RelativeLayout>

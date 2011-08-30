@@ -6,7 +6,7 @@ import android.os.*;
 import android.util.Log;
 import android.app.Activity;
 import java.io.*;
-import java.sql.Time;
+import java.util.Random;
 
 //networking components
 import com.Lobretimgap.NetworkClient.NetworkComBinder;
@@ -30,6 +30,11 @@ public class Game {
 	private int battleSeed;
 	private int opponentIndex;
 	private String opponentNick;
+	private int opponentMove;
+	private int yourMove;
+	private int myHealth;
+	private int oppHealth;
+	private Random random;
 	
 	// display variables
 	GameScreen gameScreen;
@@ -41,6 +46,10 @@ public class Game {
 		networkBound = false;
 		battleSeed = 0;
 		gameScreen = null;
+		opponentMove = -1;
+		yourMove = -1;
+		myHealth = 100;
+		oppHealth = 100;
 	}
 	
 	public static void loadGameData(Activity current)
@@ -83,14 +92,40 @@ public class Game {
 	
 	public void initiateBattle()
 	{
-		Log.i(NetworkVariables.TAG,""+binder.sendGameUpdate(new NetworkMessage("battle,"+Trainer.player.nickname + "," + Trainer.player.pokemon[0])));
+		binder.sendGameUpdate(new NetworkMessage("battle,"+Trainer.player.nickname + "," + Trainer.player.pokemon[0]));
 	}
 	
 	public void acceptBattle()
 	{
 		battleSeed = (int)(Math.random()*100);
+		random = new Random(battleSeed);
 		binder.sendGameUpdate(new NetworkMessage("accept,"+Trainer.player.nickname + "," + Trainer.player.pokemon[0] + "," + battleSeed));
 		gameScreen.setStatusText("Accepted battle...");
+	}
+	
+	public void runAway()
+	{
+		binder.sendGameUpdate(new NetworkMessage("run"));
+	}
+	
+	public void attack(int moveIndex)
+	{
+		yourMove = moveIndex;
+		Log.e(NetworkVariables.TAG, "move: " + opponentMove + " " + yourMove);
+		binder.sendGameUpdate(new NetworkMessage("attack," + moveIndex));
+		if (opponentMove > -1) playTurn();
+	}
+	
+	public void playTurn()
+	{
+		myHealth -= random.nextInt()%10;
+		oppHealth -= random.nextInt()%10;
+		gameScreen.setMyHealth(myHealth);
+		gameScreen.setOppHealth(oppHealth);
+		yourMove = -1;
+		opponentMove = -1;
+		Log.e(NetworkVariables.TAG, "move played by " + Trainer.player.nickname);
+		setBattleTurn(Pokemon.pokemon[opponentIndex].speed <= Pokemon.pokemon[Trainer.player.pokemon[0]].speed);
 	}
 	
 	public void setBattleTurn(boolean self)
@@ -103,6 +138,7 @@ public class Game {
 		{
 			gameScreen.setStatusText("Opponent's turn...");
 		}
+		gameScreen.enableAttackInterface(true);
 	}
 	
 	private void createConnection(Activity current)
@@ -152,6 +188,9 @@ public class Game {
 					{
 						opponentNick = args[1];
 						opponentIndex = Integer.parseInt(args[2]);
+						gameScreen.setOppPoke(opponentIndex);
+						gameScreen.setOppNick(opponentNick);
+						gameScreen.setOppHealth(100);
 						acceptBattle();
 						setBattleTurn(Pokemon.pokemon[opponentIndex].speed <= Pokemon.pokemon[Trainer.player.pokemon[0]].speed);
 					}
@@ -160,7 +199,23 @@ public class Game {
 						opponentNick = args[1];
 						opponentIndex = Integer.parseInt(args[2]);
 						battleSeed = Integer.parseInt(args[3]);
+						random = new Random(battleSeed);
+						gameScreen.setOppPoke(opponentIndex);
+						gameScreen.setOppNick(opponentNick);
+						gameScreen.setOppHealth(100);
 						setBattleTurn(Pokemon.pokemon[opponentIndex].speed <= Pokemon.pokemon[Trainer.player.pokemon[0]].speed);
+					}
+					else if (args[0].equals("run"))
+					{
+						gameScreen.removeOpp();
+						gameScreen.setStatusText(opponentNick + " ran away...");
+						gameScreen.enableAttackInterface(false);
+					}
+					else if (args[0].equals("attack"))
+					{
+						opponentMove = Integer.parseInt(args[1]);
+						Log.e(NetworkVariables.TAG, "move: " + opponentMove + " " + yourMove);
+						if (yourMove > -1) playTurn();
 					}
 					break;
 			}

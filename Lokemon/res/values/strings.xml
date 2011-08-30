@@ -2,4 +2,8 @@
 <resources>
     <string name="hello">Hello World, LaunchMenu!</string>
     <string name="app_name">Lokémon</string>
+    <string-array name="moves">
+    	<item>Growl</item>
+    	<item>Tackle</item>
+    </string-array>
 </resources>

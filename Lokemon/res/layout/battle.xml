@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent" android:orientation="vertical">
+    <TableLayout android:layout_height="wrap_content" android:layout_width="match_parent" android:layout_weight="0.84" android:id="@+id/battle_view">
+        <TableRow android:id="@+id/top" android:layout_weight="1" android:layout_width="match_parent">
+            <RelativeLayout android:id="@+id/top_left" android:layout_height="wrap_content" android:layout_width="wrap_content">
+                <ImageView android:layout_width="wrap_content" android:id="@+id/area_image" android:src="@drawable/tree" android:layout_height="wrap_content"></ImageView>
+            </RelativeLayout>
+            <RelativeLayout android:id="@+id/top_right" android:layout_height="wrap_content" android:layout_width="wrap_content"></RelativeLayout>
+        </TableRow>
+        <TableRow android:id="@+id/bottom" android:layout_width="match_parent" android:layout_weight="1">
+            <RelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/bottom_left"></RelativeLayout>
+            <RelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/bottom_right"></RelativeLayout>
+        </TableRow>
+    </TableLayout>
+    <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_weight="0.16" android:id="@+id/options_bar"></LinearLayout>
+</LinearLayout>
