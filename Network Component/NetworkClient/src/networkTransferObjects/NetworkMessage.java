@@ -20,7 +20,7 @@ public class NetworkMessage implements Serializable
 	private static final long serialVersionUID = 4259455514140197693L;
 
 	//Used internally for network message classification.
-    public enum MessageType //Comments show where the type can be received
+    public static enum MessageType //Comments show where the type can be received
     {
         UPDATE_MESSAGE, //Client and Server
         REQUEST_MESSAGE,//Client and Server
