@@ -1,9 +1,13 @@
 package networkserver.Threads;
 
+import com.dyuproject.protostuff.LinkedBuffer;
+import com.dyuproject.protostuff.ProtostuffIOUtil;
+import com.dyuproject.protostuff.Schema;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
+import networkTransferObjects.NetworkMessage;
 import networkserver.ServerCustomisation;
 
 /**
@@ -16,22 +20,23 @@ import networkserver.ServerCustomisation;
 public class ServerDaemonWriteoutThread extends Thread
 {
     private Socket socket;
-    private ObjectOutputStream oos;
-    private ArrayBlockingQueue<Object> messageQueue;
+    private OutputStream os;
+    private ArrayBlockingQueue<NetworkMessage> messageQueue;
     private boolean stopOperation = false;
+    private LinkedBuffer buffer = LinkedBuffer.allocate(512);
 
     
 
     public ServerDaemonWriteoutThread(Socket writeOutSocket) throws IOException
     {
         socket = writeOutSocket;
-        oos = new ObjectOutputStream(socket.getOutputStream());
-        messageQueue = new ArrayBlockingQueue<Object>(ServerCustomisation.threadWriteOutBufferSize);
+        os = socket.getOutputStream();
+        messageQueue = new ArrayBlockingQueue<NetworkMessage>(ServerCustomisation.threadWriteOutBufferSize);
     }
 
     //Tries to add the message to the queue of messages waiting to be sent to
     //the client. If the message queue is full, it will return false, otherwise true.
-    public boolean writeMessage(Object message)
+    public boolean writeMessage(NetworkMessage message)
     {
         return messageQueue.offer(message);
     }
@@ -43,9 +48,10 @@ public class ServerDaemonWriteoutThread extends Thread
         {
             try
             {
-                Object message = messageQueue.take();
-                oos.writeObject(message);
-                oos.flush();
+                NetworkMessage msg = messageQueue.take();
+                Schema schema = msg.getSchema();
+
+                ProtostuffIOUtil.writeTo(os, msg, schema, buffer);
             }
             catch(IOException e)
             {
@@ -56,6 +62,14 @@ public class ServerDaemonWriteoutThread extends Thread
                 //We have been interrupted, so restart the loop.
                 //This is used in shutdownThread, after setting stopOperation to true
                 //To enforce an immediate thread shutdown.
+            }
+            catch(Exception e)
+            {
+                System.err.println("Unexpected error occured in network write thread!\n "+ e);
+            }
+            finally
+            {
+                buffer.clear();
             }
             
         }

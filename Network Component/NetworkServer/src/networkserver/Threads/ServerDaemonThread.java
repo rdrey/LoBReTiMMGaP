@@ -1,9 +1,12 @@
 package networkserver.Threads;
 
-import java.awt.AWTEvent;
+import com.dyuproject.protostuff.LinkedBuffer;
+import com.dyuproject.protostuff.ProtostuffIOUtil;
+import com.dyuproject.protostuff.Schema;
+import com.dyuproject.protostuff.runtime.RuntimeSchema;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InterruptedIOException;
-import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.nio.BufferOverflowException;
 import java.util.Vector;
@@ -23,8 +26,9 @@ public abstract class ServerDaemonThread extends Thread{
 
     private Socket socket;
     private ServerDaemonWriteoutThread out;
-    private ObjectInputStream in;
+    private InputStream in;
     private boolean stopOperation = false;
+    LinkedBuffer buffer = LinkedBuffer.allocate(512);
 
     public int playerID;
     public String playerName;
@@ -39,6 +43,7 @@ public abstract class ServerDaemonThread extends Thread{
      */
     public ServerDaemonThread()
     {
+        
     }
 
     /*
@@ -48,7 +53,7 @@ public abstract class ServerDaemonThread extends Thread{
     {
         socket = acceptedSocket;
         out = new ServerDaemonWriteoutThread(acceptedSocket);
-        in = new ObjectInputStream(socket.getInputStream());        
+        in = socket.getInputStream();        
         out.start();
     }
 
@@ -109,7 +114,7 @@ public abstract class ServerDaemonThread extends Thread{
         //Now send these to the client
         NetworkMessage message = new NetworkMessage("Peer list transfer");
         message.setMessageType(NetworkMessage.MessageType.PEER_LIST_MESSAGE);
-        message.addDataObject("peerList", peers);
+        //message.addDataObject("peerList", peers);
         writeOut(message);
 
     }
@@ -167,8 +172,11 @@ public abstract class ServerDaemonThread extends Thread{
         {
             try
             {
-                Object data = in.readObject();                
-                processNetworkMessage(data);
+                
+                NetworkMessage msg = null;
+            	Schema schema = RuntimeSchema.getSchema(NetworkMessage.class);
+            	ProtostuffIOUtil.mergeFrom(in, msg, schema, buffer);
+                processNetworkMessage(msg);
             }
             catch(InterruptedIOException e)
             {
@@ -182,14 +190,14 @@ public abstract class ServerDaemonThread extends Thread{
                 this.shutdownThread();                
                 break;
             }
-            catch(ClassNotFoundException e)
+            finally
             {
-                System.err.println("Unrecognised class object received from client - ignoring");
-            } 
+                buffer.clear();
+            }
         }
     }
 
-    private void processNetworkMessage(Object message)
+    private void processNetworkMessage(NetworkMessage message)
     {
         if(message instanceof NetworkMessage)
         {
@@ -266,7 +274,7 @@ public abstract class ServerDaemonThread extends Thread{
     /*
      * Writes a given object to the outputstream
      */
-    private void writeOut(Object object) throws BufferOverflowException
+    private void writeOut(NetworkMessage object) throws BufferOverflowException
     {
         //Later perhaps we can more gracefully deal with this. Perhaps add wait
         //a little while and then try again?
