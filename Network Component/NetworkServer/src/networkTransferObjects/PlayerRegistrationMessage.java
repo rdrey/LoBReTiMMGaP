@@ -18,18 +18,25 @@ import com.dyuproject.protostuff.runtime.RuntimeSchema;
 public class PlayerRegistrationMessage extends NetworkMessage{
 
 	public String playerName;
-    public int playerID;
+        public int playerID;
 
     public List<String> strings;
     public List<Integer> ints;
 
-    public PlayerRegistrationMessage(int playerId, String playerName)
+    public PlayerRegistrationMessage(String playerName)
     {
     	super("playerRegistration");
-    	playerID = playerId;
     	this.playerName = playerName;
-    	strings = new ArrayList<String>();
+        strings = new ArrayList<String>();
     	ints = new ArrayList<Integer>();
+    }
+    
+    public PlayerRegistrationMessage(int playerId)
+    {
+        super("playerRegistration");
+        playerID = playerId;
+        strings = new ArrayList<String>();
+    	ints = new ArrayList<Integer>();  
     }
 
     /**

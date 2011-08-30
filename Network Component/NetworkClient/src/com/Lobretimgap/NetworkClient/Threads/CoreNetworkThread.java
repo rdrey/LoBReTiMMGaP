@@ -34,6 +34,8 @@ public abstract class CoreNetworkThread extends Thread
     private boolean stopOperation = false;
     public boolean isRunning = false;
     LinkedBuffer buffer = LinkedBuffer.allocate(512);
+    private boolean connected = false;
+    private int playerId;
     
     private long latencyStartTime, latencyEndTime;
     
@@ -46,14 +48,24 @@ public abstract class CoreNetworkThread extends Thread
 		peers = new Vector<ClientPeer>();
 	}
 	
-	public boolean connect()
+	/**
+	 * Asynchronously connects to the server
+	 */
+	public void connect()
 	{
+		if(!connected)
+			this.start();
+	}
+	
+	private void connectToServer()
+	{
+		boolean success = true;
 		try
 		{
 			Inet4Address hostAddress = (Inet4Address)InetAddress.getByName(NetworkVariables.hostname);
 			socket = new Socket(hostAddress, NetworkVariables.port);
 			in = socket.getInputStream();
-			out = new NetworkWriteThread(socket);
+			out = new NetworkWriteThread(socket);		
 			out.start();
 			
 			fireEvent(new NetworkEvent(this, "Connection successfully established!"), ConnectionEstablishedListener.class);
@@ -61,15 +73,25 @@ public abstract class CoreNetworkThread extends Thread
 		catch(UnknownHostException e)
 		{
 			Log.e(NetworkVariables.TAG, "Failed to resolve host.", e);	
-			return false;
+			success = false;
 		}
 		catch(IOException e)
 		{
 			Log.e(NetworkVariables.TAG, "Error while initializing connection to server.", e);	
-			return false;
+			success = false;
+		}
+		finally
+		{
+			if(!success)
+			{
+				fireEvent(new NetworkEvent(this, "Failed to connect to server... See log for details."), ConnectionFailedListener.class);				
+			}
+			else
+			{
+				connected = true;
+			}
 		}
 		Log.i(NetworkVariables.TAG, "Connection to server has been established.");
-		return true;
 	}
 	
 	
@@ -182,89 +204,111 @@ public abstract class CoreNetworkThread extends Thread
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
     public void run()
-	{		
-		isRunning = true;
-		registerWithServer(getPlayerRegistrationInformation());
-        //Do running stuff        
-        while(!stopOperation)
-        {
-            try
-            {
-            	NetworkMessage msg = null;
-            	Schema schema = RuntimeSchema.getSchema(NetworkMessage.class);
-            	ProtostuffIOUtil.mergeFrom(in, msg, schema, buffer);                             
-                processNetworkMessage(msg);
-            }
-            catch(InterruptedIOException e)
-            {
-                //We expect that something wants the threads attention. This is
-                //used to immediately end the thread in shutdownThread().
-            }
-            catch(IOException e)
-            {
-                System.err.println("Error occured while reading from thread : "+e);
-                fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
-                this.shutdownThread();                
-                break;
-            }            
-            finally
-            {
-            	buffer.clear();
-            }
-        }
+	{
+		if(!connected)
+		{
+			connectToServer();
+		}
+		if(connected)
+		{
+			isRunning = true;
+			registerWithServer(getPlayerRegistrationInformation());
+	        //Do running stuff        
+	        while(!stopOperation)
+	        {
+	            try
+	            {
+	            	NetworkMessage msg = null;
+	            	Schema schema = RuntimeSchema.getSchema(NetworkMessage.class);
+	            	ProtostuffIOUtil.mergeFrom(in, msg, schema, buffer);                             
+	                processNetworkMessage(msg);
+	            }
+	            catch(InterruptedIOException e)
+	            {
+	                //We expect that something wants the threads attention. This is
+	                //used to immediately end the thread in shutdownThread().
+	            }
+	            catch(IOException e)
+	            {
+	                System.err.println("Error occured while reading from thread : "+e);
+	                fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
+	                this.shutdownThread();                
+	                break;
+	            }            
+	            catch(NullPointerException e)
+	            {
+	            	Log.e(NetworkVariables.TAG, "Null Pointer Exception in run loop.", e);
+	            }
+				finally
+	            {
+	            	buffer.clear();
+	            }
+	        }
+		}
+		else
+		{
+			shutdownThread();
+		}
     }
 	
 	private void processNetworkMessage(NetworkMessage message)
 	{
 		
-        NetworkMessage msg = (NetworkMessage)message;
-        switch(msg.getMessageType())
+		if(message instanceof NetworkMessage)
+		{
+	        NetworkMessage msg = (NetworkMessage)message;
+	        switch(msg.getMessageType())
+	        {
+	            case UPDATE_MESSAGE:
+	                fireEvent(new NetworkEvent(this, msg),  UpdateReceivedListener.class);
+	                break;
+	            case REQUEST_MESSAGE:
+	                fireEvent(new NetworkEvent(this, msg),  RequestReceivedListener.class);
+	                break;
+	            case INITIAL_GAME_STATE_MESSAGE:
+	            	processInitialGameState(msg);
+	            	break;
+	            case PARTIAL_GAMESTATE_UPDATE_MESSAGE:
+	            	fireEvent(new NetworkEvent(this, msg),  PartialGamestateReceivedListener.class);
+	                break;
+	            case GAMESTATE_UPDATE_MESSAGE:
+	            	fireEvent(new NetworkEvent(this, msg),  GamestateReceivedListener.class);
+	                break;
+	            case GAMESTATE_REQUEST_MESSAGE:
+	                //Used exclusively on the server side
+	                break;
+	            case TERMINATION_REQUEST_MESSAGE:
+	                //similarly, dealt with on the server side
+	                break;
+	            case PEER_LIST_MESSAGE:                	
+	            	handlePeerListUpdate(msg);
+	            	break;
+	            case PEER_LIST_REQUEST_MESSAGE:
+	                //Also dealt with on the server side.
+	                break;
+	            case LATENCY_REQUEST_MESSAGE:
+	            	//Respond by sending a latency response message asap.
+	            	NetworkMessage latMsg = new NetworkMessage("Latency Response");
+	            	latMsg.setMessageType(NetworkMessage.MessageType.LATENCY_RESPONSE_MESSAGE);
+	            	writeOut(latMsg);
+	            	break;
+	            case LATENCY_RESPONSE_MESSAGE:
+	            	//WE have received a response to an earlier latency request.
+	            	latencyEndTime = System.currentTimeMillis();
+	            	if(latencyStartTime < latencyEndTime)
+	            	{
+	            		fireEvent(new NetworkEvent(this, (latencyEndTime - latencyStartTime)),  LatencyUpdateListener.class);
+	            	}
+	            	break;
+	            default:
+	                fireEvent(new NetworkEvent(this, msg),  UnknownMessageTypeReceivedListener.class);
+	                //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
+	                break;        
+	        }
+		}else if(message instanceof PlayerRegistrationMessage)
         {
-            case UPDATE_MESSAGE:
-                fireEvent(new NetworkEvent(this, msg),  UpdateReceivedListener.class);
-                break;
-            case REQUEST_MESSAGE:
-                fireEvent(new NetworkEvent(this, msg),  RequestReceivedListener.class);
-                break;
-            case INITIAL_GAME_STATE_MESSAGE:
-            	processInitialGameState(msg);
-            	break;
-            case PARTIAL_GAMESTATE_UPDATE_MESSAGE:
-            	fireEvent(new NetworkEvent(this, msg),  PartialGamestateReceivedListener.class);
-                break;
-            case GAMESTATE_UPDATE_MESSAGE:
-            	fireEvent(new NetworkEvent(this, msg),  GamestateReceivedListener.class);
-                break;
-            case GAMESTATE_REQUEST_MESSAGE:
-                //Used exclusively on the server side
-                break;
-            case TERMINATION_REQUEST_MESSAGE:
-                //similarly, dealt with on the server side
-                break;
-            case PEER_LIST_MESSAGE:                	
-            	handlePeerListUpdate(msg);
-            	break;
-            case PEER_LIST_REQUEST_MESSAGE:
-                //Also dealt with on the server side.
-                break;
-            case LATENCY_REQUEST_MESSAGE:
-            	//Respond by sending a latency response message asap.
-            	NetworkMessage latMsg = new NetworkMessage("Latency Response");
-            	latMsg.setMessageType(NetworkMessage.MessageType.LATENCY_RESPONSE_MESSAGE);
-            	writeOut(latMsg);
-            	break;
-            case LATENCY_RESPONSE_MESSAGE:
-            	//WE have received a response to an earlier latency request.
-            	latencyEndTime = System.currentTimeMillis();
-            	if(latencyStartTime < latencyEndTime)
-            	{
-            		fireEvent(new NetworkEvent(this, (latencyEndTime - latencyStartTime)),  LatencyUpdateListener.class);
-            	}
-            	break;
-            default:
-                fireEvent(new NetworkEvent(this, msg),  UnknownMessageTypeReceivedListener.class);
-                //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
-                break;        
+        	playerId = ((PlayerRegistrationMessage)message).playerID;
+        	Log.i(NetworkVariables.TAG, "Received player ID of "+playerId+" from the server.");
         }
 	}
 	
@@ -275,6 +319,7 @@ public abstract class CoreNetworkThread extends Thread
 		
 		//And now replace them with a new set of peers. 
 		//peers = (Vector<ClientPeer>)msg.getDataObject("peerList");
+		Log.d(NetworkVariables.TAG, "New Peer list received.");
 		Log.d(NetworkVariables.TAG, "New Peer list received.");
 		
 		//Now try to connect to the new list of peers
@@ -287,21 +332,32 @@ public abstract class CoreNetworkThread extends Thread
     {
         //Later perhaps we can more gracefully deal with this. Perhaps add wait
         //a little while and then try again?
-        if(!out.writeMessage(object))
-        {
-            throw new BufferOverflowException();
-        }
+    	try
+    	{
+	        if(!out.writeMessage(object))
+	        {
+	            throw new BufferOverflowException();
+	        }
+    	}
+    	catch(NullPointerException e)
+    	{
+    		//No idea why this sometimes happens
+    	}
     }
+    	
 
     public void shutdownThread()
     {
         try
         {
         	isRunning = false;
-            out.shutdownThread();
+        	if(out != null)
+        		out.shutdownThread();
             stopOperation = true;
             this.interrupt();
-            socket.close();
+            if(socket != null)
+            	socket.close();
+            connected = false;
         }
         catch(IOException e)
         {

@@ -61,14 +61,7 @@ public class NetworkTestApp extends Activity {
 			
 			binder.registerMessenger(eventMessenger);
 			
-			if(binder.ConnectToServer())
-			{
-				tv.append("Connection to server successful!\n");
-			}
-			else
-			{
-				tv.append("Failed to connect to server....\n");
-			}	
+			binder.ConnectToServer();			
 			
 			timer.schedule(new TimerTask() {
 				@Override
@@ -98,6 +91,9 @@ public class NetworkTestApp extends Activity {
 				case CONNECTION_LOST:
 					tv.append("Connect to host lost...\n");
 					break;
+					
+				case CONNECTION_FAILED:
+					tv.append("Failed to connect to host...\n");
 					
 				case LATENCY_UPDATE_RECEIVED:
 					tv.append("Latency reported as: " + ((NetworkEvent)msg.obj).getMessage()+"ms\n");

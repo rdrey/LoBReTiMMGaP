@@ -255,9 +255,11 @@ public abstract class ServerDaemonThread extends Thread{
         else if(message instanceof PlayerRegistrationMessage)
         {
             PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;
-            ServerVariables.playerNetworkAddressList.put(new Integer(regMessage.playerID), socket.getInetAddress());
-            playerID = regMessage.playerID;
+            playerID = ServerVariables.playerNetworkAddressList.size();
+            ServerVariables.playerNetworkAddressList.add(socket.getInetAddress());            
             playerName = regMessage.playerName;
+            PlayerRegistrationMessage reply = new PlayerRegistrationMessage(playerID);
+            writeOut(reply);
             registerPlayer(regMessage);
 
             

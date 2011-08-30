@@ -11,7 +11,7 @@ public class CoreNetworkThreadImpl extends CoreNetworkThread {
 
 	@Override
 	public PlayerRegistrationMessage getPlayerRegistrationInformation() {		
-		return new PlayerRegistrationMessage(1, "Lawrence");
+		return new PlayerRegistrationMessage("Lawrence");
 	}
 
 	@Override

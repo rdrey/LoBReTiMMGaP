@@ -42,7 +42,14 @@ public class NetworkWriteThread extends Thread
     //the client. If the message queue is full, it will return false, otherwise true.
     public boolean writeMessage(NetworkMessage message)
     {
-        return messageQueue.offer(message);
+    	if(message != null)
+    	{
+    		return messageQueue.offer(message);
+    	}
+    	else
+    	{
+    		return false;
+    	}
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
