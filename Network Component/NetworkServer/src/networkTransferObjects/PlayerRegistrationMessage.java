@@ -1,11 +1,11 @@
 
 package networkTransferObjects;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import networkserver.ServerCustomisation;
+import java.util.ArrayList;
+import java.util.List;
 
-
+import com.dyuproject.protostuff.Schema;
+import com.dyuproject.protostuff.runtime.RuntimeSchema;
 
 /**
  * A once off message sent to the server which should contain any initialisation information
@@ -15,66 +15,32 @@ import networkserver.ServerCustomisation;
  * @date 2011/08/02
  * @author Lawrence Webley
  */
-public class PlayerRegistrationMessage implements Serializable{
-    /**
-	 * Used to ensure conformity across the network connection.
-	 */
-	private static final long serialVersionUID = 6520835168631802917L;
+public class PlayerRegistrationMessage extends NetworkMessage{
+
 	public String playerName;
     public int playerID;
 
-    private HashMap<String, String> strings;
-    private HashMap<String, Integer> ints;
-    private HashMap<String, Object> objects;
+    public List<String> strings;
+    public List<Integer> ints;
 
     public PlayerRegistrationMessage(int playerId, String playerName)
     {
+    	super("playerRegistration");
     	playerID = playerId;
     	this.playerName = playerName;
-
-    	strings = new HashMap<String, String>(ServerCustomisation.initialNetworkMessageMapSize);
-        ints = new HashMap<String, Integer>(ServerCustomisation.initialNetworkMessageMapSize);
-        objects = new HashMap<String, Object>(ServerCustomisation.initialNetworkMessageMapSize);
+    	strings = new ArrayList<String>();
+    	ints = new ArrayList<Integer>();
     }
 
-
-    public void addDataString(String key, String value)
-    {
-        strings.put(key, value);
-    }
-
-    public void addDataInt(String key, int value)
-    {
-        ints.put(key, new Integer(value));
-    }
-
-    /*
-     * Adds an object to this network message. The object must implement serializable
+    /**
+     * Gets the class serialization schema for network serialization.
+     * You MUST override this method if you decide to extend this class.
+     * @return The schema to seralize this class with
      */
-    public void addDataObject(String key, Object value) throws IllegalArgumentException
+    @SuppressWarnings("rawtypes")
+    @Override
+    public Schema getSchema()
     {
-        if(value instanceof java.io.Serializable)
-        {
-            objects.put(key, value);
-        }
-        else
-        {
-            throw new IllegalArgumentException("Object is not serializable!");
-        }
-    }
-
-    public String getDataString(String key)
-    {
-        return strings.get(key);
-    }
-
-    public int getDataInt(String key)
-    {
-        return ints.get(key).intValue();
-    }
-
-    public Object getDataObject(String key)
-    {
-        return objects.get(key);
+        return RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
     }
 }

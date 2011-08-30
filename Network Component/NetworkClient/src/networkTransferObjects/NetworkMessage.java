@@ -1,25 +1,18 @@
 
 package networkTransferObjects;
 
-import java.io.Serializable;
-import java.util.HashMap;
-
-import com.Lobretimgap.NetworkClient.NetworkVariables;
-
+import com.dyuproject.protostuff.Schema;
+import com.dyuproject.protostuff.runtime.RuntimeSchema;
 
 /**
  * Used to pass information between the client and the server
  * @date 2011/08/02
  * @author Lawrence Webley
  */
-public class NetworkMessage implements Serializable
-{
-    /**
-	 * Used to ensure that the server object and client object are treated as identical objects.
-	 */
-	private static final long serialVersionUID = 4259455514140197693L;
-
-	//Used internally for network message classification.
+public class NetworkMessage
+{  
+        
+    //Used internally for network message classification.
     public enum MessageType //Comments show where the type can be received
     {
         UPDATE_MESSAGE, //Client and Server
@@ -35,61 +28,14 @@ public class NetworkMessage implements Serializable
         LATENCY_RESPONSE_MESSAGE //Server & Client
 
     }
-
-    private HashMap<String, String> strings;
-    private HashMap<String, Integer> ints;
-    private HashMap<String, Object> objects;
+    
     private MessageType messageType;
-
     private String primeMessage;
 
     public NetworkMessage(String message)
     {
-        primeMessage = message;
-        strings = new HashMap<String, String>(NetworkVariables.initialNetworkMessageMapSize);
-        ints = new HashMap<String, Integer>(NetworkVariables.initialNetworkMessageMapSize);
-        objects = new HashMap<String, Object>(NetworkVariables.initialNetworkMessageMapSize);
-    }
-   
-    public void addDataString(String key, String value)
-    {
-        strings.put(key, value);
-    }
-
-    public void addDataInt(String key, int value)
-    {
-        ints.put(key, new Integer(value));
-    }
-
-    /*
-     * Adds an object to this network message. The object must implement serializable
-     */
-    public void addDataObject(String key, Object value) throws IllegalArgumentException
-    {
-        if(value instanceof java.io.Serializable)
-        {
-            objects.put(key, value);
-        }
-        else
-        {
-            throw new IllegalArgumentException("Object is not serializable!");
-        }
-    }
-
-    public String getDataString(String key)
-    {
-        return strings.get(key);
-    }
-
-    public int getDataInt(String key)
-    {
-        return ints.get(key).intValue();
-    }
-
-    public Object getDataObject(String key)
-    {
-        return objects.get(key);
-    }
+        primeMessage = message;       
+    }    
 
     public String getMessage()
     {
@@ -105,5 +51,16 @@ public class NetworkMessage implements Serializable
     public MessageType getMessageType()
     {
         return messageType;
+    }
+
+    /**
+     * Gets the class serialization schema for network serialization.
+     * You MUST override this method if you decide to extend this class.
+     * @return The schema to seralize this class with
+     */
+    @SuppressWarnings("rawtypes")
+	public Schema getSchema()
+    {
+        return RuntimeSchema.getSchema(NetworkMessage.class);
     }
 }

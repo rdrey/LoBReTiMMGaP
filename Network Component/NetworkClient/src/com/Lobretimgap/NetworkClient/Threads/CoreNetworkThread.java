@@ -1,6 +1,7 @@
 package com.Lobretimgap.NetworkClient.Threads;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.ObjectInputStream;
 import java.net.Inet4Address;
@@ -20,14 +21,19 @@ import com.Lobretimgap.NetworkClient.Utility.EventListenerList;
 import com.Lobretimgap.NetworkClient.EventListeners.*;
 import com.Lobretimgap.NetworkClient.Events.*;
 import com.Lobretimgap.NetworkClient.Peer2Peer.*;
+import com.dyuproject.protostuff.LinkedBuffer;
+import com.dyuproject.protostuff.ProtostuffIOUtil;
+import com.dyuproject.protostuff.Schema;
+import com.dyuproject.protostuff.runtime.RuntimeSchema;
 
 public abstract class CoreNetworkThread extends Thread 
 {
 	private Socket socket;
 	private NetworkWriteThread out;
-	private ObjectInputStream in;
+	private InputStream in;
     private boolean stopOperation = false;
     public boolean isRunning = false;
+    LinkedBuffer buffer = LinkedBuffer.allocate(512);
     
     private long latencyStartTime, latencyEndTime;
     
@@ -46,7 +52,7 @@ public abstract class CoreNetworkThread extends Thread
 		{
 			Inet4Address hostAddress = (Inet4Address)InetAddress.getByName(NetworkVariables.hostname);
 			socket = new Socket(hostAddress, NetworkVariables.port);
-			in = new ObjectInputStream(socket.getInputStream());
+			in = socket.getInputStream();
 			out = new NetworkWriteThread(socket);
 			out.start();
 			
@@ -173,6 +179,7 @@ public abstract class CoreNetworkThread extends Thread
         writeOut(message);
     }
     
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
     public void run()
 	{		
@@ -183,8 +190,10 @@ public abstract class CoreNetworkThread extends Thread
         {
             try
             {
-                Object data = in.readObject();                
-                processNetworkMessage(data);
+            	NetworkMessage msg = null;
+            	Schema schema = RuntimeSchema.getSchema(NetworkMessage.class);
+            	ProtostuffIOUtil.mergeFrom(in, msg, schema, buffer);                             
+                processNetworkMessage(msg);
             }
             catch(InterruptedIOException e)
             {
@@ -197,68 +206,65 @@ public abstract class CoreNetworkThread extends Thread
                 fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
                 this.shutdownThread();                
                 break;
-            }
-            catch(ClassNotFoundException e)
+            }            
+            finally
             {
-                System.err.println("Unrecognised class object received from client - ignoring");
-            } 
+            	buffer.clear();
+            }
         }
     }
 	
-	private void processNetworkMessage(Object message)
+	private void processNetworkMessage(NetworkMessage message)
 	{
-		if(message instanceof NetworkMessage)
+		
+        NetworkMessage msg = (NetworkMessage)message;
+        switch(msg.getMessageType())
         {
-            NetworkMessage msg = (NetworkMessage)message;
-            switch(msg.getMessageType())
-            {
-                case UPDATE_MESSAGE:
-                    fireEvent(new NetworkEvent(this, msg),  UpdateReceivedListener.class);
-                    break;
-                case REQUEST_MESSAGE:
-                    fireEvent(new NetworkEvent(this, msg),  RequestReceivedListener.class);
-                    break;
-                case INITIAL_GAME_STATE_MESSAGE:
-                	processInitialGameState(msg);
-                	break;
-                case PARTIAL_GAMESTATE_UPDATE_MESSAGE:
-                	fireEvent(new NetworkEvent(this, msg),  PartialGamestateReceivedListener.class);
-                    break;
-                case GAMESTATE_UPDATE_MESSAGE:
-                	fireEvent(new NetworkEvent(this, msg),  GamestateReceivedListener.class);
-                    break;
-                case GAMESTATE_REQUEST_MESSAGE:
-                    //Used exclusively on the server side
-                    break;
-                case TERMINATION_REQUEST_MESSAGE:
-                    //similarly, dealt with on the server side
-                    break;
-                case PEER_LIST_MESSAGE:                	
-                	handlePeerListUpdate(msg);
-                	break;
-                case PEER_LIST_REQUEST_MESSAGE:
-                    //Also dealt with on the server side.
-                    break;
-                case LATENCY_REQUEST_MESSAGE:
-                	//Respond by sending a latency response message asap.
-                	NetworkMessage latMsg = new NetworkMessage("Latency Response");
-                	latMsg.setMessageType(NetworkMessage.MessageType.LATENCY_RESPONSE_MESSAGE);
-                	writeOut(latMsg);
-                	break;
-                case LATENCY_RESPONSE_MESSAGE:
-                	//WE have received a response to an earlier latency request.
-                	latencyEndTime = System.currentTimeMillis();
-                	if(latencyStartTime < latencyEndTime)
-                	{
-                		fireEvent(new NetworkEvent(this, (latencyEndTime - latencyStartTime)),  LatencyUpdateListener.class);
-                	}
-                	break;
-                default:
-                    fireEvent(new NetworkEvent(this, msg),  UnknownMessageTypeReceivedListener.class);
-                    //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
-                    break;
-
-            }
+            case UPDATE_MESSAGE:
+                fireEvent(new NetworkEvent(this, msg),  UpdateReceivedListener.class);
+                break;
+            case REQUEST_MESSAGE:
+                fireEvent(new NetworkEvent(this, msg),  RequestReceivedListener.class);
+                break;
+            case INITIAL_GAME_STATE_MESSAGE:
+            	processInitialGameState(msg);
+            	break;
+            case PARTIAL_GAMESTATE_UPDATE_MESSAGE:
+            	fireEvent(new NetworkEvent(this, msg),  PartialGamestateReceivedListener.class);
+                break;
+            case GAMESTATE_UPDATE_MESSAGE:
+            	fireEvent(new NetworkEvent(this, msg),  GamestateReceivedListener.class);
+                break;
+            case GAMESTATE_REQUEST_MESSAGE:
+                //Used exclusively on the server side
+                break;
+            case TERMINATION_REQUEST_MESSAGE:
+                //similarly, dealt with on the server side
+                break;
+            case PEER_LIST_MESSAGE:                	
+            	handlePeerListUpdate(msg);
+            	break;
+            case PEER_LIST_REQUEST_MESSAGE:
+                //Also dealt with on the server side.
+                break;
+            case LATENCY_REQUEST_MESSAGE:
+            	//Respond by sending a latency response message asap.
+            	NetworkMessage latMsg = new NetworkMessage("Latency Response");
+            	latMsg.setMessageType(NetworkMessage.MessageType.LATENCY_RESPONSE_MESSAGE);
+            	writeOut(latMsg);
+            	break;
+            case LATENCY_RESPONSE_MESSAGE:
+            	//WE have received a response to an earlier latency request.
+            	latencyEndTime = System.currentTimeMillis();
+            	if(latencyStartTime < latencyEndTime)
+            	{
+            		fireEvent(new NetworkEvent(this, (latencyEndTime - latencyStartTime)),  LatencyUpdateListener.class);
+            	}
+            	break;
+            default:
+                fireEvent(new NetworkEvent(this, msg),  UnknownMessageTypeReceivedListener.class);
+                //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
+                break;        
         }
 	}
 	
@@ -268,7 +274,7 @@ public abstract class CoreNetworkThread extends Thread
 		//Terminate communication with existing peers
 		
 		//And now replace them with a new set of peers. 
-		peers = (Vector<ClientPeer>)msg.getDataObject("peerList");
+		//peers = (Vector<ClientPeer>)msg.getDataObject("peerList");
 		Log.d(NetworkVariables.TAG, "New Peer list received.");
 		
 		//Now try to connect to the new list of peers
@@ -277,7 +283,7 @@ public abstract class CoreNetworkThread extends Thread
 	/*
      * Writes a given object to the outputstream
      */
-    private void writeOut(Object object) throws BufferOverflowException
+    private void writeOut(NetworkMessage object) throws BufferOverflowException
     {
         //Later perhaps we can more gracefully deal with this. Perhaps add wait
         //a little while and then try again?

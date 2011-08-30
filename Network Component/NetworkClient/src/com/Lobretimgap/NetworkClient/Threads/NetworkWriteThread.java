@@ -1,43 +1,62 @@
 package com.Lobretimgap.NetworkClient.Threads;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import com.Lobretimgap.NetworkClient.NetworkVariables;
+import networkTransferObjects.NetworkMessage;
 
-public class NetworkWriteThread extends Thread 
-{	
-	Socket socket;
-	private ObjectOutputStream oos;
-	private ArrayBlockingQueue<Object> messageQueue;
-	private boolean stopOperation = false;
-	
-	public NetworkWriteThread(Socket netSocket) throws IOException
-	{
-		socket = netSocket;
-		oos = new ObjectOutputStream(socket.getOutputStream());
-        messageQueue = new ArrayBlockingQueue<Object>(NetworkVariables.writeThreadBufferSize);
-	}
-	
-	//Tries to add the message to the queue of messages waiting to be sent to
+import android.util.Log;
+
+import com.Lobretimgap.NetworkClient.NetworkVariables;
+import com.dyuproject.protostuff.LinkedBuffer;
+import com.dyuproject.protostuff.ProtostuffIOUtil;
+import com.dyuproject.protostuff.Schema;
+
+/**
+ * This thread allows the user to write an object to the client asynchronously.
+ * Internally it adds the object to be written to a queue, and sends items over the
+ * network in a FIFO fashion
+ * @date 2011/08/02
+ * @author Lawrence Webley
+ */
+public class NetworkWriteThread extends Thread
+{
+    private Socket socket;
+    private OutputStream os;
+    private ArrayBlockingQueue<NetworkMessage> messageQueue;
+    private boolean stopOperation = false;
+    private LinkedBuffer buffer = LinkedBuffer.allocate(512);
+
+    
+
+    public NetworkWriteThread(Socket writeOutSocket) throws IOException
+    {
+        socket = writeOutSocket;
+        os = socket.getOutputStream();
+        messageQueue = new ArrayBlockingQueue<NetworkMessage>(NetworkVariables.writeThreadBufferSize);
+    }
+
+    //Tries to add the message to the queue of messages waiting to be sent to
     //the client. If the message queue is full, it will return false, otherwise true.
-    public boolean writeMessage(Object message)
+    public boolean writeMessage(NetworkMessage message)
     {
         return messageQueue.offer(message);
     }
 
-    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
     public void run()
     {
         while(!stopOperation)
         {
             try
             {
-                Object message = messageQueue.take();
-                oos.writeObject(message);
-                oos.flush();
+                NetworkMessage msg = messageQueue.take();
+                Schema schema = msg.getSchema();
+
+                ProtostuffIOUtil.writeTo(os, msg, schema, buffer);
             }
             catch(IOException e)
             {
@@ -48,6 +67,14 @@ public class NetworkWriteThread extends Thread
                 //We have been interrupted, so restart the loop.
                 //This is used in shutdownThread, after setting stopOperation to true
                 //To enforce an immediate thread shutdown.
+            }
+            catch(Exception e)
+            {
+            	Log.e(NetworkVariables.TAG, "Unexpected error in network write thread.", e);
+            }
+            finally
+            {
+                buffer.clear();
             }
             
         }
