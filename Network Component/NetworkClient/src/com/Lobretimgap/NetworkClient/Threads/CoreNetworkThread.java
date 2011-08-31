@@ -322,7 +322,7 @@ public abstract class CoreNetworkThread extends Thread
 	 * @param newLength
 	 * @return
 	 */
-	private byte[] copyOf(byte [] original, int newLength)
+	public byte[] copyOf(byte [] original, int newLength)
 	{
 		byte [] fresh = new byte[newLength];
 		for(int i = 0; (i < fresh.length) && (i < original.length);i++)

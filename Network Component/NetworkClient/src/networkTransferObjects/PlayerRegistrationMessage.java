@@ -19,29 +19,26 @@ public class PlayerRegistrationMessage extends NetworkMessage{
 
     public String playerName;
     public int playerID;
-    public List<String> strings;
+    
 
     public PlayerRegistrationMessage(String playerName)
     {
     	super("playerRegistration");
     	this.playerName = playerName;
-        playerID = -1;
-    	strings = new ArrayList<String>();
+        playerID = -1;    
     }
 
     public PlayerRegistrationMessage(int playerId)
     {
         super("playerRegistration");
         playerID = playerId;
-        playerName = "Player";
-        strings = new ArrayList<String>();
+        playerName = "Player";    
     }
 
     public PlayerRegistrationMessage()
     {
     	super("playerRegistration");
         playerID = -1;
-        playerName = "Player";
-        strings = new ArrayList<String>();
+        playerName = "Player";    
     }
 }

@@ -99,7 +99,7 @@ public class NetworkWriteThread extends Thread
             		classType = 0;
             	}
             	
-            	//Serialize the message                 
+            	//Serialize the message
                 byte [] serializedObject = ProtostuffIOUtil.toByteArray(msg, schema, buffer);
                                 
                 //Calculate and create a leading length field (4 bytes of data, an integer)

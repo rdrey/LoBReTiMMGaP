@@ -19,14 +19,13 @@ public class PlayerRegistrationMessage extends NetworkMessage{
 
     public String playerName;
     public int playerID;
-    public List<String> strings;
+
 
     public PlayerRegistrationMessage(String playerName)
     {
     	super("playerRegistration");
     	this.playerName = playerName;
         playerID = -1;
-    	strings = new ArrayList<String>();
     }
 
     public PlayerRegistrationMessage(int playerId)
@@ -34,7 +33,6 @@ public class PlayerRegistrationMessage extends NetworkMessage{
         super("playerRegistration");
         playerID = playerId;
         playerName = "Player";
-        strings = new ArrayList<String>();
     }
 
     public PlayerRegistrationMessage()
@@ -42,6 +40,5 @@ public class PlayerRegistrationMessage extends NetworkMessage{
     	super("playerRegistration");
         playerID = -1;
         playerName = "Player";
-        strings = new ArrayList<String>();
     }
 }
