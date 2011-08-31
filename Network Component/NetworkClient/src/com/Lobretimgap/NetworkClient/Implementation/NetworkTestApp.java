@@ -70,7 +70,7 @@ public class NetworkTestApp extends Activity {
 						binder.requestLatency();
 				}
 				
-			}, recurranceDelay * 1000, recurranceDelay * 1000);
+			}, recurranceDelay * 1000, recurranceDelay * 200);
 			
 		}
 	};	

@@ -42,6 +42,7 @@ public abstract class CoreNetworkThread extends Thread
     LinkedBuffer buffer = LinkedBuffer.allocate(512);
     ByteBuffer b = ByteBuffer.allocate(4);
     private boolean connected = false;
+    private boolean awaitingLatencyResponse = false;
     private int playerId;
     
     private long latencyStartTime, latencyEndTime;
@@ -132,10 +133,14 @@ public abstract class CoreNetworkThread extends Thread
 	 */
 	public void requestNetworkLatency()
 	{
-		NetworkMessage msg = new NetworkMessage("Requesting Latency check");
-		msg.setMessageType(NetworkMessage.MessageType.LATENCY_REQUEST_MESSAGE);
-		writeOut(msg);
-		latencyStartTime = System.currentTimeMillis();
+		if(!awaitingLatencyResponse)
+		{
+			awaitingLatencyResponse = true;
+			NetworkMessage msg = new NetworkMessage("Requesting Latency check");
+			msg.setMessageType(NetworkMessage.MessageType.LATENCY_REQUEST_MESSAGE);
+			writeOut(msg);
+			latencyStartTime = System.currentTimeMillis();
+		}
 	}
 	
 	private void registerWithServer(PlayerRegistrationMessage message)
@@ -238,7 +243,7 @@ public abstract class CoreNetworkThread extends Thread
 	                    byte classType = messageHeader[0];	                    
 	                    //set the message and schema to the correct type
 	                    switch(classType)
-	                    {
+	                    {	                    	                            
 	                        case 1:
 	                            msg = new PlayerRegistrationMessage();
 	                            schema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
@@ -387,6 +392,7 @@ public abstract class CoreNetworkThread extends Thread
 	            	break;
 	            case LATENCY_RESPONSE_MESSAGE:
 	            	//WE have received a response to an earlier latency request.
+	            	awaitingLatencyResponse = false;
 	            	latencyEndTime = System.currentTimeMillis();
 	            	if(latencyStartTime < latencyEndTime)
 	            	{

@@ -191,7 +191,7 @@ public abstract class ServerDaemonThread extends Thread{
 
                     //set the message and schema to the correct type
                     switch(classType)
-                    {
+                    {                        
                         case 1:
                             msg = new PlayerRegistrationMessage();
                             schema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
@@ -270,6 +270,7 @@ public abstract class ServerDaemonThread extends Thread{
     {
         if(message instanceof PlayerRegistrationMessage)
         {
+            System.out.println("Reg message: "+ message.getMessage());
             PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;
             playerID = ServerVariables.playerNetworkAddressList.size();
             ServerVariables.playerNetworkAddressList.add(socket.getInetAddress());

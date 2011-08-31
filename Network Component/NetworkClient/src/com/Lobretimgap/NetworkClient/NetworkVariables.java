@@ -1,9 +1,5 @@
 package com.Lobretimgap.NetworkClient;
 
-import java.util.ArrayList;
-
-import networkTransferObjects.*;
-
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
 import com.Lobretimgap.NetworkClient.Implementation.CoreNetworkThreadImpl;
 
