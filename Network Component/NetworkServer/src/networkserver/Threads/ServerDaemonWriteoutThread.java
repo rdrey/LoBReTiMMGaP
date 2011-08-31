@@ -7,6 +7,8 @@ import com.dyuproject.protostuff.runtime.RuntimeSchema;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.concurrent.ArrayBlockingQueue;
 import networkTransferObjects.NetworkMessage;
 import networkserver.ServerCustomisation;
@@ -49,9 +51,22 @@ public class ServerDaemonWriteoutThread extends Thread
         {
             try
             {
+                //Serialize the message
                 NetworkMessage msg = messageQueue.take();
-                Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class);                
-                ProtostuffIOUtil.writeTo(os, msg, schema, buffer);                
+                Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class);
+                byte [] serializedObject = ProtostuffIOUtil.toByteArray(msg, schema, buffer);
+
+                //Calculate and create a leading length field (6 bytes of data)
+                NumberFormat nf = new DecimalFormat("000000");
+                byte [] lengthField = nf.format(serializedObject.length).getBytes();
+
+                //Stitch them together into one message
+                byte [] message = new byte[serializedObject.length + lengthField.length];
+                System.arraycopy(lengthField, 0, message, 0, lengthField.length);
+                System.arraycopy(serializedObject, 0, message, lengthField.length, serializedObject.length);
+
+                //And then send it off.
+                os.write(message);
             }
             catch(IOException e)
             {

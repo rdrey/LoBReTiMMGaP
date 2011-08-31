@@ -220,34 +220,39 @@ public abstract class CoreNetworkThread extends Thread
 	        {
 	            try
 	            {
-	            	NetworkMessage msg = new NetworkMessage();	            	
-	            	Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class);	            	
-                                	
-	            	 byte [] bytes = new byte[32];
-	                 int bytesRead = 0;
-	                 do{
-	                     if(bytesRead == bytes.length)
-	                     {
-	                         byte [] newBytes = copyOf(bytes, 2*bytes.length);
-	                         bytes = newBytes;
-	                     }
-	                     bytesRead += in.read(bytes, bytesRead, bytes.length - bytesRead);
-	                 }while(bytesRead == bytes.length);                    
-                    
-                    
-                    //If this isnt the end of the stream
-                    if(bytesRead != -1)
-                    {
-                    	Log.i(NetworkVariables.TAG, "Mid receive, byte buffer at "+bytesRead);
-                        ProtostuffIOUtil.mergeFrom(copyOf(bytes, bytesRead), msg, schema);                        
-                        processNetworkMessage(msg);
-                    }
-                    else
-                    {
-                        System.err.println("End of stream!");
-                        fireEvent(new NetworkEvent(this, "Connection to Server lost!\n"),  ConnectionLostListener.class);                        shutdownThread();
-                        
-                    }
+	            	NetworkMessage msg = new NetworkMessage();
+	            	Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class);
+
+	                //Expecting 6 bytes of length info
+	                byte [] messageSizeBytes = new byte [6];
+	                int success = in.read(messageSizeBytes);
+	                if(success == 6)
+	                {
+	                    //Determine message length
+	                    String mSizeString = new String(messageSizeBytes);
+	                    int mSize = Integer.parseInt(mSizeString);
+
+	                    //Read in the object bytes
+	                    byte [] object = new byte [mSize];
+	                    int bytesRead = 0;
+	                    while(bytesRead != mSize)
+	                    {
+	                        bytesRead += in.read(object, bytesRead, object.length - bytesRead);
+	                    }
+
+	                    System.out.println("Mid receive, byte buffer at "+bytesRead);
+	                    ProtostuffIOUtil.mergeFrom(object, msg, schema);
+	                    processNetworkMessage(msg);
+	                    
+	                }
+	                else
+	                {//Failed to read in length field properly
+	                    if(success == -1)
+	                    {//Stream closed
+	                        System.err.println("End of stream!");
+	                        shutdownThread();
+	                    }
+	                } 
 	                
 	            }
 	            catch(InterruptedIOException e)
@@ -265,6 +270,10 @@ public abstract class CoreNetworkThread extends Thread
 	            catch(NullPointerException e)
 	            {
 	            	Log.e(NetworkVariables.TAG, "Null Pointer Exception in run loop.", e);
+	            }
+	            catch(RuntimeException e)
+	            {
+	                System.err.println("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?");
 	            }
 				finally
 	            {

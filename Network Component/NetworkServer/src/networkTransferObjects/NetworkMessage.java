@@ -1,6 +1,9 @@
 
 package networkTransferObjects;
 
+import com.dyuproject.protostuff.Schema;
+import com.dyuproject.protostuff.runtime.RuntimeSchema;
+
 /**
  * Used to pass information between the client and the server
  * @date 2011/08/02
@@ -31,17 +34,22 @@ public class NetworkMessage
 
     public NetworkMessage(String message)
     {
-        primeMessage = message;
+        primeMessage = message;        
     }
 
     public NetworkMessage()
     {
-        primeMessage = "";
+    	primeMessage = "";    	
     }
 
     public String getMessage()
     {
         return primeMessage;
+    }
+
+    public void setMessage(String message)
+    {
+    	primeMessage = message;
     }
 
     //Used internally for network message classification. Don't use this.
@@ -54,5 +62,19 @@ public class NetworkMessage
     {
         return messageType;
     }
-    
+
+    /**
+     * Gets the runtime schema of this class for serialization.
+     * If you inherit from this class, you MUST OVERRIDE this method,
+     * otherwise it will be serialized as its parent, and you will lose data.
+     *
+     * Additionally you will need to add a case for it in the network read and write
+     * methods, so that the receiving end knows what type of class to deserialize it as.
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+	public Schema getSchema()
+    {
+    	return RuntimeSchema.getSchema(NetworkMessage.class);
+    }
 }

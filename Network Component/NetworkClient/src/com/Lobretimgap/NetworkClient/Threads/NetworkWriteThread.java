@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.BufferOverflowException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import networkTransferObjects.NetworkMessage;
@@ -61,10 +63,24 @@ public class NetworkWriteThread extends Thread
         while(!stopOperation)
         {
             try
-            {            	
+            {   
+            	//Serialize the message
                 NetworkMessage msg = messageQueue.take();                
                 Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class);
-                ProtostuffIOUtil.writeTo(os, msg, schema, buffer);
+                byte [] serializedObject = ProtostuffIOUtil.toByteArray(msg, schema, buffer);
+                
+                //Calculate and create a leading length field (6 bytes of data)
+                NumberFormat nf = new DecimalFormat("000000");
+                byte [] lengthField = nf.format(serializedObject.length).getBytes();
+                
+                //Stitch them together into one message
+                byte [] message = new byte[serializedObject.length + lengthField.length];
+                System.arraycopy(lengthField, 0, message, 0, lengthField.length);
+                System.arraycopy(serializedObject, 0, message, lengthField.length, serializedObject.length);
+                
+                //Log.d(NetworkVariables.TAG, "Serialized Size: "+serializedObject.length);
+                //And then send it off.
+                os.write(message);                
                 
             }
             catch(IOException e)

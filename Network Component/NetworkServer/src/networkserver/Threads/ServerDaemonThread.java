@@ -175,32 +175,38 @@ public abstract class ServerDaemonThread extends Thread{
             {
                 
                 NetworkMessage msg = new NetworkMessage();
-            	Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class); 
-                
-                byte [] bytes = new byte[32];
-                int bytesRead = 0;
-                do{
-                    if(bytesRead == bytes.length)
-                    {
-                        byte [] newBytes = Arrays.copyOf(bytes, 2*bytes.length);
-                        bytes = newBytes;
-                    }
-                    bytesRead += in.read(bytes, bytesRead, bytes.length - bytesRead);
-                }while(bytesRead == bytes.length);
+            	Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class);
 
-                if(bytesRead != -1)
+                //Expecting 6 bytes of length info
+                byte [] messageSizeBytes = new byte [6];
+                int success = in.read(messageSizeBytes);
+                if(success == 6)
                 {
+                    //Determine message length
+                    String mSizeString = new String(messageSizeBytes);
+                    int mSize = Integer.parseInt(mSizeString);
+
+                    //Read in the object bytes
+                    byte [] object = new byte [mSize];
+                    int bytesRead = 0;
+                    while(bytesRead != mSize)
+                    {
+                        bytesRead += in.read(object, bytesRead, object.length - bytesRead);
+                    }
+
                     System.out.println("Mid receive, byte buffer at "+bytesRead);
-                    ProtostuffIOUtil.mergeFrom(Arrays.copyOf(bytes, bytesRead), msg, schema);                    
+                    ProtostuffIOUtil.mergeFrom(object, msg, schema);
                     processNetworkMessage(msg);
+                    
                 }
                 else
-                {
-                    System.err.println("End of stream!");
-                    shutdownThread();
-                }
-                
-                
+                {//Failed to read in length field properly
+                    if(success == -1)
+                    {//Stream closed
+                        System.err.println("End of stream!");
+                        shutdownThread();
+                    }
+                } 
             }
             catch(InterruptedIOException e)
             {
@@ -218,6 +224,10 @@ public abstract class ServerDaemonThread extends Thread{
             {
                 System.err.println("Null Pointer Exception: +"+ e.getMessage());
                 stopOperation = true;
+            }
+            catch(RuntimeException e)
+            {
+                System.err.println("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?");
             }
             finally
             {
