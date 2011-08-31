@@ -17,14 +17,15 @@ import com.dyuproject.protostuff.runtime.RuntimeSchema;
  */
 public class PlayerRegistrationMessage extends NetworkMessage{
 
-	public String playerName;
-	public int playerID;
+    public String playerName;
+    public int playerID;
     public List<String> strings;
 
     public PlayerRegistrationMessage(String playerName)
     {
     	super("playerRegistration");
     	this.playerName = playerName;
+        playerID = -1;
     	strings = new ArrayList<String>();
     }
 
@@ -32,27 +33,15 @@ public class PlayerRegistrationMessage extends NetworkMessage{
     {
         super("playerRegistration");
         playerID = playerId;
+        playerName = "Player";
         strings = new ArrayList<String>();
     }
 
     public PlayerRegistrationMessage()
     {
     	super("playerRegistration");
+        playerID = -1;
+        playerName = "Player";
+        strings = new ArrayList<String>();
     }
-
-    /**
-     * Gets the runtime schema of this class for serialization.
-     * If you inherit from this class, you MUST OVERRIDE this method,
-     * otherwise it will be serialized as its parent, and you will lose data.
-     *
-     * Additionally you will need to add a case for it in the network read and write
-     * methods, so that the receiving end knows what type of class to deserialize it as.
-     * @return
-     */
-    @SuppressWarnings("rawtypes")
-    @Override
-	public Schema getSchema()
-    {
-    	return RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
-    }
-   }
+}

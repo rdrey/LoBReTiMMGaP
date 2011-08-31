@@ -7,10 +7,10 @@ import com.dyuproject.protostuff.runtime.RuntimeSchema;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.concurrent.ArrayBlockingQueue;
-import networkTransferObjects.NetworkMessage;
+import networkTransferObjects.*;
 import networkserver.ServerCustomisation;
 
 /**
@@ -27,6 +27,7 @@ public class ServerDaemonWriteoutThread extends Thread
     private ArrayBlockingQueue<NetworkMessage> messageQueue;
     private boolean stopOperation = false;
     private LinkedBuffer buffer = LinkedBuffer.allocate(512);
+    private ByteBuffer b = ByteBuffer.allocate(4);
 
     
 
@@ -35,6 +36,8 @@ public class ServerDaemonWriteoutThread extends Thread
         socket = writeOutSocket;
         os = socket.getOutputStream();
         messageQueue = new ArrayBlockingQueue<NetworkMessage>(ServerCustomisation.threadWriteOutBufferSize);
+        b.order(ByteOrder.BIG_ENDIAN);
+        
     }
 
     //Tries to add the message to the queue of messages waiting to be sent to
@@ -51,20 +54,49 @@ public class ServerDaemonWriteoutThread extends Thread
         {
             try
             {
-                //Serialize the message
-                NetworkMessage msg = messageQueue.take();
-                Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class);
+                //Get the message for processing
+            	NetworkMessage msg = messageQueue.take();
+            	Schema schema;
+            	//Used to flag what type of class this is in the message
+            	byte classType;
+
+            	//Determine the message type (added descendants of NetworkMessage must be defined here)
+            	if(msg instanceof PlayerRegistrationMessage)
+            	{
+            		schema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
+            		//Arbitrarily classType numbers. Doesn't matter what they are as long as they match the numbers on the server side!
+            		classType = 1;
+            	}
+            	else if(msg instanceof NetworkMessageMedium)
+            	{
+            		schema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
+            		classType = 2;
+            	}
+            	else if(msg instanceof NetworkMessageLarge)
+            	{
+            		schema = RuntimeSchema.getSchema(NetworkMessageLarge.class);
+            		classType = 3;
+            	}
+            	else//If its none of the registered subclasses of networkMessage
+            	{
+            		schema = RuntimeSchema.getSchema(NetworkMessage.class);
+            		classType = 0;
+            	}
+
+            	//Serialize the message
                 byte [] serializedObject = ProtostuffIOUtil.toByteArray(msg, schema, buffer);
 
-                //Calculate and create a leading length field (6 bytes of data)
-                NumberFormat nf = new DecimalFormat("000000");
-                byte [] lengthField = nf.format(serializedObject.length).getBytes();
-
+                //Calculate and create a leading length field (4 bytes of data, an integer)                
+                b.clear();
+                b.putInt(serializedObject.length);
+                byte [] lengthField = b.array();
                 //Stitch them together into one message
-                byte [] message = new byte[serializedObject.length + lengthField.length];
-                System.arraycopy(lengthField, 0, message, 0, lengthField.length);
-                System.arraycopy(serializedObject, 0, message, lengthField.length, serializedObject.length);
+                byte [] message = new byte[serializedObject.length + lengthField.length + 1];
+                message[0] = classType;
+                System.arraycopy(lengthField, 0, message, 1, lengthField.length);
+                System.arraycopy(serializedObject, 0, message, lengthField.length + 1, serializedObject.length);
 
+                //Log.d(NetworkVariables.TAG, "Serialized Size: "+serializedObject.length);
                 //And then send it off.
                 os.write(message);
             }
@@ -80,7 +112,8 @@ public class ServerDaemonWriteoutThread extends Thread
             }
             catch(Exception e)
             {
-                System.err.println("Unexpected error occured in network write thread!\n "+ e);
+                System.err.println("Unexpected error occured in network write thread!\n " );
+                e.printStackTrace(System.err);
             }
             finally
             {

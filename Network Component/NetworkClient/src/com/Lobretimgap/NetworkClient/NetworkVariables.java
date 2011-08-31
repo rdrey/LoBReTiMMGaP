@@ -1,5 +1,9 @@
 package com.Lobretimgap.NetworkClient;
 
+import java.util.ArrayList;
+
+import networkTransferObjects.*;
+
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
 import com.Lobretimgap.NetworkClient.Implementation.CoreNetworkThreadImpl;
 
@@ -11,7 +15,8 @@ public class NetworkVariables {
 	public static final int initialNetworkMessageMapSize = 8;
 	
 	//Replace CoreNetworkThread.class with a concrete implementation of that class.
-	public static final Class<CoreNetworkThreadImpl> coreNetworkThreadClass = CoreNetworkThreadImpl.class;
+	public static final Class<CoreNetworkThreadImpl> coreNetworkThreadClass = CoreNetworkThreadImpl.class;	
+	
 	
 	/**
 	 * Uses the class type above to create a concrete instance of the CoreNetworkThread 

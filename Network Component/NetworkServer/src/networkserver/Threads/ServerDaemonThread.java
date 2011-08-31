@@ -9,10 +9,14 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.Socket;
 import java.nio.BufferOverflowException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Vector;
 import javax.swing.event.EventListenerList;
 import networkTransferObjects.NetworkMessage;
+import networkTransferObjects.NetworkMessageLarge;
+import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
 import networkserver.EventListeners.*;
 import networkserver.Events.NetworkEvent;
@@ -30,6 +34,7 @@ public abstract class ServerDaemonThread extends Thread{
     private BufferedInputStream in;
     private boolean stopOperation = false;
     LinkedBuffer buffer = LinkedBuffer.allocate(2048);
+    ByteBuffer b = ByteBuffer.allocate(4);
 
     public int playerID;
     public String playerName;
@@ -44,7 +49,7 @@ public abstract class ServerDaemonThread extends Thread{
      */
     public ServerDaemonThread()
     {
-        
+        b.order(ByteOrder.BIG_ENDIAN);
     }
 
     /*
@@ -172,19 +177,43 @@ public abstract class ServerDaemonThread extends Thread{
         while(!stopOperation)
         {
             try
-            {
-                
-                NetworkMessage msg = new NetworkMessage();
-            	Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class);
+            {                
+                NetworkMessage msg;
+            	Schema schema;
 
                 //Expecting 6 bytes of length info
-                byte [] messageSizeBytes = new byte [6];
-                int success = in.read(messageSizeBytes);
-                if(success == 6)
+                byte [] messageHeader = new byte [5];
+                int success = in.read(messageHeader);
+                if(success == 5)
                 {
+                    //Chop off message type modifier
+                    byte classType = messageHeader[0];
+
+                    //set the message and schema to the correct type
+                    switch(classType)
+                    {
+                        case 1:
+                            msg = new PlayerRegistrationMessage();
+                            schema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
+                            break;
+                        case 2:
+                            msg = new NetworkMessageMedium();
+                            schema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
+                            break;
+                        case 3:
+                            msg = new NetworkMessageLarge();
+                            schema = RuntimeSchema.getSchema(NetworkMessageLarge.class);
+                            break;
+                        default:
+                            msg = new NetworkMessage();
+                            schema = RuntimeSchema.getSchema(NetworkMessage.class);
+                    }
+                    
                     //Determine message length
-                    String mSizeString = new String(messageSizeBytes);
-                    int mSize = Integer.parseInt(mSizeString);
+                    b.clear();
+                    b.put(messageHeader, 1, 4);
+                    b.rewind();
+                    int mSize = b.getInt();
 
                     //Read in the object bytes
                     byte [] object = new byte [mSize];
@@ -194,7 +223,7 @@ public abstract class ServerDaemonThread extends Thread{
                         bytesRead += in.read(object, bytesRead, object.length - bytesRead);
                     }
 
-                    System.out.println("Mid receive, byte buffer at "+bytesRead);
+                    //System.out.println("Mid receive, byte buffer at "+bytesRead);
                     ProtostuffIOUtil.mergeFrom(object, msg, schema);
                     processNetworkMessage(msg);
                     
@@ -232,13 +261,29 @@ public abstract class ServerDaemonThread extends Thread{
             finally
             {
                 buffer.clear();
+                b.clear();
             }
         }
     }
 
     private void processNetworkMessage(NetworkMessage message)
     {
-        if(message instanceof NetworkMessage)
+        if(message instanceof PlayerRegistrationMessage)
+        {
+            PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;
+            playerID = ServerVariables.playerNetworkAddressList.size();
+            ServerVariables.playerNetworkAddressList.add(socket.getInetAddress());
+            playerName = regMessage.playerName;
+            PlayerRegistrationMessage reply = new PlayerRegistrationMessage(playerID);
+            writeOut(reply);
+            registerPlayer(regMessage);
+
+
+            sendInitialState();
+            sendPeerList();
+            fireEvent(new NetworkEvent(this, "Connection successfully established"),  ConnectionEstablishedListener.class);
+        }
+        else if(message instanceof NetworkMessage)
         {
             NetworkMessage msg = (NetworkMessage)message;
             switch(msg.getMessageType())
@@ -290,22 +335,7 @@ public abstract class ServerDaemonThread extends Thread{
                     break;
 
             }
-        }
-        else if(message instanceof PlayerRegistrationMessage)
-        {
-            PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;
-            playerID = ServerVariables.playerNetworkAddressList.size();
-            ServerVariables.playerNetworkAddressList.add(socket.getInetAddress());            
-            playerName = regMessage.playerName;
-            PlayerRegistrationMessage reply = new PlayerRegistrationMessage(playerID);
-            writeOut(reply);
-            registerPlayer(regMessage);
-
-            
-            sendInitialState();
-            sendPeerList();
-            fireEvent(new NetworkEvent(this, "Connection successfully established"),  ConnectionEstablishedListener.class);
-        }
+        }        
         else
         {
             System.err.println("Unrecognised object received from client: "+message.getClass());

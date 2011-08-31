@@ -10,10 +10,14 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.BufferOverflowException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Vector;
 
 import networkTransferObjects.NetworkMessage;
+import networkTransferObjects.NetworkMessageLarge;
+import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
 
 import android.util.Log;
@@ -36,6 +40,7 @@ public abstract class CoreNetworkThread extends Thread
     private boolean stopOperation = false;
     public boolean isRunning = false;
     LinkedBuffer buffer = LinkedBuffer.allocate(512);
+    ByteBuffer b = ByteBuffer.allocate(4);
     private boolean connected = false;
     private int playerId;
     
@@ -48,6 +53,7 @@ public abstract class CoreNetworkThread extends Thread
 	public CoreNetworkThread()
 	{
 		peers = new Vector<ClientPeer>();
+		b.order(ByteOrder.BIG_ENDIAN);
 	}
 	
 	/**
@@ -214,24 +220,48 @@ public abstract class CoreNetworkThread extends Thread
 		if(connected)
 		{
 			isRunning = true;
-			//registerWithServer(getPlayerRegistrationInformation());
+			registerWithServer(getPlayerRegistrationInformation());
 	        //Do running stuff        
 	        while(!stopOperation)
 	        {
 	            try
 	            {
-	            	NetworkMessage msg = new NetworkMessage();
-	            	Schema<NetworkMessage> schema = RuntimeSchema.getSchema(NetworkMessage.class);
+	            	NetworkMessage msg;
+	            	Schema schema;
 
 	                //Expecting 6 bytes of length info
-	                byte [] messageSizeBytes = new byte [6];
-	                int success = in.read(messageSizeBytes);
-	                if(success == 6)
+	                byte [] messageHeader = new byte [5];
+	                int success = in.read(messageHeader);
+	                if(success == 5)
 	                {
+	                    //Chop off message type modifier
+	                    byte classType = messageHeader[0];	                    
+	                    //set the message and schema to the correct type
+	                    switch(classType)
+	                    {
+	                        case 1:
+	                            msg = new PlayerRegistrationMessage();
+	                            schema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
+	                            break;
+	                        case 2:
+	                            msg = new NetworkMessageMedium();
+	                            schema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
+	                            break;
+	                        case 3:
+	                            msg = new NetworkMessageLarge();
+	                            schema = RuntimeSchema.getSchema(NetworkMessageLarge.class);
+	                            break;
+	                        default:
+	                            msg = new NetworkMessage();
+	                            schema = RuntimeSchema.getSchema(NetworkMessage.class);
+	                    }
+	                    
 	                    //Determine message length
-	                    String mSizeString = new String(messageSizeBytes);
-	                    int mSize = Integer.parseInt(mSizeString);
-
+	                    b.clear();
+	                    b.put(messageHeader, 1, 4);
+	                    b.rewind();
+	                    int mSize = b.getInt();
+	                    
 	                    //Read in the object bytes
 	                    byte [] object = new byte [mSize];
 	                    int bytesRead = 0;
@@ -239,8 +269,7 @@ public abstract class CoreNetworkThread extends Thread
 	                    {
 	                        bytesRead += in.read(object, bytesRead, object.length - bytesRead);
 	                    }
-
-	                    System.out.println("Mid receive, byte buffer at "+bytesRead);
+	                    
 	                    ProtostuffIOUtil.mergeFrom(object, msg, schema);
 	                    processNetworkMessage(msg);
 	                    
@@ -253,7 +282,6 @@ public abstract class CoreNetworkThread extends Thread
 	                        shutdownThread();
 	                    }
 	                } 
-	                
 	            }
 	            catch(InterruptedIOException e)
 	            {
@@ -314,8 +342,12 @@ public abstract class CoreNetworkThread extends Thread
 	
 	private void processNetworkMessage(NetworkMessage message)
 	{
-		
-		if(message instanceof NetworkMessage)
+		if(message instanceof PlayerRegistrationMessage)
+        {
+        	playerId = ((PlayerRegistrationMessage)message).playerID;
+        	Log.i(NetworkVariables.TAG, "Received player ID of "+playerId+" from the server.");
+        }		
+		else if(message instanceof NetworkMessage)
 		{
 	        NetworkMessage msg = (NetworkMessage)message;
 	        switch(msg.getMessageType())
@@ -366,11 +398,7 @@ public abstract class CoreNetworkThread extends Thread
 	                //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
 	                break;        
 	        }
-		}else if(message instanceof PlayerRegistrationMessage)
-        {
-        	playerId = ((PlayerRegistrationMessage)message).playerID;
-        	Log.i(NetworkVariables.TAG, "Received player ID of "+playerId+" from the server.");
-        }
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
