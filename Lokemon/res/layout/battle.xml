@@ -1,19 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
   xmlns:android="http://schemas.android.com/apk/res/android"
-  android:layout_width="match_parent"
-  android:layout_height="match_parent" android:orientation="vertical">
-    <TableLayout android:layout_height="wrap_content" android:layout_width="match_parent" android:layout_weight="0.84" android:id="@+id/battle_view">
-        <TableRow android:id="@+id/top" android:layout_weight="1" android:layout_width="match_parent">
-            <RelativeLayout android:id="@+id/top_left" android:layout_height="wrap_content" android:layout_width="wrap_content">
-                <ImageView android:layout_width="wrap_content" android:id="@+id/area_image" android:src="@drawable/tree" android:layout_height="wrap_content"></ImageView>
+  android:orientation="vertical" android:weightSum="1.0" android:layout_height="fill_parent" android:layout_width="fill_parent" android:background="@drawable/grass_background">
+    <TableLayout android:layout_weight="0.84" android:id="@+id/battle_view" android:stretchColumns="0,1" android:weightSum="1.0" android:layout_width="match_parent" android:layout_height="0dip">
+        <TableRow android:id="@+id/top" android:layout_width="match_parent" android:weightSum="1.0" android:layout_height="0dip" android:measureWithLargestChild="true" android:layout_weight="0.55">
+            <RelativeLayout android:id="@+id/top_left" android:layout_height="match_parent" android:layout_weight="0.5">
             </RelativeLayout>
-            <RelativeLayout android:id="@+id/top_right" android:layout_height="wrap_content" android:layout_width="wrap_content"></RelativeLayout>
+            <RelativeLayout android:id="@+id/top_right" android:layout_height="match_parent" android:layout_weight="0.5">
+                <ImageView android:layout_height="wrap_content" android:id="@+id/opp_poke" android:layout_width="wrap_content" android:src="@drawable/bulbasaur" android:layout_centerInParent="true" android:layout_above="@+id/opp_level"></ImageView>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/opp_level" android:text="Lv. 8" android:textSize="12dip" android:layout_alignLeft="@+id/opp_health" android:layout_above="@+id/opp_health" android:background="#000000"></TextView>
+                <ProgressBar style="@android:style/Widget.ProgressBar.Horizontal" android:progress="50" android:id="@+id/opp_health" android:layout_height="12dip" android:layout_width="104dip" android:layout_centerHorizontal="true" android:layout_alignParentBottom="true"></ProgressBar>
+                <TextView android:id="@+id/opp_health_num" android:text="80/100" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_above="@+id/opp_health" android:layout_alignRight="@+id/opp_health" android:textSize="12dip" android:background="#000000"></TextView>
+                <TextView android:id="@+id/opp_name" android:text="Bulbasaur" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_above="@+id/opp_poke" android:layout_centerHorizontal="true" android:background="#000000"></TextView>
+            </RelativeLayout>
         </TableRow>
-        <TableRow android:id="@+id/bottom" android:layout_width="match_parent" android:layout_weight="1">
-            <RelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/bottom_left"></RelativeLayout>
-            <RelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/bottom_right"></RelativeLayout>
+        <TableRow android:id="@+id/bottom" android:layout_width="match_parent" android:weightSum="1.0" android:layout_height="0dip" android:layout_weight="0.45">
+            <RelativeLayout android:id="@+id/bottom_left" android:layout_weight="0.5" android:layout_height="match_parent">
+                <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/my_poke" android:layout_centerInParent="true" android:src="@drawable/charmander_attack" android:layout_below="@+id/my_name"></ImageView>
+                <ProgressBar android:id="@+id/my_health" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_below="@+id/my_level" android:progress="50" android:layout_height="12dip" android:layout_width="104dip" android:layout_centerHorizontal="true"></ProgressBar>
+                <TextView android:id="@+id/my_health_num" android:text="80/100" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_above="@+id/my_health" android:layout_alignRight="@+id/my_health" android:textSize="12dip" android:background="#000000"></TextView>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/my_name" android:text="Charmander" android:layout_centerHorizontal="true" android:layout_alignParentTop="true" android:background="#000000"></TextView>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_below="@+id/my_poke" android:id="@+id/my_level" android:text="Lv. 10" android:textSize="12dip" android:layout_alignLeft="@+id/my_health" android:background="#000000"></TextView>
+            </RelativeLayout>
+            <RelativeLayout android:id="@+id/bottom_right" android:layout_weight="0.5" android:layout_height="match_parent">
+                <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentBottom="true" android:layout_alignParentRight="true" android:id="@+id/attack_button" android:text="Attack" android:height="128dip" android:layout_marginRight="4dip" android:width="80dip"></Button>
+            </RelativeLayout>
         </TableRow>
     </TableLayout>
-    <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_weight="0.16" android:id="@+id/options_bar"></LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_weight="0.16" android:id="@+id/options_bar" android:orientation="horizontal" android:gravity="center_vertical" android:layout_height="0dip" android:weightSum="1">
+        <Button android:id="@+id/run_button" android:layout_width="wrap_content" android:text="Run" android:layout_weight="0.25" android:layout_height="fill_parent" android:layout_gravity="center_vertical" android:layout_margin="4dip"></Button>
+        <Button android:text="Pokémon" android:id="@+id/switch_button" android:layout_gravity="bottom" android:layout_height="match_parent" android:layout_weight="0.5" android:layout_width="wrap_content" android:layout_marginTop="32dip" android:layout_marginBottom="4dip"></Button>
+        <Button android:text="Bag" android:id="@+id/bag_button" android:layout_weight="0.25" android:layout_width="wrap_content" android:layout_height="fill_parent" android:layout_gravity="center_vertical" android:layout_margin="4dip"></Button>
+    </LinearLayout>
 </LinearLayout>

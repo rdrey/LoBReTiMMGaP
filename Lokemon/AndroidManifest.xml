@@ -22,6 +22,7 @@
         </activity>
 		<activity android:name="IntroScreen"></activity>
 		<activity android:name="GameScreen"></activity>
+		<activity android:name="BattleScreen"></activity>
 		<service android:name="com.Lobretimgap.NetworkClient.NetworkComService" />
     </application>
 </manifest>
