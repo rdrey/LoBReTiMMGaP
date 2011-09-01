@@ -125,4 +125,46 @@
 		"evolution":[],
 		"moves": [0,1,16,1,17,1,18,1,19,22,20,28,21,35,22,42]
 	},
+{
+		"index":9,
+		"name":"Caterpie",
+		"catchrate":0.1,
+		"habitat":"forest",
+		"type": ["bug"],
+		"hp":45,
+		"attack":30,
+		"defense":35,
+		"speed":45,
+		"special":20,
+		"evolution": [10,7],
+		"moves": [0,1,23,1]
+	},
+	{
+		"index":10,
+		"name":"Metapod",
+		"catchrate":0.1,
+		"habitat":"forest",
+		"type": ["bug"],
+		"hp":50,
+		"attack":20,
+		"defense":55,
+		"speed":30,
+		"special":25,
+		"evolution": [11,10],
+		"moves": [24,1]
+	},
+	{
+		"index":11,
+		"name":"Butterfree",
+		"catchrate":0.1,
+		"habitat":"forest",
+		"type": ["bug","flying"],
+		"hp":60,
+		"attack":45,
+		"defense":50,
+		"speed":70,
+		"special":80,
+		"evolution":[],
+		"moves": [25,1,4,15,26,16,7,17,27,21,28,26,29,32]
+	},
 ]		

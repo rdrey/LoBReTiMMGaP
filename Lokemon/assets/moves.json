@@ -90,5 +90,33 @@
 	{
 		"index":22,
 		"name":"Hydro Pump"
+	},
+	{
+		"index":23,
+		"name":"String Shot"
+	},
+	{
+		"index":24,
+		"name":"Harden"
+	},
+	{
+		"index":25,
+		"name":"Confusion"
+	},
+	{
+		"index":26,
+		"name":"Stun Spore"
+	},
+	{
+		"index":27,
+		"name":"Supersonic"
+	},
+	{
+		"index":28,
+		"name":"Whirlwind"
+	},
+	{
+		"index":29,
+		"name":"Psybeam"
 	}
 ]
