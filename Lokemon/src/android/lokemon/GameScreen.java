@@ -41,7 +41,7 @@ public class GameScreen extends Activity implements View.OnClickListener {
         myNick = (TextView)findViewById(R.id.my_name);
         
         removeOpp();
-        switch (Trainer.player.pokemon[0])
+        switch (G.player.pokemon.get(0).index)
         {
         case 0:
         	myPoke.setImageResource(R.drawable.bulbasaur);
@@ -54,7 +54,7 @@ public class GameScreen extends Activity implements View.OnClickListener {
         	break;
         }
         myHealth.setText("HP: 100");
-        myNick.setText(Trainer.player.nickname);
+        myNick.setText(G.player.nickname);
         
         run_button = (Button)findViewById(R.id.run_button);
         run_button.setOnClickListener(this);
@@ -85,13 +85,13 @@ public class GameScreen extends Activity implements View.OnClickListener {
     		setStatusText("You selected " + moves_spinner.getSelectedItem().toString());
     		enableAttackInterface(false);
     		if (moves_spinner.getSelectedItem().toString().equals("Growl"))
-    			Game.game.attack(0);
+    			G.game.attack(0);
     		if (moves_spinner.getSelectedItem().toString().equals("Tackle"))
-    			Game.game.attack(1);
+    			G.game.attack(1);
     	}
     	else if (v == run_button)
     	{
-    		Game.game.runAway();
+    		G.game.runAway();
     		setStatusText("You ran away...");
     		removeOpp();
     	}

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_height="wrap_content" android:orientation="vertical" android:layout_width="match_parent" android:layout_gravity="bottom" android:background="#c0000000">
+    <LinearLayout android:layout_height="match_parent" android:layout_width="match_parent" android:id="@+id/overview">
+        <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/icon_frame" android:padding="2dip">
+            <ImageView android:src="@drawable/charmander" android:id="@+id/icon" android:scaleType="fitXY" android:layout_height="64dip" android:layout_width="64dip"></ImageView>
+        </FrameLayout>
+        <LinearLayout android:layout_weight="0.4" android:layout_width="wrap_content" android:layout_height="match_parent" android:orientation="vertical" android:id="@+id/description" android:gravity="center">
+            <TextView android:layout_height="wrap_content" android:text="Charmander" style="bold" android:layout_width="wrap_content" android:id="@+id/name" android:textStyle="bold"></TextView>
+            <TextView android:layout_height="wrap_content" android:text="Type: Fire" android:layout_width="wrap_content" android:id="@+id/type"></TextView>
+            <ProgressBar android:progress="50" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_height="8dip" android:id="@+id/health_bar" android:layout_width="96dip" android:layout_marginTop="4dip"></ProgressBar>
+        </LinearLayout>
+        <TableLayout android:layout_weight="0.4" android:layout_height="match_parent" android:gravity="center_vertical" android:layout_width="wrap_content" android:id="@+id/stats">
+            <TableRow android:layout_width="wrap_content" android:layout_height="wrap_content" android:weightSum="1.0" android:id="@+id/top">
+                <TextView android:layout_width="wrap_content" android:layout_weight="0.1" android:layout_height="wrap_content" android:text="A:" android:id="@+id/a_label" android:textStyle="bold"></TextView>
+                <TextView android:layout_width="wrap_content" android:layout_weight="0.4" android:layout_height="wrap_content" android:text="50" android:id="@+id/attack"></TextView>
+                <TextView android:layout_width="wrap_content" android:layout_weight="0.1" android:layout_height="wrap_content" android:text="D:" android:id="@+id/d_label" android:textStyle="bold"></TextView>
+                <TextView android:layout_width="wrap_content" android:layout_weight="0.4" android:layout_height="wrap_content" android:text="50" android:id="@+id/defense"></TextView>
+            </TableRow>
+            <TableRow android:layout_width="wrap_content" android:layout_height="wrap_content" android:weightSum="1.0" android:id="@+id/bottom">
+                <TextView android:layout_width="wrap_content" android:layout_weight="0.1" android:layout_height="wrap_content" android:text="SD:" android:id="@+id/sd_label" android:textStyle="bold"></TextView>
+                <TextView android:layout_width="wrap_content" android:layout_weight="0.4" android:layout_height="wrap_content" android:text="50" android:id="@+id/speed"></TextView>
+                <TextView android:layout_width="wrap_content" android:layout_weight="0.1" android:layout_height="wrap_content" android:text="SP:" android:id="@+id/sp_label" android:textStyle="bold"></TextView>
+                <TextView android:layout_width="wrap_content" android:layout_weight="0.4" android:layout_height="wrap_content" android:text="50" android:id="@+id/special"></TextView>
+            </TableRow>
+            <TableRow android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/health_row">
+                <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/hp_label" android:textStyle="bold" android:text="HP:" android:layout_weight="0.1"></TextView>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/hp" android:layout_weight="0.4" android:text="50"></TextView>
+                <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/lv_label" android:text="LV:" android:textStyle="bold" android:layout_weight="0.1"></TextView>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/level" android:layout_weight="0.4" android:text="22"></TextView>
+            </TableRow>
+        </TableLayout>
+    </LinearLayout>
+</LinearLayout>

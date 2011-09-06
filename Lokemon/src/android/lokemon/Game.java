@@ -18,8 +18,6 @@ import networkTransferObjects.NetworkMessage;
 
 public class Game {
 	
-	public static Game game;
-	
 	// network variables
 	private boolean connected;
 	private boolean networkBound;
@@ -41,7 +39,7 @@ public class Game {
 	
 	private Game()
 	{
-		game = this;
+		G.game = this;
 		connected = false;
 		networkBound = false;
 		battleSeed = 0;
@@ -58,7 +56,7 @@ public class Game {
 		try
 		{
 			AssetManager assetManager = current.getAssets();
-			BufferedReader input = new BufferedReader(new InputStreamReader(assetManager.open("pokemon.json")));
+			BufferedReader input = new BufferedReader(new InputStreamReader(assetManager.open("base_pokemon.json")));
 			String str = "";
 			String in = input.readLine();
 			while (in != null)
@@ -66,7 +64,7 @@ public class Game {
 				str += in;
 				in = input.readLine();
 			}
-			Pokemon.loadPokemon(str);
+			BasePokemon.loadPokemon(str, current);
 			input.close();
 			assetManager.close();
 		}
@@ -75,13 +73,13 @@ public class Game {
 	
 	public static void startGame(GameScreen current)
 	{
-		game.gameScreen = current;
-		game.createConnection(current);
+		G.game.gameScreen = current;
+		G.game.createConnection(current);
 	}
 	
 	public static void endGame()
 	{
-		if(game.binder != null)game.binder.sendTerminationRequest(new NetworkMessage("Bye bye!"));
+		if(G.game.binder != null)G.game.binder.sendTerminationRequest(new NetworkMessage("Bye bye!"));
 		else Log.e(NetworkVariables.TAG, "Binder is null");
 	}
 	
@@ -92,14 +90,14 @@ public class Game {
 	
 	public void initiateBattle()
 	{
-		binder.sendGameUpdate(new NetworkMessage("battle,"+Trainer.player.nickname + "," + Trainer.player.pokemon[0]));
+		binder.sendGameUpdate(new NetworkMessage("battle,"+G.player.nickname + "," + G.player.pokemon.get(0).index));
 	}
 	
 	public void acceptBattle()
 	{
 		battleSeed = (int)(Math.random()*100);
 		random = new Random(battleSeed);
-		binder.sendGameUpdate(new NetworkMessage("accept,"+Trainer.player.nickname + "," + Trainer.player.pokemon[0] + "," + battleSeed));
+		binder.sendGameUpdate(new NetworkMessage("accept,"+G.player.nickname + "," + G.player.pokemon.get(0).index + "," + battleSeed));
 		gameScreen.setStatusText("Accepted battle...");
 	}
 	
@@ -124,8 +122,8 @@ public class Game {
 		gameScreen.setOppHealth(oppHealth);
 		yourMove = -1;
 		opponentMove = -1;
-		Log.e(NetworkVariables.TAG, "move played by " + Trainer.player.nickname);
-		setBattleTurn(Pokemon.pokemon[opponentIndex].speed <= Pokemon.pokemon[Trainer.player.pokemon[0]].speed);
+		Log.e(NetworkVariables.TAG, "move played by " + G.player.nickname);
+		setBattleTurn(G.basePokemon[opponentIndex].speed <= G.player.pokemon.get(0).getBase().speed);
 	}
 	
 	public void setBattleTurn(boolean self)
@@ -192,7 +190,7 @@ public class Game {
 						gameScreen.setOppNick(opponentNick);
 						gameScreen.setOppHealth(100);
 						acceptBattle();
-						setBattleTurn(Pokemon.pokemon[opponentIndex].speed <= Pokemon.pokemon[Trainer.player.pokemon[0]].speed);
+						setBattleTurn(G.basePokemon[opponentIndex].speed <= G.player.pokemon.get(0).getBase().speed);
 					}
 					else if (args[0].equals("accept"))
 					{
@@ -203,7 +201,7 @@ public class Game {
 						gameScreen.setOppPoke(opponentIndex);
 						gameScreen.setOppNick(opponentNick);
 						gameScreen.setOppHealth(100);
-						setBattleTurn(Pokemon.pokemon[opponentIndex].speed <= Pokemon.pokemon[Trainer.player.pokemon[0]].speed);
+						setBattleTurn(G.basePokemon[opponentIndex].speed <= G.player.pokemon.get(0).getBase().speed);
 					}
 					else if (args[0].equals("run"))
 					{

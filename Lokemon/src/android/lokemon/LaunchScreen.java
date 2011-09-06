@@ -2,6 +2,7 @@ package android.lokemon;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.lokemon.G.Mode;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
@@ -25,16 +26,16 @@ public class LaunchScreen extends Activity implements View.OnClickListener{
         continue_button = (Button)findViewById(R.id.continue_button);
         continue_button.setOnClickListener(this);
         welcome_text = (TextView)findViewById(R.id.welcome_text);
-        
-        // load trainer data if there is any
-        Trainer.loadTrainer(this);
     }
     
     public void onStart () 
     {
+    	// load game data
     	Game.loadGameData(this);
+    	// load trainer data if there is any
+        Trainer.loadTrainer(this);
     	// check if a player already exists
-        if (Trainer.player == null)
+        if (G.player == null)
         {
         	welcome_text.setText("Welcome, trainer!");
         	continue_button.setEnabled(false);
@@ -42,7 +43,7 @@ public class LaunchScreen extends Activity implements View.OnClickListener{
         }
         else
         {
-        	welcome_text.setText("Trainer: " + Trainer.player.nickname);
+        	welcome_text.setText("Trainer: " + G.player.nickname);
         	continue_button.setEnabled(true);
         	continue_button.setVisibility(View.VISIBLE);
         }
