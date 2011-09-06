@@ -62,6 +62,11 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 			Intent intent = new Intent(v.getContext(), PokemonPopup.class);
 	        startActivityForResult(intent, 0);
 		}
+		else if (v == attack_button)
+		{
+			Intent intent = new Intent(v.getContext(), MovesPopup.class);
+	        startActivityForResult(intent, 0);
+		}
 	}
 	
 	public void onPause()

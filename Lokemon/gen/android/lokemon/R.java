@@ -39,7 +39,8 @@ public final class R {
     public static final class id {
         public static final int a_label=0x7f060033;
         public static final int absoluteLayout1=0x7f060016;
-        public static final int attack=0x7f060034;
+        public static final int accuracy=0x7f060034;
+        public static final int attack=0x7f06003a;
         public static final int attack_button=0x7f060011;
         public static final int avatar_label=0x7f06001b;
         public static final int avatars=0x7f06001c;
@@ -52,25 +53,26 @@ public final class R {
         public static final int bulbasaur=0x7f060023;
         public static final int charmander=0x7f060024;
         public static final int continue_button=0x7f060029;
-        public static final int d_label=0x7f060035;
-        public static final int defense=0x7f060036;
-        public static final int description=0x7f06002e;
-        public static final int health_bar=0x7f060031;
-        public static final int health_row=0x7f06003b;
-        public static final int hp=0x7f06003d;
-        public static final int hp_label=0x7f06003c;
-        public static final int icon=0x7f06002d;
-        public static final int icon_frame=0x7f06002c;
+        public static final int d_label=0x7f06003b;
+        public static final int defense=0x7f06003c;
+        public static final int description=0x7f060037;
+        public static final int effect=0x7f06002e;
+        public static final int health_bar=0x7f060038;
+        public static final int health_row=0x7f060041;
+        public static final int hp=0x7f060043;
+        public static final int hp_label=0x7f060042;
+        public static final int icon=0x7f060036;
+        public static final int icon_frame=0x7f060035;
         public static final int leaf=0x7f06001d;
-        public static final int level=0x7f06003f;
-        public static final int lv_label=0x7f06003e;
+        public static final int level=0x7f060045;
+        public static final int lv_label=0x7f060044;
         public static final int moves_spinner=0x7f060018;
         public static final int my_health=0x7f06000d;
         public static final int my_health_num=0x7f06000f;
         public static final int my_level=0x7f06000e;
         public static final int my_name=0x7f06000c;
         public static final int my_poke=0x7f06000b;
-        public static final int name=0x7f06002f;
+        public static final int name=0x7f06002c;
         public static final int new_button=0x7f06002a;
         public static final int next_button=0x7f06001f;
         public static final int nick_field=0x7f06001a;
@@ -82,24 +84,28 @@ public final class R {
         public static final int opp_poke=0x7f060004;
         public static final int options_bar=0x7f060012;
         public static final int overview=0x7f06002b;
+        public static final int p_label=0x7f060031;
         public static final int poke_description=0x7f060026;
         public static final int poke_label=0x7f060021;
         public static final int poke_stats=0x7f060027;
         public static final int pokemon=0x7f060022;
+        public static final int power=0x7f060032;
+        public static final int pp=0x7f06002f;
         public static final int red=0x7f06001e;
+        public static final int right=0x7f060030;
         public static final int run_button=0x7f060013;
-        public static final int sd_label=0x7f060037;
-        public static final int sp_label=0x7f060039;
-        public static final int special=0x7f06003a;
-        public static final int speed=0x7f060038;
+        public static final int sd_label=0x7f06003d;
+        public static final int sp_label=0x7f06003f;
+        public static final int special=0x7f060040;
+        public static final int speed=0x7f06003e;
         public static final int squirtle=0x7f060025;
-        public static final int stats=0x7f060032;
+        public static final int stats=0x7f060039;
         public static final int status=0x7f060017;
         public static final int switch_button=0x7f060014;
         public static final int top=0x7f060001;
         public static final int top_left=0x7f060002;
         public static final int top_right=0x7f060003;
-        public static final int type=0x7f060030;
+        public static final int type=0x7f06002d;
         public static final int welcome_text=0x7f060028;
     }
     public static final class layout {
@@ -108,7 +114,8 @@ public final class R {
         public static final int intro=0x7f030002;
         public static final int list_popup=0x7f030003;
         public static final int main=0x7f030004;
-        public static final int pokemon_item=0x7f030005;
+        public static final int move_item=0x7f030005;
+        public static final int pokemon_item=0x7f030006;
     }
     public static final class string {
         public static final int app_name=0x7f040001;

@@ -71,10 +71,8 @@ public class PokemonPopup extends ListActivity{
     			name.setText(entry.getName());
     			hp.setText(entry.getHP() + "");
     			bar.setProgress((int)(entry.getHP()/(float)entry.getTotalHP()*100.0f));
-    			String type1 = entry.getType1();
-    			String type2 = entry.getType2();
-    			String t = Character.toUpperCase(type1.charAt(0)) + type1.substring(1);
-    			if (type2 != null)t += "/" + Character.toUpperCase(type2.charAt(0)) + type2.substring(1);
+    			String t = G.capitalize((entry.getType1().name));
+    			if (entry.getType2() != null)t += "/" + G.capitalize((entry.getType2().name));
     			type.setText(t);
     			attack.setText(entry.getAttack() + "");
     			defense.setText(entry.getDefense() + "");

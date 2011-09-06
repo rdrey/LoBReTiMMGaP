@@ -1,9 +1,5 @@
 package android.lokemon;
 
-import java.util.ArrayList;
-
-import com.Lobretimgap.NetworkClient.NetworkVariables;
-
 import android.app.Activity;
 import android.os.*;
 import android.widget.*;

@@ -124,9 +124,9 @@ public class Pokemon {
 	
 	public String getName() {return base.name;}
 	
-	public String getType1() {return base.type[0];}
+	public ElemType getType1() {return base.type1;}
 	
-	public String getType2() {if (base.type.length==2) return base.type[1]; else return null;}
+	public ElemType getType2() {return base.type2;}
 	
 	public int getSpriteNormal() {return base.spriteID;}
 	

@@ -1,7 +1,11 @@
 [
 	{
 		"index":0,
-		"name":"Tackle"
+		"name":"Tackle",
+		"type":"normal",
+		"pp":35,
+		"power":35,
+		"accuracy":95
 	},
 	{
 		"index":1,

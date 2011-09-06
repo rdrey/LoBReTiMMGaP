@@ -8,7 +8,7 @@
         </FrameLayout>
         <LinearLayout android:layout_weight="0.4" android:layout_width="wrap_content" android:layout_height="match_parent" android:orientation="vertical" android:id="@+id/description" android:gravity="center">
             <TextView android:layout_height="wrap_content" android:text="Charmander" style="bold" android:layout_width="wrap_content" android:id="@+id/name" android:textStyle="bold"></TextView>
-            <TextView android:layout_height="wrap_content" android:text="Type: Fire" android:layout_width="wrap_content" android:id="@+id/type"></TextView>
+            <TextView android:layout_height="wrap_content" android:text="Type: Fire" android:id="@+id/type" android:layout_width="wrap_content"></TextView>
             <ProgressBar android:progress="50" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_height="8dip" android:id="@+id/health_bar" android:layout_width="96dip" android:layout_marginTop="4dip"></ProgressBar>
         </LinearLayout>
         <TableLayout android:layout_weight="0.4" android:layout_height="match_parent" android:gravity="center_vertical" android:layout_width="wrap_content" android:id="@+id/stats">

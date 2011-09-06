@@ -5,7 +5,11 @@ import android.content.res.*;
 import android.os.*;
 import android.util.Log;
 import android.app.Activity;
-import java.io.*;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Random;
 
 //networking components
@@ -56,19 +60,30 @@ public class Game {
 		try
 		{
 			AssetManager assetManager = current.getAssets();
-			BufferedReader input = new BufferedReader(new InputStreamReader(assetManager.open("base_pokemon.json")));
-			String str = "";
-			String in = input.readLine();
-			while (in != null)
-			{
-				str += in;
-				in = input.readLine();
-			}
-			BasePokemon.loadPokemon(str, current);
-			input.close();
-			assetManager.close();
+			ElemType.loadTypes(Game.readFile(assetManager.open("types.json")));
+			Log.i("Data load", "Types loaded");
+			BasePokemon.loadPokemon(Game.readFile(assetManager.open("base_pokemon.json")), current);
+			Log.i("Data load", "Pokemon loaded");
+			Move.loadMoves(Game.readFile(assetManager.open("moves.json")));
+			Log.i("Data load", "Moves loaded");
+			//assetManager.close(); // started causing a RuntimeException for no apparent reason
 		}
 		catch (Exception e) {Log.e("Data load", e.getMessage());}
+	}
+	
+	// read all from a file
+	public static String readFile(InputStream file) throws IOException
+	{
+		BufferedReader input = new BufferedReader(new InputStreamReader(file));
+		String str = "";
+		String in = input.readLine();
+		while (in != null)
+		{
+			str += in;
+			in = input.readLine();
+		}
+		input.close();
+		return str;
 	}
 	
 	public static void startGame(GameScreen current)

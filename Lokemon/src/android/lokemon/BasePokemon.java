@@ -4,6 +4,7 @@ import org.json.*;
 
 import android.app.Activity;
 import android.content.res.Resources;
+import android.lokemon.G.Types;
 import android.util.Log;
 
 public class BasePokemon {
@@ -12,6 +13,8 @@ public class BasePokemon {
 	public String name;
 	public float catchrate;
 	public String [] type;
+	public ElemType type1;
+	public ElemType type2;
 	public int hp;
 	public int attack;
 	public int defense;
@@ -28,8 +31,10 @@ public class BasePokemon {
 		name = object.getString("name");
 		catchrate = (float)object.getDouble("catchrate");
 		JSONArray array = object.getJSONArray("type");
-		type = new String[array.length()];
-		for (int i = 0; i < type.length; i++) type[i] = array.getString(i);
+		//type = new String[array.length()];
+		//for (int i = 0; i < type.length; i++) type[i] = array.getString(i);
+		type1 = G.types[Types.valueOf(array.getString(0)).ordinal()];
+		if (array.length() == 2) type2 = G.types[Types.valueOf(array.getString(1)).ordinal()];
 		hp = object.getInt("hp");
 		attack = object.getInt("attack");
 		defense = object.getInt("defense");
@@ -52,13 +57,13 @@ public class BasePokemon {
 			spriteID = current.getResources().getIdentifier(spriteName, "drawable", "android.lokemon");
 			spriteID_attack = current.getResources().getIdentifier(spriteName + "_attack", "drawable", "android.lokemon");
 		}
-		catch (Resources.NotFoundException e){ Log.e("loading", e.getMessage()); }
+		catch (Resources.NotFoundException e){ Log.e("Data load", e.getMessage()); }
 	}
 	
 	public String getDescription()
 	{
-		String desc = name + " is a " + (type.length==2?"dual ":"") + Character.toUpperCase(type[0].charAt(0)) + type[0].substring(1);
-		if (type.length == 2) desc += "/" + Character.toUpperCase(type[1].charAt(0)) + type[1].substring(1);
+		String desc = name + " is a " + (type2!=null?"dual ":"") + G.capitalize(type1.name);
+		if (type2 != null) desc += "/" + G.capitalize(type2.name);
 		desc += " type Pokémon.";
 		if (evolution != null)
 		{
