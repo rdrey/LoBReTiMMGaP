@@ -25,6 +25,7 @@
 		<activity android:name="BattleScreen"></activity>
 		<activity android:name="PokemonPopup" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
 		<activity android:name="MovesPopup" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
+		<activity android:name="Wait" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
 		<service android:name="com.Lobretimgap.NetworkClient.NetworkComService" />
     </application>
 </manifest>

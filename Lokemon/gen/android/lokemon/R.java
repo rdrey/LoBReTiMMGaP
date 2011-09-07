@@ -51,6 +51,7 @@ public final class R {
         public static final int bottom_left=0x7f06000a;
         public static final int bottom_right=0x7f060010;
         public static final int bulbasaur=0x7f060023;
+        public static final int center=0x7f06004a;
         public static final int charmander=0x7f060024;
         public static final int col_1=0x7f06003a;
         public static final int col_2=0x7f06003b;
@@ -69,6 +70,7 @@ public final class R {
         public static final int leaf=0x7f06001d;
         public static final int level=0x7f060049;
         public static final int lv_label=0x7f060048;
+        public static final int message=0x7f06004c;
         public static final int moves_spinner=0x7f060018;
         public static final int my_health=0x7f06000d;
         public static final int my_health_num=0x7f06000f;
@@ -94,6 +96,7 @@ public final class R {
         public static final int pokemon=0x7f060022;
         public static final int power=0x7f060032;
         public static final int pp=0x7f06002f;
+        public static final int progress=0x7f06004b;
         public static final int red=0x7f06001e;
         public static final int right=0x7f060030;
         public static final int run_button=0x7f060013;
@@ -120,6 +123,7 @@ public final class R {
         public static final int main=0x7f030004;
         public static final int move_item=0x7f030005;
         public static final int pokemon_item=0x7f030006;
+        public static final int wait=0x7f030007;
     }
     public static final class string {
         public static final int app_name=0x7f040001;

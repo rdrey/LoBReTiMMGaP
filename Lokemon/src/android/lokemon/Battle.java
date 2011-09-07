@@ -1,5 +1,6 @@
 package android.lokemon;
 
+import android.content.Intent;
 import android.lokemon.G.Mode;
 import android.util.Log;
 

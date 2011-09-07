@@ -3,6 +3,7 @@ package android.lokemon;
 import java.util.ArrayList;
 import android.app.ListActivity;
 import android.content.Context;
+import android.content.Intent;
 import android.lokemon.G.Mode;
 import android.os.Bundle;
 import android.util.Log;
@@ -29,6 +30,8 @@ public class MovesPopup extends ListActivity{
 		if (G.mode == Mode.BATTLE)
 		{
 			G.battle.selectMove(entries.get(pos)[0]);
+			Intent intent = new Intent(v.getContext(), Wait.class);
+	        startActivityForResult(intent, 0);
 			finish();
 		}
 	}
