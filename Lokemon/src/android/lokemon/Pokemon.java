@@ -1,6 +1,6 @@
 package android.lokemon;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 
 import org.json.*;
 
@@ -10,7 +10,7 @@ public class Pokemon {
 	
 	// public attributes
 	public int index;
-	// battle variables aren't saved and only persist for a single battle
+	// battle variables
 	public boolean inBattle;
 	public float accuracy;
 	public float evasion;
@@ -28,6 +28,7 @@ public class Pokemon {
 	private int level;
 	private int xp;
 	private int xp_to_level;
+	private int [] pp;
 	
 	// creates new Pokemon at level 1
 	public Pokemon(int pokeIndex, int level)
@@ -35,6 +36,9 @@ public class Pokemon {
 		index = pokeIndex;
 		inBattle = false;
 		base = G.basePokemon[index];
+		pp = new int[base.moves.length/2];
+		for (int i = 0; i < base.moves.length; i+=2) 
+			pp[i/2] = G.moves[base.moves[i]].pp;
 		hp_current = base.hp;
 		xp = (int)Math.pow(level, 3);
 		xp_to_level = (int)Math.pow(level+1, 3);
@@ -46,7 +50,7 @@ public class Pokemon {
 	}
 	
 	// recreates existing Pokemon with specific hp, level, IVs and EVs
-	public Pokemon(int pokeIndex, int hp, int xp, int level, int [] IVs, int [] EVs, int [] stats)
+	public Pokemon(int pokeIndex, int hp, int xp, int level, int [] IVs, int [] EVs, int [] stats, int [] pp)
 	{
 		index = pokeIndex;
 		base = G.basePokemon[index];
@@ -62,14 +66,16 @@ public class Pokemon {
 		speed = stats[2];
 		special = stats[3];
 		hp_total = stats[4];
+		this.pp = pp;
 	}
 	
 	// recreates existing Pokemon from JSON
 	public Pokemon (JSONObject object) throws JSONException
 	{
 		this(object.getInt("index"), object.getInt("hp"), object.getInt("xp"),
-				object.getInt("level"), G.getIntArray(object.getJSONArray("iv")),
-				G.getIntArray(object.getJSONArray("ev")), G.getIntArray(object.getJSONArray("stats")));
+				object.getInt("level"), Util.getIntArray(object.getJSONArray("iv")),
+				Util.getIntArray(object.getJSONArray("ev")), Util.getIntArray(object.getJSONArray("stats")),
+				Util.getIntArray(object.getJSONArray("pp")));
 	}
 	
 	private void levelUp()
@@ -138,6 +144,17 @@ public class Pokemon {
 		return (int)(0.64*baseTotal - 113); // formula based on linear regression
 	}
 	
+	public ArrayList<int[]> getMovesAndPP()
+	{
+		ArrayList<int[]> mp = new ArrayList<int[]>();
+		for (int i = 0 ; i < base.moves.length; i+=2)
+		{
+			if (base.moves[i+1] <= level && G.moves[base.moves[i]].category < 1) mp.add(new int[]{base.moves[i],pp[i/2]});
+			else break;
+		}
+		return mp;
+	}
+	
 	public String getJSON() throws JSONException
 	{
 		JSONObject obj = new JSONObject();
@@ -152,8 +169,9 @@ public class Pokemon {
 		obj.accumulate("hp", hp_current);
 		obj.accumulate("level", level);
 		obj.accumulate("stats", stats);
-		obj.accumulate("ev", G.getIntJSONArray(EV));
-		obj.accumulate("iv", G.getIntJSONArray(IV));
+		obj.accumulate("ev", Util.getIntJSONArray(EV));
+		obj.accumulate("iv", Util.getIntJSONArray(IV));
+		obj.accumulate("pp", Util.getIntJSONArray(pp));
 		return obj.toString();
 	}
 }

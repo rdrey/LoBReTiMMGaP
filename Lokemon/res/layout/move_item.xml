@@ -7,7 +7,7 @@
             <TextView android:layout_weight="0.5" android:layout_height="wrap_content" android:text="Tackle" style="bold" android:layout_width="wrap_content" android:id="@+id/name" android:textStyle="bold"></TextView>
             <TextView android:layout_weight="0.5" android:layout_height="wrap_content" android:text="Normal" android:layout_width="wrap_content" android:id="@+id/type" android:gravity="right"></TextView>
         </LinearLayout>
-        <TextView android:layout_height="wrap_content" android:text="This move only does once-off damage." android:layout_width="match_parent" android:id="@+id/effect"></TextView>
+        <TextView android:layout_height="wrap_content" android:text="This move only does once-off damage." android:layout_width="match_parent" android:id="@+id/effect" android:textStyle="italic"></TextView>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:weightSum="1.0" android:id="@+id/bottom">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/pp" android:text="20 PP" android:textStyle="bold" android:layout_weight="0.5"></TextView>
             <TableRow android:layout_width="wrap_content" android:id="@+id/right" android:layout_weight="0.5" android:weightSum="1.0" android:layout_height="wrap_content">

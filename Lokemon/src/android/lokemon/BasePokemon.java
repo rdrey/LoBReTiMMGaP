@@ -62,8 +62,8 @@ public class BasePokemon {
 	
 	public String getDescription()
 	{
-		String desc = name + " is a " + (type2!=null?"dual ":"") + G.capitalize(type1.name);
-		if (type2 != null) desc += "/" + G.capitalize(type2.name);
+		String desc = name + " is a " + (type2!=null?"dual ":"") + Util.capitalize(type1.name);
+		if (type2 != null) desc += "/" + Util.capitalize(type2.name);
 		desc += " type Pokémon.";
 		if (evolution != null)
 		{

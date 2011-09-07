@@ -62,10 +62,10 @@ public class Game {
 			AssetManager assetManager = current.getAssets();
 			ElemType.loadTypes(Game.readFile(assetManager.open("types.json")));
 			Log.i("Data load", "Types loaded");
-			BasePokemon.loadPokemon(Game.readFile(assetManager.open("base_pokemon.json")), current);
-			Log.i("Data load", "Pokemon loaded");
 			Move.loadMoves(Game.readFile(assetManager.open("moves.json")));
 			Log.i("Data load", "Moves loaded");
+			BasePokemon.loadPokemon(Game.readFile(assetManager.open("base_pokemon.json")), current);
+			Log.i("Data load", "Pokemon loaded");
 			//assetManager.close(); // started causing a RuntimeException for no apparent reason
 		}
 		catch (Exception e) {Log.e("Data load", e.getMessage());}

@@ -3,61 +3,153 @@
 		"index":0,
 		"name":"Tackle",
 		"type":"normal",
+		"category":0,
 		"pp":35,
 		"power":35,
-		"accuracy":95
+		"accuracy":95,
+		"desc":"Deals once-off damage."
 	},
 	{
 		"index":1,
-		"name":"Growl"
+		"name":"Growl",
+		"type":"normal",
+		"category":2,
+		"pp":40,
+		"accuracy":100,
+		"opp_effect":"decreases attack by 1 level",
+		"desc":"Decreases target's Attack by 1 level."
 	},
 	{
 		"index":2,
-		"name":"Leech Seed"
+		"name":"Leech Seed",
+		"type":"grass",
+		"category":2,
+		"pp":10,
+		"accuracy":90,
+		"opp_effect":"decreases target hp by 1/16th or 1hp every turn",
+		"player_effect":"adds leeched hp to active poke",
+		"restrictions":"grass-type, Haze, switching",
+		"desc":"Plants seed on target that leeches HP."
 	},
 	{
 		"index":3,
-		"name":"Vine Whip"
+		"name":"Vine Whip",
+		"type":"grass",
+		"category":0,
+		"pp":10,
+		"power":35,
+		"accuracy":100,
+		"desc":"Deals once-off damage."
 	},
 	{
 		"index":4,
-		"name":"Poison Powder"
+		"name":"Poison Powder",
+		"type":"poison",
+		"category":1,
+		"pp":35,
+		"accuracy":75,
+		"opp_effect":"is poisoned",
+		"restrictions":"poison-type,steel-type,has major status ailment",
+		"desc":"Poisons target."
 	},
 	{
 		"index":5,
-		"name":"Razor Leaf"
+		"name":"Razor Leaf",
+		"type":"grass",
+		"category":0,
+		"pp":25,
+		"power":55,
+		"accuracy":95,
+		"desc":"Deals once-off damage with a high critical hit chance.",
+		"critical":true
 	},
 	{
 		"index":6,
-		"name":"Growth"
+		"name":"Growth",
+		"type":"normal",
+		"category":2,
+		"pp":40,
+		"player_effect":"increases special by one stage",
+		"restrictions":"does not affect critical hits",
+		"desc":"Increases active Pokémon's Special by 1 stage"
 	},
 	{
 		"index":7,
-		"name":"Sleep Powder"
+		"name":"Sleep Powder",
+		"type":"grass",
+		"category":1,
+		"pp":15,
+		"accuracy":75,
+		"opp_effect":"puts to sleep",
+		"restrictions":"has major status ailment",
+		"desc":"Puts target to sleep"
 	},
 	{
 		"index":8,
-		"name":"Solar Beam"
+		"name":"Solar Beam",
+		"type":"grass",
+		"category":2,
+		"pp":10,
+		"power":120,
+		"accuracy":100,
+		"turns":2,
+		"restrictions":"sleep,freez,partial trapping,flinch pauses",
+		"desc":"Deals large once-off damage but takes two turns to execute."
 	},
 	{
 		"index":9,
-		"name":"Scratch"
+		"name":"Scratch",
+		"type":"normal",
+		"category":0,
+		"pp":35,
+		"power":40,
+		"accuracy":100,
+		"desc":"Deals once-off damage."
 	},
 	{
 		"index":10,
-		"name":"Ember"
+		"name":"Ember",
+		"type":"fire",
+		"category":1,
+		"pp":25,
+		"power":40,
+		"accuracy":100,
+		"opp_effect":"10% chance of burning",
+		"restrictions":"has major status ailments",
+		"desc":"Deals once-off damage and has a chance of burning target."
 	},
 	{
 		"index":11,
-		"name":"Leer"
+		"name":"Leer",
+		"type":"normal",
+		"category":2,
+		"pp":30,
+		"accuracy":100,
+		"opp_effect":"decrease defense by 1 stage",
+		"desc":"Decreases target's Defense by 1 stage."
 	},
 	{
 		"index":12,
-		"name":"Rage"
+		"name":"Rage",
+		"type":"normal",
+		"category":2,
+		"pp":20,
+		"power":20,
+		"accuracy":100,
+		"player_effect":"rages every turn until fainting and doesn't use pp subsequently, increases attack stat by 1 stage if user is damaged",
+		"restrictions":"sleep,freeze,partial trapping,flinching pauses it",
+		"desc":"Is used every turn and increases active Pokémon's Attack by 1 stage everytime it sustains damage."
 	},
 	{
 		"index":13,
-		"name":"Slash"
+		"name":"Slash",
+		"type":"normal",
+		"category":0,
+		"pp":20,
+		"power":70,
+		"accuracy":100,
+		"desc":"Deals large once-off damage with a high critical hit chance.",
+		"critical":true
 	},
 	{
 		"index":14,

@@ -35,4 +35,11 @@ public class Battle {
 		poke_opp = newPoke;
 		display.switchOppPoke(poke_opp);
 	}
+	
+	public void selectMove(int moveIndex)
+	{
+		// battle logic here
+	}
+	
+	public Pokemon getSelectedPokemon() {return poke_player;}
 }

@@ -3,6 +3,7 @@ package android.lokemon;
 import java.util.ArrayList;
 import android.app.ListActivity;
 import android.content.Context;
+import android.graphics.Color;
 import android.lokemon.G.Mode;
 import android.os.Bundle;
 import android.util.Log;
@@ -36,6 +37,22 @@ public class PokemonPopup extends ListActivity{
 			G.battle.switchPlayerPoke(entries.get(pos));
 			finish();
 		}
+		else if (G.mode == Mode.MAP)
+		{
+			// show moves popup
+		}
+	}
+	
+	public void onPause()
+	{
+		super.onPause();
+		this.setVisible(false);
+	}
+	
+	public void onResume()
+	{
+		super.onResume();
+		this.setVisible(true);
 	}
 	
 	private class EntryAdapter extends ArrayAdapter<Pokemon>{
@@ -71,9 +88,14 @@ public class PokemonPopup extends ListActivity{
     			name.setText(entry.getName());
     			hp.setText(entry.getHP() + "");
     			bar.setProgress((int)(entry.getHP()/(float)entry.getTotalHP()*100.0f));
-    			String t = G.capitalize((entry.getType1().name));
-    			if (entry.getType2() != null)t += "/" + G.capitalize((entry.getType2().name));
+    			String t = Util.capitalize((entry.getType1().name));
+    			if (entry.getType2() != null)t += "/" + Util.capitalize((entry.getType2().name));
     			type.setText(t);
+    			v.findViewById(R.id.col_1).setBackgroundColor(entry.getType1().colour_id);
+    			if (entry.getType2() == null) 
+    				v.findViewById(R.id.col_2).setBackgroundColor(entry.getType1().colour_id);
+    			else
+    				v.findViewById(R.id.col_2).setBackgroundColor(entry.getType2().colour_id);
     			attack.setText(entry.getAttack() + "");
     			defense.setText(entry.getDefense() + "");
     			special.setText(entry.getSpecial() + "");
