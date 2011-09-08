@@ -10,6 +10,8 @@ public class Battle {
 	private Pokemon poke_player;
 	// current pokemon selected by opponent
 	private Pokemon poke_opp;
+	// how many pokemon are able to battle
+	int pokeCount;
 	
 	// a reference to the screen that displays the battle
 	private BattleScreen display;
@@ -17,9 +19,14 @@ public class Battle {
 	public Battle(BattleScreen screen)
 	{
 		display = screen;
+		pokeCount = 0;
 		G.mode = Mode.BATTLE;
 		switchPlayerPoke(G.player.pokemon.get(0));
 		switchOppPoke(G.player.pokemon.get(2));
+		for (int i = 0; i < G.player.pokemon.size(); i++)
+			if (G.player.pokemon.get(i).getHP() > 0)
+				pokeCount++;
+		display.setNumPokemon(pokeCount);
 		G.battle = this;
 	}
 	

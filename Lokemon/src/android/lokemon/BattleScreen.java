@@ -13,6 +13,7 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	private Button attack_button;
 	private Button bag_button;
 	private Button run_button;
+	private ViewGroup battle_buttons;
 	
 	// display widgets
 	private ImageView player_poke;
@@ -25,6 +26,8 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	private TextView opp_hp;
 	private ProgressBar opp_bar;
 	private TextView opp_level;
+	
+	private ImageView pokeballs;
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -39,6 +42,7 @@ public class BattleScreen extends Activity implements View.OnClickListener{
         bag_button.setOnClickListener(this);
         run_button = (Button)findViewById(R.id.run_button);
         run_button.setOnClickListener(this);
+        battle_buttons = (ViewGroup)findViewById(R.id.buttons);
         
         // get Pokemon display widgets
         player_poke = (ImageView)findViewById(R.id.my_poke);
@@ -52,6 +56,7 @@ public class BattleScreen extends Activity implements View.OnClickListener{
         opp_hp = (TextView)findViewById(R.id.opp_health_num);
         opp_bar = (ProgressBar)findViewById(R.id.opp_health);
         
+        pokeballs = (ImageView)findViewById(R.id.pokeballs);
         new Battle(this);
 	}
 	
@@ -120,9 +125,15 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	public void showBattleInterface(boolean show)
 	{
 		int state = show?View.VISIBLE:View.INVISIBLE;
-		switch_button.setVisibility(state);
+		battle_buttons.setVisibility(state);
+		/*switch_button.setVisibility(state);
 		attack_button.setVisibility(state);
 		bag_button.setVisibility(state);
-		run_button.setVisibility(state);
+		run_button.setVisibility(state);*/
+	}
+	
+	public void setNumPokemon(int num)
+	{
+		pokeballs.getDrawable().setLevel(num);
 	}
 }
