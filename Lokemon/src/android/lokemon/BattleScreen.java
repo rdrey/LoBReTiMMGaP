@@ -72,6 +72,15 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 			Intent intent = new Intent(v.getContext(), MovesPopup.class);
 	        startActivityForResult(intent, 0);
 		}
+		else if (v == bag_button)
+		{
+			Intent intent = new Intent(v.getContext(), BagPopup.class);
+	        startActivityForResult(intent, 0);
+		}
+		else if (v == run_button)
+		{
+			
+		}
 	}
 	
 	public void onPause()

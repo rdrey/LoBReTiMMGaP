@@ -6,13 +6,13 @@ public class Potion extends Item {
 	
 	private Potions type;
 	
-	public Potion(int count, Potions type)
+	public Potion(Potions type, int count)
 	{
 		super(getTypeName(type), count, 6, getTypeDescription(type));
 		this.type = type;
 	}
 	
-	public Potion(Potions type) {this(0,type);}
+	public Potion(Potions type) {this(type,0);}
 	
 	public Potions getType() {return type;}
 	

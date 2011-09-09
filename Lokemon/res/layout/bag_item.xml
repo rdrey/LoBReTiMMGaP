@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_height="wrap_content" android:orientation="vertical" android:layout_width="match_parent" android:layout_gravity="bottom" android:background="#c0000000" android:padding="4dip">
+    <LinearLayout android:layout_height="match_parent" android:id="@+id/overview" android:orientation="vertical" android:layout_width="match_parent">
+        <LinearLayout android:weightSum="1.0" android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/top" android:background="#7fff0000" android:paddingLeft="8dip" android:paddingRight="8dip">
+            <TextView android:layout_weight="0.5" android:layout_height="wrap_content" android:text="Tackle" style="bold" android:layout_width="wrap_content" android:id="@+id/name" android:textStyle="bold"></TextView>
+            <TextView android:layout_weight="0.5" android:layout_height="wrap_content" android:text="Normal" android:layout_width="wrap_content" android:id="@+id/type" android:gravity="right"></TextView>
+        </LinearLayout>
+        <TextView android:layout_height="wrap_content" android:text="This move only does once-off damage." android:layout_width="match_parent" android:id="@+id/effect" android:textStyle="italic"></TextView>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:weightSum="1.0" android:id="@+id/bottom">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/pp" android:text="20 PP" android:textStyle="bold" android:layout_weight="0.5"></TextView>
+            <TableRow android:layout_width="wrap_content" android:id="@+id/right" android:layout_weight="0.5" android:weightSum="1.0" android:layout_height="wrap_content">
+                <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/p_label" android:textStyle="bold" android:text="POW:" android:layout_weight="0.2"></TextView>
+                <TextView android:layout_height="wrap_content" android:text="35" android:layout_width="wrap_content" android:id="@+id/power" android:layout_weight="0.3"></TextView>
+                <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/a_label" android:textStyle="bold" android:text="ACC:" android:layout_weight="0.2"></TextView>
+                <TextView android:layout_height="wrap_content" android:text="95%" android:layout_width="wrap_content" android:id="@+id/accuracy" android:layout_weight="0.3"></TextView>
+            </TableRow>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
