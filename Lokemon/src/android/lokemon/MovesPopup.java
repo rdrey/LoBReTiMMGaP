@@ -21,7 +21,7 @@ public class MovesPopup extends ListActivity{
 		if (G.mode == Mode.BATTLE)
 			entries = G.battle.getSelectedPokemon().getMovesAndPP();
 		else if (G.mode == Mode.MAP)
-			entries = new ArrayList<int[]>();
+			entries = new ArrayList<int[]>(); // get the selected pokemon's moves
 		setListAdapter(new EntryAdapter(this, R.layout.move_item, entries));
 	}
 
@@ -70,16 +70,17 @@ public class MovesPopup extends ListActivity{
     			pp.setText(entry[1] + " PP");
     			power.setText(move.power + "");
     			acc.setText(move.accuracy +"%");
-    			
-    			// if there is no pp left or we are not in battle the move cannot be selected
-    			if (entry[1] <= 0 || G.mode == Mode.MAP) 
-    			{
-    				v.setClickable(false);
-    				v.setEnabled(false);
-    				v.setFocusable(false);
-    			}
         	}
         	return v;
+        }
+        
+        public boolean isEnabled(int position) 
+        {
+        	// if there is no pp left or we are not in battle the move cannot be selected
+        	if (G.mode == Mode.MAP || items.get(position)[1] <= 0)
+        		return false;
+        	else
+        		return true;
         }
 	}
 }

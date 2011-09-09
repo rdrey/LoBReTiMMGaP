@@ -10,13 +10,14 @@ public class Potion extends Item {
 	{
 		super(getTypeName(type), count, 6, getTypeDescription(type));
 		this.type = type;
+		this.spriteID = getTypeSprite(type);
 	}
 	
 	public Potion(Potions type) {this(type,0);}
 	
 	public Potions getType() {return type;}
 	
-	private static String getTypeDescription(Potions type)
+	private static String getTypeName(Potions type)
 	{
 		switch (type)
 		{
@@ -35,22 +36,41 @@ public class Potion extends Item {
 		}
 	}
 	
-	private static String getTypeName(Potions type)
+	private static String getTypeDescription(Potions type)
 	{
 		switch (type)
 		{
 		case HP:
 			return "Fully restores your active Pokémon's HP.";
 		case ATTACK:
-			return "Increases your active Pokémon's Attack by 1 stage (can have a cumulative effect).";
+			return "Increases your active Pokémon's Attack by 1 stage.";
 		case DEFENSE:
-			return "Increases your active Pokémon's Defense by 1 stage (can have a cumulative effect).";
+			return "Increases your active Pokémon's Defense by 1 stage.";
 		case SPECIAL:
-			return "Increases your active Pokémon's Special by 1 stage (can have a cumulative effect).";
+			return "Increases your active Pokémon's Special by 1 stage.";
 		case SPEED:
-			return "Increases your active Pokémon's Speed by 1 stage (can have a cumulative effect).";
+			return "Increases your active Pokémon's Speed by 1 stage.";
 		default:
 			return "";
+		}
+	}
+	
+	private static int getTypeSprite(Potions type)
+	{
+		switch (type)
+		{
+		case HP:
+			return R.drawable.health;
+		case ATTACK:
+			return R.drawable.attack;
+		case DEFENSE:
+			return R.drawable.defense;
+		case SPECIAL:
+			return R.drawable.special;
+		case SPEED:
+			return R.drawable.speed;
+		default:
+			return -1;
 		}
 	}
 }

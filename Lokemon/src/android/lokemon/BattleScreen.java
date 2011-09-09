@@ -135,14 +135,22 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	{
 		int state = show?View.VISIBLE:View.INVISIBLE;
 		battle_buttons.setVisibility(state);
-		/*switch_button.setVisibility(state);
-		attack_button.setVisibility(state);
-		bag_button.setVisibility(state);
-		run_button.setVisibility(state);*/
 	}
 	
 	public void setNumPokemon(int num)
 	{
 		pokeballs.getDrawable().setLevel(num);
+	}
+	
+	public void disableSwitch() 
+	{
+		switch_button.setClickable(false);
+		switch_button.getBackground().setAlpha(128);
+	}
+	
+	public void disableBag() 
+	{
+		bag_button.setClickable(false);
+		bag_button.getBackground().setAlpha(128);
 	}
 }

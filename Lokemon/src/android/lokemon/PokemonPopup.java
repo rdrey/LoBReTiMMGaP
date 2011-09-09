@@ -101,14 +101,6 @@ public class PokemonPopup extends ListActivity{
     			special.setText(entry.getSpecial() + "");
     			speed.setText(entry.getSpeed() + "");
     			icon.setImageResource(entry.getSpriteNormal());
-    			
-    			// if we are in a battle and the Pokemon has no HP it cannot be selected
-    			if (G.mode == Mode.BATTLE && entry.getHP() == 0)
-    			{
-    				v.setClickable(false);
-    				v.setEnabled(false);
-    				v.setFocusable(false);
-    			}
         	}
         	return v;
         }

@@ -1,6 +1,5 @@
 package android.lokemon;
 
-import android.content.Intent;
 import android.lokemon.G.Mode;
 import android.util.Log;
 
@@ -12,6 +11,8 @@ public class Battle {
 	private Pokemon poke_opp;
 	// how many pokemon are able to battle
 	int pokeCount;
+	// how many usable items are there
+	int itemCount;
 	
 	// a reference to the screen that displays the battle
 	private BattleScreen display;
@@ -20,13 +21,24 @@ public class Battle {
 	{
 		display = screen;
 		pokeCount = 0;
+		itemCount = 0;
 		G.mode = Mode.BATTLE;
+		
 		switchPlayerPoke(G.player.pokemon.get(0));
 		switchOppPoke(G.player.pokemon.get(2));
+		
 		for (int i = 0; i < G.player.pokemon.size(); i++)
 			if (G.player.pokemon.get(i).getHP() > 0)
 				pokeCount++;
 		display.setNumPokemon(pokeCount);
+		if (pokeCount < 2)
+			display.disableSwitch();
+		
+		for (Item i:G.player.items)
+			itemCount += i.getCount();
+		if (itemCount == 0)
+			display.disableBag();
+		
 		G.battle = this;
 	}
 	
@@ -46,6 +58,15 @@ public class Battle {
 	
 	public void selectMove(int moveIndex)
 	{
+		// battle logic here
+	}
+	
+	public void useItem(Item item)
+	{
+		item.decrement();
+		itemCount--;
+		if (itemCount == 0)
+			display.disableBag();
 		// battle logic here
 	}
 	

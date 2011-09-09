@@ -32,6 +32,14 @@ public class Trainer {
 		items[3] = new Potion(Potions.DEFENSE);
 		items[4] = new Potion(Potions.SPECIAL);
 		items[5] = new Potion(Potions.SPEED);
+		// give a new player a starting gift
+		try
+		{
+			items[0].increment();
+			items[0].increment();
+			items[1].increment();
+		}
+		catch(Item.MaxItemCountException e) {Log.e("Player creation", e.getMessage());}
 		G.player = this;
 	}
 	

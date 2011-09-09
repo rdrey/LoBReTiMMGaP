@@ -20,19 +20,20 @@ public class BagPopup extends ListActivity{
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.list_popup);
-		entries = new ArrayList<Item>(Arrays.asList(G.player.items));
+		entries = new ArrayList<Item>();
+		for (Item i:G.player.items)
+			if (i.getCount() > 0)
+				entries.add(i);
 		setListAdapter(new EntryAdapter(this, R.layout.bag_item, entries));
 	}
 
 	public void onListItemClick(ListView l, View v, int pos, long id)
 	{
-		/*if (G.mode == Mode.BATTLE)
+		if (G.mode == Mode.BATTLE)
 		{
-			G.battle.selectMove(entries.get(pos)[0]);
-			Intent intent = new Intent(v.getContext(), Wait.class);
-	        startActivityForResult(intent, 0);
+			G.battle.useItem(entries.get(pos));
 			finish();
-		}*/
+		}
 	}
 	
 	private class EntryAdapter extends ArrayAdapter<Item>{
@@ -46,37 +47,34 @@ public class BagPopup extends ListActivity{
 
         public View getView(int position, View convertView, ViewGroup parent) {
         	View v = convertView;
-        	//int[] entry = items.get(position);
-        	//Move move = G.moves[entry[0]];
+        	Item entry = items.get(position);
         	if (v == null)
         	{
         		LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 v = vi.inflate(R.layout.bag_item, null);             
         	}
-        	/*if (entry != null)
+        	if (entry != null)
         	{
-    			ViewGroup strip = (ViewGroup)v.findViewById(R.id.top);
-    			strip.setBackgroundColor(move.type.colour_id);
-    			TextView t = (TextView)v.findViewById(R.id.type);
-    			TextView name = (TextView)v.findViewById(R.id.name);
-    			TextView desc = (TextView)v.findViewById(R.id.effect);
-    			TextView pp = (TextView)v.findViewById(R.id.pp);
-    			TextView power = (TextView)v.findViewById(R.id.power);
-    			TextView acc = (TextView)v.findViewById(R.id.accuracy);
-    			t.setText(Util.capitalize(move.type.name));
-    			name.setText(move.name);
-    			desc.setText(move.description);
-    			pp.setText(entry[1] + " PP");
-    			// if there is no pp left or we are not in battle the move cannot be selected
-    			if (entry[1] <= 0 || G.mode == Mode.MAP) 
-    			{
-    				v.setClickable(false);
-    				v.setEnabled(false);
-    			}
-    			power.setText(move.power + "");
-    			acc.setText(move.accuracy +"%");
-        	}*/
+        		TextView name = (TextView)v.findViewById(R.id.name);
+        		TextView desc = (TextView)v.findViewById(R.id.description);
+        		TextView count = (TextView)v.findViewById(R.id.count);
+        		ImageView icon = (ImageView)v.findViewById(R.id.icon);
+        		
+        		name.setText(entry.getName());
+        		desc.setText(entry.getDescription());
+        		count.setText(entry.getCount() + "");
+        		icon.setImageResource(entry.getSprite());
+        	}
         	return v;
+        }
+        
+        public boolean isEnabled(int position)
+        {
+        	// if we are in map mode items should not be usable
+        	if (G.mode == Mode.MAP)
+        		return false;
+        	else
+        		return true;
         }
 	}
 }
