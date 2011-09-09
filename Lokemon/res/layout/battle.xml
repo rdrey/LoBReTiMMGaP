@@ -4,18 +4,119 @@
   android:layout_width="match_parent"
   android:layout_height="match_parent" android:background="@drawable/grass_background">
   	<RelativeLayout android:id="@+id/top_right" android:layout_alignParentRight="true" android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_above="@+id/bottom_left" android:layout_marginRight="10dip">
-    	<ImageView android:layout_height="wrap_content" android:id="@+id/opp_poke" android:layout_width="wrap_content" android:src="@drawable/bulbasaur" android:layout_centerInParent="true" android:layout_below="@+id/opp_name"></ImageView>
-    	<TextView android:text="Bulbasaur" android:shadowColor="#000000" android:shadowDy="1.0" android:id="@+id/opp_name" android:shadowDx="1.0" android:layout_width="wrap_content" android:shadowRadius="1.0" android:textStyle="bold" android:layout_height="wrap_content" android:layout_alignParentTop="true" android:layout_centerHorizontal="true"></TextView>
-    	<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/opp_level" android:text="Lv. 8" android:textSize="12dip" android:layout_alignLeft="@+id/opp_health" android:shadowColor="#000000" android:shadowDx="1.0" android:shadowDy="1.0" android:shadowRadius="1.0" android:textStyle="bold" android:layout_below="@+id/opp_poke"></TextView>
-    	<ProgressBar style="@android:style/Widget.ProgressBar.Horizontal" android:id="@+id/opp_health" android:layout_height="12dip" android:layout_width="104dip" android:layout_centerHorizontal="true" android:progress="80" android:layout_below="@+id/opp_level"></ProgressBar>
-    	<TextView android:id="@+id/opp_health_num" android:text="80/100" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_above="@+id/opp_health" android:layout_alignRight="@+id/opp_health" android:textSize="12dip" android:shadowColor="#000000" android:shadowDx="1.0" android:shadowDy="1.0" android:shadowRadius="1.0" android:textStyle="bold"></TextView>
+    	<ImageView android:layout_height="wrap_content" 
+    	android:id="@+id/opp_poke" 
+    	android:layout_width="wrap_content" 
+    	android:src="@drawable/bulbasaur" 
+    	android:layout_centerInParent="true" 
+    	android:layout_below="@+id/opp_name">
+    	</ImageView>
+    	<TextView android:text="Bulbasaur" 
+    	android:shadowColor="#000000" 
+    	android:shadowDy="1.0" 
+    	android:id="@+id/opp_name" 
+    	android:shadowDx="1.0" 
+    	android:layout_width="wrap_content" 
+    	android:shadowRadius="1.0" 
+    	android:textStyle="bold" 
+    	android:layout_height="wrap_content" 
+    	android:layout_alignParentTop="true" 
+    	android:layout_centerHorizontal="true">
+    	</TextView>
+    	<TextView android:layout_width="wrap_content" 
+    	android:layout_height="wrap_content" 
+    	android:id="@+id/opp_level" 
+    	android:text="Lv. 8" 
+    	android:textSize="12dip" 
+    	android:layout_alignLeft="@+id/opp_health" 
+    	android:shadowColor="#000000" 
+    	android:shadowDx="1.0" 
+    	android:shadowDy="1.0" 
+    	android:shadowRadius="1.0" 
+    	android:textStyle="bold" 
+    	android:layout_below="@+id/opp_poke">
+    	</TextView>
+    	<ProgressBar style="@android:style/Widget.ProgressBar.Horizontal" 
+    	android:id="@+id/opp_health" 
+    	android:layout_height="12dip" 
+    	android:layout_width="104dip" 
+    	android:layout_centerHorizontal="true" 
+    	android:progress="80" 
+    	android:layout_below="@+id/opp_level">
+    	</ProgressBar>
+    	<TextView android:id="@+id/opp_health_num" 
+    	android:text="80/100" 
+    	android:layout_width="wrap_content" 
+    	android:layout_height="wrap_content" 
+    	android:layout_above="@+id/opp_health" 
+    	android:layout_alignRight="@+id/opp_health" 
+    	android:textSize="12dip" 
+    	android:shadowColor="#000000" 
+    	android:shadowDx="1.0" 
+    	android:shadowDy="1.0" 
+    	android:shadowRadius="1.0" 
+    	android:textStyle="bold">
+    	</TextView>
     </RelativeLayout>
-	<RelativeLayout android:id="@+id/bottom_left" android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_alignParentBottom="true" android:layout_marginLeft="10dip" android:layout_marginBottom="110dip">
-		<ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/my_poke" android:layout_centerInParent="true" android:src="@drawable/charmander_attack" android:layout_below="@+id/my_name"></ImageView>
-		<ProgressBar android:id="@+id/my_health" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_below="@+id/my_level" android:layout_height="12dip" android:layout_width="104dip" android:layout_centerHorizontal="true" android:progress="80"></ProgressBar>
-		<TextView android:id="@+id/my_health_num" android:text="80/100" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_above="@+id/my_health" android:layout_alignRight="@+id/my_health" android:textSize="12dip" android:shadowColor="#000000" android:shadowDx="1.0" android:shadowDy="1.0" android:shadowRadius="1.0" android:textStyle="bold"></TextView>
-		<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/my_name" android:text="Charmander" android:layout_centerHorizontal="true" android:layout_alignParentTop="true" android:shadowColor="#000000" android:textStyle="bold" android:shadowDx="1.0" android:shadowDy="1.0" android:shadowRadius="1.0"></TextView>
-		<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_below="@+id/my_poke" android:id="@+id/my_level" android:text="Lv. 10" android:textSize="12dip" android:layout_alignLeft="@+id/my_health" android:shadowColor="#000000" android:shadowDx="1.0" android:shadowDy="1.0" android:shadowRadius="1.0" android:textStyle="bold"></TextView>
+	<RelativeLayout android:id="@+id/bottom_left" 
+	android:layout_height="wrap_content" 
+	android:layout_width="wrap_content" 
+	android:layout_alignParentBottom="true" 
+	android:layout_marginLeft="10dip" 
+	android:layout_marginBottom="110dip">
+		<ImageView android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" 
+		android:id="@+id/my_poke" 
+		android:layout_centerInParent="true" 
+		android:src="@drawable/charmander_attack" 
+		android:layout_below="@+id/my_name">
+		</ImageView>
+		<ProgressBar android:id="@+id/my_health" 
+		style="@android:style/Widget.ProgressBar.Horizontal" 
+		android:layout_below="@+id/my_level" 
+		android:layout_height="12dip" 
+		android:layout_width="104dip" 
+		android:layout_centerHorizontal="true" 
+		android:progress="80">
+		</ProgressBar>
+		<TextView android:id="@+id/my_health_num" 
+		android:text="80/100" 
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" 
+		android:layout_above="@+id/my_health" 
+		android:layout_alignRight="@+id/my_health" 
+		android:textSize="12dip" 
+		android:shadowColor="#000000" 
+		android:shadowDx="1.0" 
+		android:shadowDy="1.0" 
+		android:shadowRadius="1.0" 
+		android:textStyle="bold">
+		</TextView>
+		<TextView android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" 
+		android:id="@+id/my_name" 
+		android:text="Charmander" 
+		android:layout_centerHorizontal="true" 
+		android:layout_alignParentTop="true" 
+		android:shadowColor="#000000" 
+		android:textStyle="bold" 
+		android:shadowDx="1.0" 
+		android:shadowDy="1.0" 
+		android:shadowRadius="1.0">
+		</TextView>
+		<TextView android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" 
+		android:layout_below="@+id/my_poke" 
+		android:id="@+id/my_level" 
+		android:text="Lv. 10" 
+		android:textSize="12dip" 
+		android:layout_alignLeft="@+id/my_health" 
+		android:shadowColor="#000000" 
+		android:shadowDx="1.0" 
+		android:shadowDy="1.0" 
+		android:shadowRadius="1.0" 
+		android:textStyle="bold">
+		</TextView>
 	</RelativeLayout>
 	<RelativeLayout android:id="@+id/buttons" android:layout_alignParentBottom="true" android:layout_width="match_parent" android:padding="2dip" android:background="@drawable/buttons_back" android:layout_height="159dip">
 		<Button android:text="Bag" android:layout_width="60dip" android:layout_alignParentRight="true" android:id="@+id/bag_button" android:layout_height="60dip" android:background="@drawable/round_button_medium" android:layout_above="@+id/attack_button" android:layout_margin="2dip"></Button>
