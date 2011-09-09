@@ -13,4 +13,5 @@ public class G {
 	public static enum Types {bug, electric, fire, flying, grass, ground, normal, poison, psychic, rock, steel, water};
 	public static ElemType [] types;
 	public static Battle battle;
+	public static enum Potions {HP, ATTACK, DEFENSE, SPECIAL, SPEED};
 }
