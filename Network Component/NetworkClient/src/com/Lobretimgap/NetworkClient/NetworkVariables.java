@@ -1,7 +1,6 @@
 package com.Lobretimgap.NetworkClient;
 
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
-import com.Lobretimgap.NetworkClient.Implementation.CoreNetworkThreadImpl;
 
 public class NetworkVariables {
 	public static final String TAG = "NetworkClient";
@@ -18,7 +17,7 @@ public class NetworkVariables {
 	public static final boolean keepAliveEnabled = false;
 	
 	//Replace CoreNetworkThread.class with a concrete implementation of that class.
-	public static final Class<CoreNetworkThreadImpl> coreNetworkThreadClass = CoreNetworkThreadImpl.class;	
+	public static final Class<CoreNetworkThread> coreNetworkThreadClass = CoreNetworkThread.class;	
 	
 	
 	/**
