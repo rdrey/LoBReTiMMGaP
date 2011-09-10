@@ -43,12 +43,18 @@ public abstract class CoreNetworkThread extends Thread
 	private NetworkWriteThread out;
 	private InputStream in;
     private boolean stopOperation = false;
+    private boolean keepAliveBreak = false;
     public boolean isRunning = false;
     LinkedBuffer buffer = LinkedBuffer.allocate(512);
     ByteBuffer b = ByteBuffer.allocate(4);
     private boolean connected = false;
     private boolean awaitingLatencyResponse = false;
     private int playerId;
+    
+    private static Schema<PlayerRegistrationMessage> playerRegSchema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
+    private static Schema<NetworkMessageMedium> mediumMsgSchema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
+    private static Schema<NetworkMessageLarge> largeMsgSchema = RuntimeSchema.getSchema(NetworkMessageLarge.class);
+    private static Schema<NetworkMessage> networkMsgSchema = RuntimeSchema.getSchema(NetworkMessage.class);
     
     private long latencyStartTime, latencyEndTime;
     
@@ -59,7 +65,9 @@ public abstract class CoreNetworkThread extends Thread
 	public CoreNetworkThread()
 	{
 		peers = new Vector<ClientPeer>();
-		b.order(ByteOrder.BIG_ENDIAN);
+		b.order(ByteOrder.BIG_ENDIAN);		
+			
+		
 	}
 	
 	/**
@@ -236,8 +244,8 @@ public abstract class CoreNetworkThread extends Thread
 	        {
 	            try
 	            {
-	            	NetworkMessage msg;
-	            	Schema schema;
+	            	NetworkMessage msg = null;
+	            	Schema schema = null;
 
 	                //Expecting 6 bytes of length info
 	                byte [] messageHeader = new byte [5];
@@ -246,43 +254,49 @@ public abstract class CoreNetworkThread extends Thread
 	                {
 	                    //Chop off message type modifier
 	                    byte classType = messageHeader[0];	                    
-	                    //set the message and schema to the correct type
+	                  //set the message and schema to the correct type
 	                    switch(classType)
-	                    {	                    	                            
+	                    {
+	                        case -1:
+	                            //Keep alive message, ignore and wait for a new message
+	                            keepAliveBreak = true;
+	                            break;
 	                        case 1:
 	                            msg = new PlayerRegistrationMessage();
-	                            schema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
+	                            schema = playerRegSchema;
 	                            break;
 	                        case 2:
 	                            msg = new NetworkMessageMedium();
-	                            schema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
+	                            schema = mediumMsgSchema;
 	                            break;
 	                        case 3:
 	                            msg = new NetworkMessageLarge();
-	                            schema = RuntimeSchema.getSchema(NetworkMessageLarge.class);
+	                            schema = largeMsgSchema;
 	                            break;
 	                        default:
 	                            msg = new NetworkMessage();
-	                            schema = RuntimeSchema.getSchema(NetworkMessage.class);
+	                            schema = networkMsgSchema;
 	                    }
-	                    
-	                    //Determine message length
-	                    b.clear();
-	                    b.put(messageHeader, 1, 4);
-	                    b.rewind();
-	                    int mSize = b.getInt();
-	                    
-	                    //Read in the object bytes
-	                    byte [] object = new byte [mSize];
-	                    int bytesRead = 0;
-	                    while(bytesRead != mSize)
+	                    if(!keepAliveBreak)
 	                    {
-	                        bytesRead += in.read(object, bytesRead, object.length - bytesRead);
-	                    }
-	                    
-	                    ProtostuffIOUtil.mergeFrom(object, msg, schema);
-	                    processNetworkMessage(msg);
-	                    
+	                        //Determine message length
+	                        b.clear();
+	                        b.put(messageHeader, 1, 4);
+	                        b.rewind();
+	                        int mSize = b.getInt();
+
+	                        //Read in the object bytes
+	                        byte [] object = new byte [mSize];
+	                        int bytesRead = 0;
+	                        while(bytesRead != mSize)
+	                        {
+	                            bytesRead += in.read(object, bytesRead, object.length - bytesRead);
+	                        }
+
+	                        //System.out.println("Mid receive, byte buffer at "+bytesRead);
+	                        ProtostuffIOUtil.mergeFrom(object, msg, schema);
+	                        processNetworkMessage(msg);
+	                    }  
 	                }
 	                else
 	                {//Failed to read in length field properly

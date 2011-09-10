@@ -11,7 +11,6 @@ import java.net.Socket;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Arrays;
 import java.util.Vector;
 import javax.swing.event.EventListenerList;
 import networkTransferObjects.NetworkMessage;
@@ -37,6 +36,11 @@ public abstract class ServerDaemonThread extends Thread{
     LinkedBuffer buffer = LinkedBuffer.allocate(2048);
     ByteBuffer b = ByteBuffer.allocate(4);
 
+    private static Schema<PlayerRegistrationMessage> playerRegSchema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
+    private static Schema<NetworkMessageMedium> mediumMsgSchema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
+    private static Schema<NetworkMessageLarge> largeMsgSchema = RuntimeSchema.getSchema(NetworkMessageLarge.class);
+    private static Schema<NetworkMessage> networkMsgSchema = RuntimeSchema.getSchema(NetworkMessage.class);
+
     public int playerID;
     public String playerName;
 
@@ -51,6 +55,8 @@ public abstract class ServerDaemonThread extends Thread{
     public ServerDaemonThread()
     {
         b.order(ByteOrder.BIG_ENDIAN);
+        //Load in schemas for collections
+        
     }
 
     /*
@@ -181,6 +187,7 @@ public abstract class ServerDaemonThread extends Thread{
             {                
                 NetworkMessage msg = null;
             	Schema schema = null;
+                
 
                 //Expecting 4 bytes of length info
                 byte [] messageHeader = new byte [5];
@@ -199,19 +206,19 @@ public abstract class ServerDaemonThread extends Thread{
                             break;
                         case 1:
                             msg = new PlayerRegistrationMessage();
-                            schema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
+                            schema = playerRegSchema;
                             break;
                         case 2:
                             msg = new NetworkMessageMedium();
-                            schema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
+                            schema = mediumMsgSchema;
                             break;
                         case 3:
                             msg = new NetworkMessageLarge();
-                            schema = RuntimeSchema.getSchema(NetworkMessageLarge.class);
+                            schema = largeMsgSchema;
                             break;
                         default:
                             msg = new NetworkMessage();
-                            schema = RuntimeSchema.getSchema(NetworkMessage.class);
+                            schema = networkMsgSchema;
                     }
                     if(!keepAliveBreak)
                     {
@@ -263,7 +270,7 @@ public abstract class ServerDaemonThread extends Thread{
             }
             catch(RuntimeException e)
             {
-                System.err.println("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?");
+                System.err.println("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?\n"+e);
             }
             finally
             {
@@ -277,9 +284,17 @@ public abstract class ServerDaemonThread extends Thread{
     private void processNetworkMessage(NetworkMessage message)
     {
         if(message instanceof PlayerRegistrationMessage)
-        {
-            System.out.println("Reg message: "+ message.getMessage());
+        {            
             PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;
+            //DEBUG
+            if(regMessage.strings != null)
+            {
+                if(regMessage.strings.size() != 0)
+                    System.out.println("Message at 0 was: "+ regMessage.strings.get(0));
+                System.out.println("Total messages in store was "+regMessage.strings.size());
+                System.out.println("Received int is "+regMessage.integers.get(0));
+            }//DEBUG END
+
             playerID = ServerVariables.playerNetworkAddressList.size();
             ServerVariables.playerNetworkAddressList.add(socket.getInetAddress());
             playerName = regMessage.playerName;
@@ -344,11 +359,7 @@ public abstract class ServerDaemonThread extends Thread{
                     break;
 
             }
-        }        
-        else
-        {
-            System.err.println("Unrecognised object received from client: "+message.getClass());
-        }
+        } 
     }
 
     /*

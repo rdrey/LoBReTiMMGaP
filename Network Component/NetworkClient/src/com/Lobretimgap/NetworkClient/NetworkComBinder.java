@@ -18,6 +18,18 @@ public class NetworkComBinder extends Binder {
 	public NetworkComBinder(CoreNetworkThread thread)
 	{
 		networkThread = thread;
+		
+		addListener(ConnectionEstablishedListener.class, new ConnectionEstablishedListener() {			
+			public void EventOccured(NetworkEvent e) {
+				isConnected = true;							 			
+			}
+		});
+		
+		addListener(ConnectionLostListener.class, new ConnectionLostListener() {			
+			public void EventOccured(NetworkEvent e) {			
+				isConnected = false;									
+			}
+		});
 	}
 	
 	/**

@@ -29,6 +29,11 @@ public class ServerDaemonWriteoutThread extends Thread
     private LinkedBuffer buffer = LinkedBuffer.allocate(512);
     private ByteBuffer b = ByteBuffer.allocate(4);
 
+    private static Schema<PlayerRegistrationMessage> playerRegSchema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
+    private static Schema<NetworkMessageMedium> mediumMsgSchema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
+    private static Schema<NetworkMessageLarge> largeMsgSchema = RuntimeSchema.getSchema(NetworkMessageLarge.class);
+    private static Schema<NetworkMessage> networkMsgSchema = RuntimeSchema.getSchema(NetworkMessage.class);
+
     
 
     public ServerDaemonWriteoutThread(Socket writeOutSocket) throws IOException
@@ -63,23 +68,23 @@ public class ServerDaemonWriteoutThread extends Thread
             	//Determine the message type (added descendants of NetworkMessage must be defined here)
             	if(msg instanceof PlayerRegistrationMessage)
             	{
-            		schema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
+            		schema = playerRegSchema;
             		//Arbitrarily classType numbers. Doesn't matter what they are as long as they match the numbers on the server side!
             		classType = 1;
             	}
             	else if(msg instanceof NetworkMessageMedium)
             	{
-            		schema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
+            		schema = mediumMsgSchema;
             		classType = 2;
             	}
             	else if(msg instanceof NetworkMessageLarge)
             	{
-            		schema = RuntimeSchema.getSchema(NetworkMessageLarge.class);
+            		schema = largeMsgSchema;
             		classType = 3;
             	}
             	else//If its none of the registered subclasses of networkMessage
             	{
-            		schema = RuntimeSchema.getSchema(NetworkMessage.class);
+            		schema = networkMsgSchema;
             		classType = 0;
             	}
 

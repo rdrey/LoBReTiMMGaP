@@ -5,10 +5,8 @@
 
 package networkTransferObjects;
 
-import com.dyuproject.protostuff.Schema;
-import com.dyuproject.protostuff.runtime.RuntimeSchema;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 /**
  * @date 2011/08/30
@@ -16,25 +14,25 @@ import java.util.List;
  */
 public class NetworkMessageLarge extends NetworkMessage {
 
-    public List<Integer> ints;
-    public List<String> strings;
-    public List<Long> longs;
-    public List<Boolean> bools;
+        public ArrayList<Integer> integers;
 
+        public HashMap<String, Object> objectDict;
+	public HashMap<String, String> stringDict;
+        
+        public ArrayList<String> strings;
+        
     public NetworkMessageLarge(String message)
     {
-        super(message);
-        strings = new ArrayList<String>();
-    	ints = new ArrayList<Integer>();
-        longs = new ArrayList<Long>();
-        bools = new ArrayList<Boolean>();
+        super(message);        
+        
+        objectDict = new HashMap<String, Object>();
+        stringDict = new HashMap<String, String>();
+        integers = new ArrayList<Integer>();
+        strings = new ArrayList<String>();        
     }
 
     public NetworkMessageLarge()
     {
         super();
     }
-
-    
-
 }

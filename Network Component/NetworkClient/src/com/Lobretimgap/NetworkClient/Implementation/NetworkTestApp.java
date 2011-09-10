@@ -3,7 +3,7 @@ package com.Lobretimgap.NetworkClient.Implementation;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import networkTransferObjects.NetworkMessage;
+import networkTransferObjects.NetworkMessageLarge;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -24,7 +24,6 @@ import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 public class NetworkTestApp extends Activity {
 	
 	private TextView tv;
-	@SuppressWarnings("unused")
 	private boolean networkBound = false;
 	private NetworkComBinder binder;
 	
@@ -122,7 +121,7 @@ public class NetworkTestApp extends Activity {
 					if(pingsPerformed == 20)
 					{
 						tv.append("Max ="+highest+", min = "+lowest+", average = "+(total/20));
-					}
+					}	
 					break;					
 				default:
 					tv.append("Unrecognised event of type "+ NetworkComBinder.EventType.values()[msg.what] + " received.");

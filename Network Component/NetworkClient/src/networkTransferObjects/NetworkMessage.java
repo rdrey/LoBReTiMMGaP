@@ -5,7 +5,7 @@ import com.dyuproject.protostuff.Schema;
 import com.dyuproject.protostuff.runtime.RuntimeSchema;
 
 /**
- * Used to pass information between the client and the server
+ * Used to pass information between the client and the server.
  * @date 2011/08/02
  * @author Lawrence Webley
  */
@@ -31,6 +31,7 @@ public class NetworkMessage
 
     private MessageType messageType;
     private String primeMessage;
+    
 
     public NetworkMessage(String message)
     {

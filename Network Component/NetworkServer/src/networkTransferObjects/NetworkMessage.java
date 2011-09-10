@@ -3,6 +3,7 @@ package networkTransferObjects;
 
 import com.dyuproject.protostuff.Schema;
 import com.dyuproject.protostuff.runtime.RuntimeSchema;
+import java.util.ArrayList;
 
 /**
  * Used to pass information between the client and the server
@@ -30,7 +31,7 @@ public class NetworkMessage
     }
 
     private MessageType messageType;
-    private String primeMessage;
+    private String primeMessage;    
 
     public NetworkMessage(String message)
     {
