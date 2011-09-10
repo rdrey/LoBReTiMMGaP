@@ -33,6 +33,7 @@ public abstract class ServerDaemonThread extends Thread{
     private ServerDaemonWriteoutThread out;
     private BufferedInputStream in;
     private boolean stopOperation = false;
+    private boolean keepAliveBreak = false;
     LinkedBuffer buffer = LinkedBuffer.allocate(2048);
     ByteBuffer b = ByteBuffer.allocate(4);
 
@@ -178,10 +179,10 @@ public abstract class ServerDaemonThread extends Thread{
         {
             try
             {                
-                NetworkMessage msg;
-            	Schema schema;
+                NetworkMessage msg = null;
+            	Schema schema = null;
 
-                //Expecting 6 bytes of length info
+                //Expecting 4 bytes of length info
                 byte [] messageHeader = new byte [5];
                 int success = in.read(messageHeader);
                 if(success == 5)
@@ -191,7 +192,11 @@ public abstract class ServerDaemonThread extends Thread{
 
                     //set the message and schema to the correct type
                     switch(classType)
-                    {                        
+                    {
+                        case -1:
+                            //Keep alive message, ignore and wait for a new message
+                            keepAliveBreak = true;
+                            break;
                         case 1:
                             msg = new PlayerRegistrationMessage();
                             schema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
@@ -208,24 +213,26 @@ public abstract class ServerDaemonThread extends Thread{
                             msg = new NetworkMessage();
                             schema = RuntimeSchema.getSchema(NetworkMessage.class);
                     }
-                    
-                    //Determine message length
-                    b.clear();
-                    b.put(messageHeader, 1, 4);
-                    b.rewind();
-                    int mSize = b.getInt();
-
-                    //Read in the object bytes
-                    byte [] object = new byte [mSize];
-                    int bytesRead = 0;
-                    while(bytesRead != mSize)
+                    if(!keepAliveBreak)
                     {
-                        bytesRead += in.read(object, bytesRead, object.length - bytesRead);
-                    }
+                        //Determine message length
+                        b.clear();
+                        b.put(messageHeader, 1, 4);
+                        b.rewind();
+                        int mSize = b.getInt();
 
-                    //System.out.println("Mid receive, byte buffer at "+bytesRead);
-                    ProtostuffIOUtil.mergeFrom(object, msg, schema);
-                    processNetworkMessage(msg);
+                        //Read in the object bytes
+                        byte [] object = new byte [mSize];
+                        int bytesRead = 0;
+                        while(bytesRead != mSize)
+                        {
+                            bytesRead += in.read(object, bytesRead, object.length - bytesRead);
+                        }
+
+                        //System.out.println("Mid receive, byte buffer at "+bytesRead);
+                        ProtostuffIOUtil.mergeFrom(object, msg, schema);
+                        processNetworkMessage(msg);
+                    }
                     
                 }
                 else
@@ -241,7 +248,7 @@ public abstract class ServerDaemonThread extends Thread{
             {
                 //We expect that something wants the threads attention. This is
                 //used to immediatly end the thread in shutdownThread().
-            }
+            }            
             catch(IOException e)
             {
                 System.err.println("Error occured while reading from thread : "+e);
@@ -260,6 +267,7 @@ public abstract class ServerDaemonThread extends Thread{
             }
             finally
             {
+                keepAliveBreak = false;
                 buffer.clear();
                 b.clear();
             }

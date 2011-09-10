@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.text.method.ScrollingMovementMethod;
 import android.widget.TextView;
 
 import com.Lobretimgap.NetworkClient.NetworkComBinder;
@@ -29,6 +30,11 @@ public class NetworkTestApp extends Activity {
 	
 	private final Timer timer = new Timer();
 	private final int recurranceDelay = 1; //in seconds
+	
+	private int pingsPerformed = 0;
+	private int highest=0;
+	private int lowest=1000;
+	private int total=0;
 
 	public void onCreate(Bundle bundle)
 	{
@@ -41,6 +47,7 @@ public class NetworkTestApp extends Activity {
 	{
 		super.onStart();
 		tv.append("Starting networking component tests...\n");
+		tv.setMovementMethod(new ScrollingMovementMethod());
 		
 		//Bind network component
 		Intent intent = new Intent(this, NetworkComService.class);
@@ -65,9 +72,17 @@ public class NetworkTestApp extends Activity {
 			
 			timer.schedule(new TimerTask() {
 				@Override
-				public void run() {				
-					if(networkBound)
-						binder.requestLatency();
+				public void run() {
+					if(pingsPerformed < 20)
+					{
+						if(networkBound)
+							binder.requestLatency();
+							pingsPerformed++;
+						}
+					else
+					{
+						this.cancel();
+					}
 				}
 				
 			}, recurranceDelay * 1000, recurranceDelay * 200);
@@ -97,6 +112,17 @@ public class NetworkTestApp extends Activity {
 					
 				case LATENCY_UPDATE_RECEIVED:
 					tv.append("Latency reported as: " + ((NetworkEvent)msg.obj).getMessage()+"ms\n");
+					int latency = ((Long)((NetworkEvent)msg.obj).getMessage()).intValue();
+					if(latency > highest)
+						highest = latency;					
+					if(latency < lowest)
+						lowest = latency;
+					total += latency;
+					
+					if(pingsPerformed == 20)
+					{
+						tv.append("Max ="+highest+", min = "+lowest+", average = "+(total/20));
+					}
 					break;					
 				default:
 					tv.append("Unrecognised event of type "+ NetworkComBinder.EventType.values()[msg.what] + " received.");
