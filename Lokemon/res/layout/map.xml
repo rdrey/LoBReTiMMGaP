@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent" android:layout_height="match_parent">
+  	<org.mapsforge.android.maps.MapView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mapview"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+	/>
+	<RelativeLayout android:id="@+id/buttons" android:layout_alignParentBottom="true" android:layout_width="match_parent" android:padding="2dip" android:background="@drawable/buttons_back" android:layout_height="159dip">
+		<Button android:text="Bag" android:layout_width="60dip" android:layout_alignParentRight="true" android:id="@+id/bag_button" android:layout_height="60dip" android:background="@drawable/round_button_medium" android:layout_above="@+id/attack_button" android:layout_margin="2dip"></Button>
+		<Button android:text="Switch" android:layout_width="60dip" android:layout_alignParentBottom="true" android:id="@+id/switch_button" android:layout_height="60dip" android:background="@drawable/round_button_medium" android:layout_toLeftOf="@+id/attack_button" android:layout_margin="2dip"></Button>
+		<Button android:text="Attack" android:layout_width="80dip" android:layout_alignParentBottom="true" android:layout_alignParentRight="true" android:id="@+id/attack_button" android:layout_height="80dip" android:background="@drawable/round_button_large" android:layout_margin="2dip"></Button>
+		<Button android:text="Run" android:layout_width="60dip" android:layout_alignParentLeft="true" android:layout_alignParentBottom="true" android:id="@+id/run_button" android:layout_height="60dip" android:background="@drawable/round_button_medium" android:layout_margin="2dip"></Button>
+		<ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/pokeballs" android:src="@drawable/pokes" android:layout_alignParentBottom="true" android:layout_toRightOf="@+id/run_button" android:layout_toLeftOf="@+id/switch_button" android:layout_marginRight="4dip" android:layout_marginLeft="4dip"></ImageView>
+	</RelativeLayout>
+</RelativeLayout>
