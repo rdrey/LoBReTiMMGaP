@@ -3,7 +3,6 @@ package networkTransferObjects;
 
 import com.dyuproject.protostuff.Schema;
 import com.dyuproject.protostuff.runtime.RuntimeSchema;
-import java.util.ArrayList;
 
 /**
  * Used to pass information between the client and the server
@@ -26,7 +25,8 @@ public class NetworkMessage
         PEER_LIST_MESSAGE, //Client only
         PEER_LIST_REQUEST_MESSAGE, //Server Only
         LATENCY_REQUEST_MESSAGE, //Server & Client.
-        LATENCY_RESPONSE_MESSAGE //Server & Client
+        LATENCY_RESPONSE_MESSAGE, //Server & Client
+        DIRECT_COMMUNICATION_MESSAGE //client to client (router through server sometimes)
 
     }
 

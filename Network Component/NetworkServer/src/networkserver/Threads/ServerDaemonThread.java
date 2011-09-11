@@ -74,6 +74,7 @@ public abstract class ServerDaemonThread extends Thread{
      * Called once joining information for the player has been received.
      * First method called after the client has connected. Use
      * this to add player information to the game engine/world.
+     * 
      */
     protected abstract void registerPlayer(PlayerRegistrationMessage initialMessage);
     
@@ -175,6 +176,8 @@ public abstract class ServerDaemonThread extends Thread{
         message.setMessageType(NetworkMessage.MessageType.GAMESTATE_UPDATE_MESSAGE);
         writeOut(message);
     }
+
+     
 
 
     @Override
@@ -285,20 +288,14 @@ public abstract class ServerDaemonThread extends Thread{
     {
         if(message instanceof PlayerRegistrationMessage)
         {            
-            PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;
-            //DEBUG
-            if(regMessage.strings != null)
-            {
-                if(regMessage.strings.size() != 0)
-                    System.out.println("Message at 0 was: "+ regMessage.strings.get(0));
-                System.out.println("Total messages in store was "+regMessage.strings.size());
-                System.out.println("Received int is "+regMessage.integers.get(0));
-            }//DEBUG END
+            PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;            
 
-            playerID = ServerVariables.playerNetworkAddressList.size();
+            playerID = ServerVariables.playerNetworkAddressList.size()+1;
+            regMessage.playerID = playerID;
             ServerVariables.playerNetworkAddressList.add(socket.getInetAddress());
             playerName = regMessage.playerName;
             PlayerRegistrationMessage reply = new PlayerRegistrationMessage(playerID);
+            reply.playerName = playerName;
             writeOut(reply);
             registerPlayer(regMessage);
 
@@ -307,7 +304,7 @@ public abstract class ServerDaemonThread extends Thread{
             sendPeerList();
             fireEvent(new NetworkEvent(this, "Connection successfully established"),  ConnectionEstablishedListener.class);
         }
-        else if(message instanceof NetworkMessage)
+        else
         {
             NetworkMessage msg = (NetworkMessage)message;
             switch(msg.getMessageType())
@@ -351,6 +348,22 @@ public abstract class ServerDaemonThread extends Thread{
                     if(latencyStartTime < latencyEndTime)
                     {
                             fireEvent(new NetworkEvent(this, (latencyEndTime - latencyStartTime)),  LatencyUpdateListener.class);
+                    }
+                    break;
+                case DIRECT_COMMUNICATION_MESSAGE:
+                    //We need to forward this to its destination (another client).
+                    //We know its either a medium or large message.
+                    if(msg instanceof NetworkMessageLarge)
+                    {
+                        int targetPlayerId = ((NetworkMessageLarge)msg).integers.get(((NetworkMessageLarge)msg).integers.size()-2);
+                    }else if (msg instanceof NetworkMessageMedium)
+                    {
+                        int targetPlayerId = ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-2);
+                    }
+                    else //Should never be anything other than NetworkMessage medium or large.
+                    {//If you want to add your own types of direct communication, add special cases here
+                        System.err.println("PlayerID: "+playerID+" attempted direct peer " +
+                                "communication with an unrecognised object type");
                     }
                     break;
                 default:

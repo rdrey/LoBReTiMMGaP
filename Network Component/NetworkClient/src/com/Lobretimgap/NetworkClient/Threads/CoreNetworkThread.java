@@ -10,6 +10,7 @@ import java.net.UnknownHostException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.NotYetConnectedException;
 import java.util.Vector;
 
 import networkTransferObjects.NetworkMessage;
@@ -30,6 +31,7 @@ import com.Lobretimgap.NetworkClient.EventListeners.RequestReceivedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.UnknownMessageTypeReceivedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.UpdateReceivedListener;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
+import com.Lobretimgap.NetworkClient.Exceptions.NotYetRegisteredException;
 import com.Lobretimgap.NetworkClient.Peer2Peer.ClientPeer;
 import com.Lobretimgap.NetworkClient.Utility.EventListenerList;
 import com.dyuproject.protostuff.LinkedBuffer;
@@ -203,6 +205,46 @@ public abstract class CoreNetworkThread extends Thread
     	message.setMessageType(NetworkMessage.MessageType.TERMINATION_REQUEST_MESSAGE);
         writeOut(message);
         shutdownThread();
+    }
+    
+     /**
+      * Sends a message directly to the player with the given player ID. Uses P2P communication
+      * if possible, but if that isn't possible, it will route the message via the game server.
+      * @param message The message to send to the peer. Must be one of the standard NetworkMessages
+      * (NetworkMessage, NetworkMessageMedium or NetworkMessageLarge)
+      * @param targetPlayerId The player ID of the player we wish to send this message too. If the
+      * player ID does not exist, this message will be lost in transit, with no notification.
+      */
+    public void sendDirectCommunicationMessage(NetworkMessage message, int targetPlayerId)
+    {
+    	//If we havn't yet registered with the game server for an ID, we can't communicate with other players yet
+    	if(playerId != 0)
+    	{
+	    	//We need to turn this message into something that can hold additional info, such as
+	    	//the target player ID. So if it isn't large or medium, change it into a medium message.
+	    	if(message instanceof NetworkMessageLarge)
+	    	{
+	    		((NetworkMessageLarge)message).integers.add(targetPlayerId);
+	    		((NetworkMessageLarge)message).integers.add(playerId);
+	    	}else if (message instanceof NetworkMessageMedium)
+	    	{
+	    		((NetworkMessageMedium)message).integers.add(targetPlayerId);
+	    		((NetworkMessageLarge)message).integers.add(playerId);
+	    	}else
+	    	{
+	    		NetworkMessageMedium msg = new NetworkMessageMedium();
+	    		msg.setMessage(message.getMessage());
+	    		msg.integers.add(targetPlayerId);
+	    		msg.integers.add(playerId);
+	    		message = msg;
+	    	}
+	    	message.setMessageType(NetworkMessage.MessageType.DIRECT_COMMUNICATION_MESSAGE);
+	    	writeOut(message);
+    	}
+    	else
+    	{
+    		throw new NotYetRegisteredException("Must have a registered playerID from the game server before sending direct messages!");
+    	}
     }
 	
     /**
