@@ -10,7 +10,6 @@ import java.net.UnknownHostException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.NotYetConnectedException;
 import java.util.Vector;
 
 import networkTransferObjects.NetworkMessage;
@@ -23,6 +22,7 @@ import com.Lobretimgap.NetworkClient.NetworkVariables;
 import com.Lobretimgap.NetworkClient.EventListeners.ConnectionEstablishedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.ConnectionFailedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.ConnectionLostListener;
+import com.Lobretimgap.NetworkClient.EventListeners.DirectMessageListener;
 import com.Lobretimgap.NetworkClient.EventListeners.GamestateReceivedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.LatencyUpdateListener;
 import com.Lobretimgap.NetworkClient.EventListeners.NetworkEventListener;
@@ -30,6 +30,7 @@ import com.Lobretimgap.NetworkClient.EventListeners.PartialGamestateReceivedList
 import com.Lobretimgap.NetworkClient.EventListeners.RequestReceivedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.UnknownMessageTypeReceivedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.UpdateReceivedListener;
+import com.Lobretimgap.NetworkClient.Events.DirectCommunicationEvent;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 import com.Lobretimgap.NetworkClient.Exceptions.NotYetRegisteredException;
 import com.Lobretimgap.NetworkClient.Peer2Peer.ClientPeer;
@@ -51,7 +52,7 @@ public abstract class CoreNetworkThread extends Thread
     ByteBuffer b = ByteBuffer.allocate(4);
     private boolean connected = false;
     private boolean awaitingLatencyResponse = false;
-    private int playerId;
+    private int playerId = -1;
     
     private static Schema<PlayerRegistrationMessage> playerRegSchema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
     private static Schema<NetworkMessageMedium> mediumMsgSchema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
@@ -217,8 +218,8 @@ public abstract class CoreNetworkThread extends Thread
       */
     public void sendDirectCommunicationMessage(NetworkMessage message, int targetPlayerId)
     {
-    	//If we havn't yet registered with the game server for an ID, we can't communicate with other players yet
-    	if(playerId != 0)
+    	
+    	if(playerId != -1)
     	{
 	    	//We need to turn this message into something that can hold additional info, such as
 	    	//the target player ID. So if it isn't large or medium, change it into a medium message.
@@ -460,6 +461,38 @@ public abstract class CoreNetworkThread extends Thread
 	            		fireEvent(new NetworkEvent(this, (latencyEndTime - latencyStartTime)),  LatencyUpdateListener.class);
 	            	}
 	            	break;
+	            case DIRECT_COMMUNICATION_MESSAGE:
+	            	//We added a src and dest integer to message before sending it at the other client,
+	            	//so we need to remove that info now, and add it to the network event. Additionally, we know
+	            	//the message is either a large or medium network message (we changed it to medium if it was 
+	            	//a normal network message.)
+	            	
+	            	if(msg instanceof NetworkMessageLarge)
+	            	{
+	            		int listSize = ((NetworkMessageLarge)msg).integers.size();
+	            		int sourcePlayerId = ((NetworkMessageLarge)msg).integers.get(listSize - 1);
+	            		//listSize -1 is the src, listSize -2 is the dest (IE us)
+	            		((NetworkMessageLarge)msg).integers.remove(listSize - 1);
+	            		((NetworkMessageLarge)msg).integers.remove(listSize - 2);
+	            		
+	            		fireEvent(new DirectCommunicationEvent(this, msg, sourcePlayerId), DirectMessageListener.class);
+	            	}else if (msg instanceof NetworkMessageMedium)
+	            	{
+	            		int listSize = ((NetworkMessageMedium)msg).integers.size();
+	            		int sourcePlayerId = ((NetworkMessageMedium)msg).integers.get(listSize - 1);
+	            		//listSize -1 is the src, listSize -2 is the dest (IE us)
+	            		((NetworkMessageMedium)msg).integers.remove(listSize - 1);
+	            		((NetworkMessageMedium)msg).integers.remove(listSize - 2);
+	            		
+	            		fireEvent(new DirectCommunicationEvent(this, msg, sourcePlayerId), DirectMessageListener.class);
+	            	}
+	            	else
+	            	{ //Should never be anything other than NetworkMessage medium or large.
+	                  //If you want to add your own types of direct communication, add special cases here
+	            		Log.w(NetworkVariables.TAG, "Attempt at direct peer communication with unrecognised object - Ignoring.");            		
+	            	}
+	            	
+	            	break;
 	            default:
 	                fireEvent(new NetworkEvent(this, msg),  UnknownMessageTypeReceivedListener.class);
 	                //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
@@ -554,7 +587,7 @@ public abstract class CoreNetworkThread extends Thread
         for(int i = 0; i < listenerArray.length; i+=2)
         {
             if(listenerArray[i] == t)
-            {
+            {            	
                 /*
                  * This might seem a little confusing at first, so here's an explanation.
                  * The listener list stores event listeners in pairs of

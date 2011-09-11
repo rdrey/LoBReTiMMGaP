@@ -177,6 +177,12 @@ public abstract class ServerDaemonThread extends Thread{
         writeOut(message);
     }
 
+     public void forwardDirectCommunication(NetworkMessage msg)
+     {
+         msg.setMessageType(NetworkMessage.MessageType.DIRECT_COMMUNICATION_MESSAGE);
+         writeOut(msg);
+     }
+
      
 
 
@@ -290,9 +296,16 @@ public abstract class ServerDaemonThread extends Thread{
         {            
             PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;            
 
-            playerID = ServerVariables.playerNetworkAddressList.size()+1;
+            playerID = ServerVariables.playerNetworkAddressList.size();
             regMessage.playerID = playerID;
+
+            //Register the players address.
             ServerVariables.playerNetworkAddressList.add(socket.getInetAddress());
+
+            //Register this thread as representing the players connection.
+            ServerVariables.playerThreads.add(this);
+            ServerVariables.playerThreadMap.put(playerID, this);
+
             playerName = regMessage.playerName;
             PlayerRegistrationMessage reply = new PlayerRegistrationMessage(playerID);
             reply.playerName = playerName;
@@ -356,9 +369,17 @@ public abstract class ServerDaemonThread extends Thread{
                     if(msg instanceof NetworkMessageLarge)
                     {
                         int targetPlayerId = ((NetworkMessageLarge)msg).integers.get(((NetworkMessageLarge)msg).integers.size()-2);
+                        if(ServerVariables.playerThreadMap.get(targetPlayerId) != null)
+                        {
+                            ServerVariables.playerThreadMap.get(targetPlayerId).forwardDirectCommunication(msg);
+                        }
                     }else if (msg instanceof NetworkMessageMedium)
                     {
                         int targetPlayerId = ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-2);
+                        if(ServerVariables.playerThreadMap.get(targetPlayerId) != null)
+                        {
+                            ServerVariables.playerThreadMap.get(targetPlayerId).forwardDirectCommunication(msg);
+                        }
                     }
                     else //Should never be anything other than NetworkMessage medium or large.
                     {//If you want to add your own types of direct communication, add special cases here
@@ -401,6 +422,15 @@ public abstract class ServerDaemonThread extends Thread{
         {
             //We dont really care if the socket failed to close correctly.
             System.err.println("Socket failed to close correctly. \n"+e);
+        }
+        finally
+        {
+            //Remove links to this thread in the threads data structures
+            //We cant just remove from the lists, since their numbering corrolates
+            //to the playerIDs, so instead we set their references to null.
+            ServerVariables.playerNetworkAddressList.set(playerID, null);
+            ServerVariables.playerThreads.set(playerID, null);
+            ServerVariables.playerThreadMap.remove(playerID);
         }
         
         

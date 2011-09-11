@@ -207,6 +207,7 @@ public class NetworkComBinder extends Binder {
 		CONNECTION_ESTABLISHED,
 		CONNECTION_LOST,
 		CONNECTION_FAILED,
+		DIRECT_MESSAGE_RECEIVED,
 		GAMESTATE_RECEIVED,
 		LATENCY_UPDATE_RECEIVED,
 		PARTIAL_GAMESTATE_RECEIVED,
@@ -252,6 +253,17 @@ public class NetworkComBinder extends Binder {
 				} catch (RemoteException e1) {					
 					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
 				}					
+			}
+		});
+		
+		addListener(DirectMessageListener.class, new DirectMessageListener() {			
+			public void EventOccured(NetworkEvent e) {
+				try {
+					eventMessenger.send(Message.obtain(null, EventType.DIRECT_MESSAGE_RECEIVED.ordinal(), e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}	
+				
 			}
 		});
 		
