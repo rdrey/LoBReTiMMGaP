@@ -70,5 +70,11 @@ public class Battle {
 		// battle logic here
 	}
 	
+	// decide whether player can run away from battle (forfeits turn)
+	public boolean run()
+	{
+		return true;
+	}
+	
 	public Pokemon getSelectedPokemon() {return poke_player;}
 }

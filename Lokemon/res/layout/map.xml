@@ -8,11 +8,8 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
 	/>
-	<RelativeLayout android:id="@+id/buttons" android:layout_alignParentBottom="true" android:layout_width="match_parent" android:padding="2dip" android:background="@drawable/buttons_back" android:layout_height="159dip">
-		<Button android:text="Bag" android:layout_width="60dip" android:layout_alignParentRight="true" android:id="@+id/bag_button" android:layout_height="60dip" android:background="@drawable/round_button_medium" android:layout_above="@+id/attack_button" android:layout_margin="2dip"></Button>
-		<Button android:text="Switch" android:layout_width="60dip" android:layout_alignParentBottom="true" android:id="@+id/switch_button" android:layout_height="60dip" android:background="@drawable/round_button_medium" android:layout_toLeftOf="@+id/attack_button" android:layout_margin="2dip"></Button>
-		<Button android:text="Attack" android:layout_width="80dip" android:layout_alignParentBottom="true" android:layout_alignParentRight="true" android:id="@+id/attack_button" android:layout_height="80dip" android:background="@drawable/round_button_large" android:layout_margin="2dip"></Button>
-		<Button android:text="Run" android:layout_width="60dip" android:layout_alignParentLeft="true" android:layout_alignParentBottom="true" android:id="@+id/run_button" android:layout_height="60dip" android:background="@drawable/round_button_medium" android:layout_margin="2dip"></Button>
-		<ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/pokeballs" android:src="@drawable/pokes" android:layout_alignParentBottom="true" android:layout_toRightOf="@+id/run_button" android:layout_toLeftOf="@+id/switch_button" android:layout_marginRight="4dip" android:layout_marginLeft="4dip"></ImageView>
+	<RelativeLayout android:layout_alignParentBottom="true" android:layout_width="match_parent" android:padding="2dip" android:background="@drawable/buttons_back2" android:layout_height="94dip" android:id="@+id/hud">
+		<Button android:layout_alignParentBottom="true" android:layout_alignParentRight="true" android:layout_margin="2dip" android:layout_height="80dip" android:layout_width="80dip" android:text="Bag" android:background="@drawable/round_button_large" android:id="@+id/bag_button"></Button>
+		<Button android:layout_alignParentLeft="true" android:layout_alignParentBottom="true" android:layout_margin="2dip" android:id="@+id/poke_button" android:layout_width="80dip" android:layout_height="80dip" android:text="Pokémon" android:background="@drawable/round_button_large"></Button>
 	</RelativeLayout>
 </RelativeLayout>

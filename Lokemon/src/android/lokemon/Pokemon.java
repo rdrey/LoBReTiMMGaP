@@ -149,8 +149,19 @@ public class Pokemon {
 		ArrayList<int[]> mp = new ArrayList<int[]>();
 		for (int i = 0 ; i < base.moves.length; i+=2)
 		{
-			if (base.moves[i+1] <= level && G.moves[base.moves[i]].category < 1) mp.add(new int[]{base.moves[i],pp[i/2]});
-			else break;
+			if (base.moves[i+1] <= level && G.moves[base.moves[i]].category < 1) 
+				mp.add(new int[]{base.moves[i],pp[i/2]});
+		}
+		return mp;
+	}
+	
+	public ArrayList<int[]> getAllMovesAndPP()
+	{
+		ArrayList<int[]> mp = new ArrayList<int[]>();
+		for (int i = 0 ; i < base.moves.length; i+=2)
+		{
+			if (G.moves[base.moves[i]].category < 1)
+				mp.add(new int[]{base.moves[i],pp[i/2]});
 		}
 		return mp;
 	}

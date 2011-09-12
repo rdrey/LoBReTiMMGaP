@@ -19,10 +19,16 @@ public class MovesPopup extends ListActivity{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.list_popup);
 		if (G.mode == Mode.BATTLE)
+		{
 			entries = G.battle.getSelectedPokemon().getMovesAndPP();
+			setListAdapter(new EntryAdapter(this, R.layout.move_item, entries));
+		}
 		else if (G.mode == Mode.MAP)
-			entries = new ArrayList<int[]>(); // get the selected pokemon's moves
-		setListAdapter(new EntryAdapter(this, R.layout.move_item, entries));
+		{
+			// get the selected pokemon's moves
+			int index = getIntent().getExtras().getInt("android.lokemon.PokeIndex");
+			setListAdapter(new EntryAdapter(this, R.layout.move_item, G.player.pokemon.get(index)));
+		}
 	}
 
 	public void onListItemClick(ListView l, View v, int pos, long id)
@@ -31,7 +37,7 @@ public class MovesPopup extends ListActivity{
 		{
 			G.battle.selectMove(entries.get(pos)[0]);
 			Intent intent = new Intent(v.getContext(), Wait.class);
-	        startActivityForResult(intent, 0);
+	        startActivity(intent);
 			finish();
 		}
 	}
@@ -39,10 +45,19 @@ public class MovesPopup extends ListActivity{
 	private class EntryAdapter extends ArrayAdapter<int[]>{
 	
         private ArrayList<int[]> items;
+        private int [] moves;
+        private int level;
 
         public EntryAdapter(Context context, int textViewResourceId, ArrayList<int[]> items) {
             super(context, textViewResourceId, items);
             this.items = items;
+        }
+        
+        public EntryAdapter(Context context, int textViewResourceId, Pokemon pokemon) {
+            super(context, textViewResourceId, pokemon.getAllMovesAndPP());
+            this.items = pokemon.getAllMovesAndPP();
+            this.moves = pokemon.getBase().moves;
+            this.level = pokemon.getLevel();
         }
 
         public View getView(int position, View convertView, ViewGroup parent) {
@@ -70,6 +85,18 @@ public class MovesPopup extends ListActivity{
     			pp.setText(entry[1] + " PP");
     			power.setText(move.power + "");
     			acc.setText(move.accuracy +"%");
+        	}
+        	if (entry[1]<= 0 || G.mode == Mode.MAP)
+        	{
+				v.setEnabled(false);
+				if (moves != null)
+				{
+					int index = 0;
+					while (moves[index] < entry[0])
+						index += 2;
+					if (moves[index + 1] > level)
+						v.findViewById(R.id.lock_overlay).setVisibility(View.VISIBLE);
+				}
         	}
         	return v;
         }

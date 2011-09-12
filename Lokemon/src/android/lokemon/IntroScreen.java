@@ -76,7 +76,7 @@ public class IntroScreen extends Activity implements View.OnClickListener, Compo
     			new Trainer(((EditText)first[1]).getText().toString(), (bulbasaur.isChecked()?0:(charmander.isChecked()?3:6)));
     			Trainer.saveTrainer(this);
     			Intent intent = new Intent(v.getContext(), BattleScreen.class);
-                startActivityForResult(intent, 0);
+                startActivity(intent);
     			
                 //enableViews(third, true);
     		}

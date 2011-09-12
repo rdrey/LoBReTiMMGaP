@@ -79,9 +79,13 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 		}
 		else if (v == run_button)
 		{
-			
+			if (G.battle.run())
+				finish();
 		}
 	}
+	
+	// players have to leave battle by explicitly running away
+	public void onBackPressed(){return;}
 	
 	public void onPause()
 	{

@@ -3,6 +3,7 @@ package android.lokemon;
 import java.util.ArrayList;
 import android.app.ListActivity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.lokemon.G.Mode;
 import android.os.Bundle;
@@ -40,6 +41,9 @@ public class PokemonPopup extends ListActivity{
 		else if (G.mode == Mode.MAP)
 		{
 			// show moves popup
+			Intent intent = new Intent(v.getContext(), MovesPopup.class);
+			intent.putExtra("android.lokemon.PokeIndex", pos);
+	        startActivity(intent);
 		}
 	}
 	

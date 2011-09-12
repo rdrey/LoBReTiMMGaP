@@ -65,6 +65,8 @@ public class BagPopup extends ListActivity{
         		count.setText(entry.getCount() + "");
         		icon.setImageResource(entry.getSprite());
         	}
+        	if (G.mode == Mode.MAP)
+				v.setEnabled(false);
         	return v;
         }
         
