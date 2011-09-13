@@ -1,35 +1,8 @@
-package android.lokemon;
-
-import android.content.*;
-import android.content.res.*;
-import android.os.*;
-import android.util.Log;
-import android.app.Activity;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Random;
-
-//networking components
-import com.Lobretimgap.NetworkClient.NetworkComBinder;
-import com.Lobretimgap.NetworkClient.NetworkComService;
-import com.Lobretimgap.NetworkClient.NetworkVariables;
-import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
-
-import networkTransferObjects.NetworkMessage;
-
-public class Game {
-	
-	// network variables
+// network variables
 	private boolean connected;
 	private boolean networkBound;
 	private NetworkComBinder binder;
 	private final Messenger eventMessenger = new Messenger(new eventHandler());
-	
-	private ArrayList<NetworkPlayer> players;
 	
 	// battle variables
 	private int battleSeed;
@@ -55,13 +28,6 @@ public class Game {
 		yourMove = -1;
 		myHealth = 100;
 		oppHealth = 100;
-		
-		players = new ArrayList<NetworkPlayer>();
-	}
-	
-	public void requestBattle(int playerIndex)
-	{
-		
 	}
 	
 	public static void loadGameData(Activity current)
