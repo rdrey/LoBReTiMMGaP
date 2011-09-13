@@ -10,14 +10,13 @@ import android.util.Log;
 import android.view.*;
 import android.widget.*;
 
-public class MovesPopup extends ListActivity{
+public class MovesPopup extends FadePopup{
 	
 	private ArrayList<int[]> entries;
 	
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.list_popup);
 		if (G.mode == Mode.BATTLE)
 		{
 			entries = G.battle.getSelectedPokemon().getMovesAndPP();

@@ -11,14 +11,13 @@ import android.util.Log;
 import android.view.*;
 import android.widget.*;
 
-public class PokemonPopup extends ListActivity{
+public class PokemonPopup extends FadePopup{
 	
 	private ArrayList<Pokemon> entries;
 	
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.list_popup);
 		if (G.mode == Mode.MAP)
 			entries = G.player.pokemon;
 		else if (G.mode == Mode.BATTLE)

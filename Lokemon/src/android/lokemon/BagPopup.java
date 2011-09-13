@@ -12,14 +12,13 @@ import android.util.Log;
 import android.view.*;
 import android.widget.*;
 
-public class BagPopup extends ListActivity{
+public class BagPopup extends FadePopup{
 	
 	private ArrayList<Item> entries;
 	
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.list_popup);
 		entries = new ArrayList<Item>();
 		for (Item i:G.player.items)
 			if (i.getCount() > 0)

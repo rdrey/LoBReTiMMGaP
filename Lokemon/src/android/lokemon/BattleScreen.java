@@ -1,7 +1,7 @@
 package android.lokemon;
 
-import android.app.Activity;
-import android.content.Intent;
+import android.app.*;
+import android.content.*;
 import android.os.Bundle;
 import android.widget.*;
 import android.view.*;
@@ -78,14 +78,32 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	        startActivityForResult(intent, 0);
 		}
 		else if (v == run_button)
-		{
-			if (G.battle.run())
-				finish();
-		}
+			onBackPressed();
 	}
 	
 	// players have to leave battle by explicitly running away
-	public void onBackPressed(){return;}
+	public void onBackPressed()
+	{
+		// create an alert dialog to ask for confirmation
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage("Are you sure you want to run away?");
+		builder.setCancelable(false);
+		builder.setPositiveButton("Run!", new DialogInterface.OnClickListener() 
+			{
+	           public void onClick(DialogInterface dialog, int id) 
+	           {
+	        	   if (G.battle.run())
+	       			finish();
+	           }
+	       })
+	       .setNegativeButton("Stay", new DialogInterface.OnClickListener() {
+	           public void onClick(DialogInterface dialog, int id) {
+	                dialog.cancel();
+	           }
+	       });
+		AlertDialog alert = builder.create();
+		alert.show();
+	}
 	
 	public void onPause()
 	{
