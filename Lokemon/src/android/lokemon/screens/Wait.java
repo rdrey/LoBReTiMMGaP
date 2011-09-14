@@ -1,6 +1,8 @@
-package android.lokemon;
+package android.lokemon.screens;
 
 import android.app.Activity;
+import android.lokemon.R;
+import android.lokemon.R.layout;
 import android.os.Bundle;
 
 public class Wait extends Activity {

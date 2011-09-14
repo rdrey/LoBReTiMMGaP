@@ -1,6 +1,10 @@
-package android.lokemon;
+package android.lokemon.game_objects;
 
 import org.json.*;
+
+import android.lokemon.G;
+import android.lokemon.Util;
+import android.lokemon.G.Types;
 
 public class Move {
 	

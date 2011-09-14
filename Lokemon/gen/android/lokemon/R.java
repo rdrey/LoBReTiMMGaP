@@ -45,9 +45,9 @@ public final class R {
         public static final int leaf_radio=0x7f020012;
         public static final int leaf_selected=0x7f020013;
         public static final int lock=0x7f020014;
-        public static final int marker_opp=0x7f020015;
-        public static final int marker_player=0x7f020016;
-        public static final int opponent=0x7f020017;
+        public static final int marker_available=0x7f020015;
+        public static final int marker_busy=0x7f020016;
+        public static final int marker_shadow=0x7f020017;
         public static final int outline=0x7f020018;
         public static final int poke0=0x7f020019;
         public static final int poke1=0x7f02001a;

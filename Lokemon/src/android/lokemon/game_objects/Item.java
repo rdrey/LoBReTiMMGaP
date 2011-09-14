@@ -1,4 +1,4 @@
-package android.lokemon;
+package android.lokemon.game_objects;
 
 public abstract class Item {
 	private int max_count;

@@ -1,9 +1,11 @@
-package android.lokemon;
+package android.lokemon.game_objects;
 
 import org.json.*;
 
 import android.app.Activity;
 import android.content.res.Resources;
+import android.lokemon.G;
+import android.lokemon.Util;
 import android.lokemon.G.Types;
 import android.util.Log;
 

@@ -1,10 +1,18 @@
-package android.lokemon;
+package android.lokemon.popups;
 
 import java.util.ArrayList;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
+import android.lokemon.G;
+import android.lokemon.R;
+import android.lokemon.Util;
 import android.lokemon.G.Mode;
+import android.lokemon.R.id;
+import android.lokemon.R.layout;
+import android.lokemon.game_objects.Move;
+import android.lokemon.game_objects.Pokemon;
+import android.lokemon.screens.Wait;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;

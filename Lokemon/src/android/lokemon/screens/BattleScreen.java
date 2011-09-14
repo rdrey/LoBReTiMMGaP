@@ -1,7 +1,16 @@
-package android.lokemon;
+package android.lokemon.screens;
 
 import android.app.*;
 import android.content.*;
+import android.lokemon.Battle;
+import android.lokemon.G;
+import android.lokemon.R;
+import android.lokemon.R.id;
+import android.lokemon.R.layout;
+import android.lokemon.game_objects.Pokemon;
+import android.lokemon.popups.BagPopup;
+import android.lokemon.popups.MovesPopup;
+import android.lokemon.popups.PokemonPopup;
 import android.os.Bundle;
 import android.widget.*;
 import android.view.*;

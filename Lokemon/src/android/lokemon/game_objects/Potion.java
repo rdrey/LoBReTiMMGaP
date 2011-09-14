@@ -1,6 +1,9 @@
-package android.lokemon;
+package android.lokemon.game_objects;
 
+import android.lokemon.G;
+import android.lokemon.R;
 import android.lokemon.G.Potions;
+import android.lokemon.R.drawable;
 
 public class Potion extends Item {
 	

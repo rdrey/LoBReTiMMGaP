@@ -1,6 +1,7 @@
-package android.lokemon;
+package android.lokemon.game_objects;
 
 import android.graphics.Color;
+import android.lokemon.G;
 import android.lokemon.G.Types;
 import android.util.Log;
 

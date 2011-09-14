@@ -1,4 +1,7 @@
-package android.lokemon;
+package android.lokemon.game_objects;
+
+import android.lokemon.R;
+import android.lokemon.R.drawable;
 
 public class PokeBall extends Item {
 

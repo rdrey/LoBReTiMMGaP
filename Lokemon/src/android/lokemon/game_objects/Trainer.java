@@ -1,10 +1,11 @@
-package android.lokemon;
+package android.lokemon.game_objects;
 
 import java.io.*;
 import java.util.ArrayList;
 import org.json.*;
 
 import android.content.*;
+import android.lokemon.G;
 import android.lokemon.G.Potions;
 import android.util.Log;
 import android.app.Activity;
@@ -13,7 +14,7 @@ import android.app.AlertDialog;
 // class encapsulates player attributes - follows singleton pattern
 public class Trainer {
 	
-	ArrayList<Pokemon> pokemon;
+	public ArrayList<Pokemon> pokemon;
 	public String nickname;
 	public Item [] items;
 	

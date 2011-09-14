@@ -1,9 +1,11 @@
-package android.lokemon;
+package android.lokemon.game_objects;
 
 import java.util.ArrayList;
 
 import org.json.*;
 
+import android.lokemon.G;
+import android.lokemon.Util;
 import android.util.Log;
 
 public class Pokemon {

@@ -2,6 +2,12 @@ package android.lokemon;
 
 import android.content.*;
 import android.content.res.*;
+import android.lokemon.G.Gender;
+import android.lokemon.G.Potions;
+import android.lokemon.game_objects.BasePokemon;
+import android.lokemon.game_objects.ElemType;
+import android.lokemon.game_objects.Move;
+import android.lokemon.game_objects.NetworkPlayer;
 import android.os.*;
 import android.util.Log;
 import android.app.Activity;
@@ -11,7 +17,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import org.mapsforge.android.maps.GeoPoint;
+import org.mapsforge.android.maps.OverlayItem;
 
 //networking components
 import com.Lobretimgap.NetworkClient.NetworkComBinder;
@@ -21,48 +33,106 @@ import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 
 import networkTransferObjects.NetworkMessage;
 
-public class Game {
+public class Game {	
 	
-	// network variables
-	private boolean connected;
-	private boolean networkBound;
-	private NetworkComBinder binder;
-	private final Messenger eventMessenger = new Messenger(new eventHandler());
-	
+	// player lists
 	private ArrayList<NetworkPlayer> players;
+	private LinkedList<NetworkPlayer> new_players;
+	private LinkedList<NetworkPlayer> old_players;
 	
-	// battle variables
-	private int battleSeed;
-	private int opponentIndex;
-	private String opponentNick;
-	private int opponentMove;
-	private int yourMove;
-	private int myHealth;
-	private int oppHealth;
-	private Random random;
+	// item lists
+	private ArrayList<Potions> items;
+	private LinkedList<Potions> new_items;
+	private LinkedList<Potions> old_items;
 	
-	// display variables
-	GameScreen gameScreen;
+	// testing threads for generating and removing players
+	private Timer add_players_timer;
+	private Timer remove_players_timer;
 	
 	private Game()
 	{
 		G.game = this;
-		connected = false;
-		networkBound = false;
-		battleSeed = 0;
-		gameScreen = null;
-		opponentMove = -1;
-		yourMove = -1;
-		myHealth = 100;
-		oppHealth = 100;
 		
+		// create player lists
 		players = new ArrayList<NetworkPlayer>();
+		new_players = new LinkedList<NetworkPlayer>();
+		old_players = new LinkedList<NetworkPlayer>();
+		
+		// create item lists
+		items = new ArrayList<Potions>();
+		new_items = new LinkedList<Potions>();
+		old_items = new LinkedList<Potions>();
+		
+		// some test players
+		addPlayer(new NetworkPlayer(121,"Test1", G.Gender.FEMALE,new GeoPoint(52.52709,13.416012)));
+		addPlayer(new NetworkPlayer(435,"Test2", G.Gender.MALE,new GeoPoint(52.527312,13.415609)));     
+		addPlayer(new NetworkPlayer(234,"Test3", G.Gender.FEMALE,new GeoPoint(52.527407,13.415114)));
+		addPlayer(new NetworkPlayer(287,"Test4", G.Gender.MALE,new GeoPoint(52.327198,13.415969)));
+		
+		// start testing threads 
+		add_players_timer = new Timer();
+		remove_players_timer = new Timer();
+		add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*1000));
+		remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*1000));
 	}
+	
+	/*
+	 * Methods related to adding, removing and updating network players and items
+	 */
+	
+	// adds it to the main player list and adds it to a new player list
+	public void addPlayer(NetworkPlayer player)
+	{
+		players.add(player);
+		new_players.add(player);
+	}
+	
+	// removes it from the main player list and adds it to an old player list
+	public void removePlayer(NetworkPlayer player)
+	{
+		old_players.add(player);
+		players.remove(player);
+	}
+	
+	// adds it to the main item list and adds it to a new item list
+	public void addItem(Potions item)
+	{
+		items.add(item);
+		new_items.add(item);
+	}
+	
+	// removes it from the main item list and adds it to an old item list
+	public void removeItem(Potions item)
+	{
+		old_items.add(item);
+		items.remove(item);
+	}
+	
+	// this method is used by the map screen to update its overlays
+	public ArrayList<NetworkPlayer> getAllPlayers() {return players;}
+	// this method is used by the map screen to update its overlays
+	public LinkedList<NetworkPlayer> getNewPlayers() {return new_players;}
+	// this method is used by the map screen to update its overlays
+	public LinkedList<NetworkPlayer> getOldPlayers() {return old_players;}
+	// this method is used by the map screen to update its overlays
+	public ArrayList<Potions> getAllItems() {return items;}
+	// this method is used by the map screen to update its overlays
+	public LinkedList<Potions> getNewItems() {return new_items;}
+	// this method is used by the map screen to update its overlays
+	public LinkedList<Potions> getOldItems() {return old_items;}
+	
+	/*
+	 * Methods related to initiating battles
+	 */
 	
 	public void requestBattle(int playerIndex)
 	{
 		
 	}
+	
+	/*
+	 * Methods related to saving and loading game state
+	 */
 	
 	public static void loadGameData(Activity current)
 	{
@@ -77,6 +147,10 @@ public class Game {
 			BasePokemon.loadPokemon(Game.readFile(assetManager.open("base_pokemon.json")), current);
 			Log.i("Data load", "Pokemon loaded");
 			//assetManager.close(); // started causing a RuntimeException for no apparent reason
+			
+			// load map markers
+			G.player_marker_available = current.getResources().getDrawable(R.drawable.marker_available);
+			G.player_marker_busy = current.getResources().getDrawable(R.drawable.marker_busy);
 		}
 		catch (Exception e) {Log.e("Data load", e.getMessage());}
 	}
@@ -96,152 +170,36 @@ public class Game {
 		return str;
 	}
 	
-	public static void startGame(GameScreen current)
-	{
-		G.game.gameScreen = current;
-		G.game.createConnection(current);
-	}
+	/*
+	 * TimerTask classes to generate/remove players (only used for testing)
+	 */
 	
-	public static void endGame()
+	// adds a player to the game with a 50% chance
+	private class PlayerGeneration extends TimerTask
 	{
-		if(G.game.binder != null)G.game.binder.sendTerminationRequest(new NetworkMessage("Bye bye!"));
-		else Log.e(NetworkVariables.TAG, "Binder is null");
-	}
-	
-	public static void pauseGame()
-	{
-		
-	}
-	
-	public void initiateBattle()
-	{
-		binder.sendGameUpdate(new NetworkMessage("battle,"+G.player.nickname + "," + G.player.pokemon.get(0).index));
-	}
-	
-	public void acceptBattle()
-	{
-		battleSeed = (int)(Math.random()*100);
-		random = new Random(battleSeed);
-		binder.sendGameUpdate(new NetworkMessage("accept,"+G.player.nickname + "," + G.player.pokemon.get(0).index + "," + battleSeed));
-		gameScreen.setStatusText("Accepted battle...");
-	}
-	
-	public void runAway()
-	{
-		binder.sendGameUpdate(new NetworkMessage("run"));
-	}
-	
-	public void attack(int moveIndex)
-	{
-		yourMove = moveIndex;
-		Log.e(NetworkVariables.TAG, "move: " + opponentMove + " " + yourMove);
-		binder.sendGameUpdate(new NetworkMessage("attack," + moveIndex));
-		if (opponentMove > -1) playTurn();
-	}
-	
-	public void playTurn()
-	{
-		myHealth -= random.nextInt()%10;
-		oppHealth -= random.nextInt()%10;
-		gameScreen.setMyHealth(myHealth);
-		gameScreen.setOppHealth(oppHealth);
-		yourMove = -1;
-		opponentMove = -1;
-		Log.e(NetworkVariables.TAG, "move played by " + G.player.nickname);
-		setBattleTurn(G.basePokemon[opponentIndex].speed <= G.player.pokemon.get(0).getBase().speed);
-	}
-	
-	public void setBattleTurn(boolean self)
-	{
-		if (self)
+		public void run()
 		{
-			gameScreen.setStatusText("Your turn...");
-		}
-		else
-		{
-			gameScreen.setStatusText("Opponent's turn...");
-		}
-		gameScreen.enableAttackInterface(true);
-	}
-	
-	private void createConnection(Activity current)
-	{
-		// bind network component
-		Intent intent = new Intent(current, NetworkComService.class);
-		ServiceConnection ser = new ServiceConnection() {
-			
-			public void onServiceDisconnected(ComponentName name) {
-				networkBound = false;
-				Log.i(NetworkVariables.TAG, "Service disconnected");
-			}
-			
-			public void onServiceConnected(ComponentName name, IBinder service) {
-				gameScreen.setStatusText("Connecting to game server...");
-				// get an instance of the binder for the service
-				binder = (NetworkComBinder)service;
-				networkBound = true;
-				binder.registerMessenger(eventMessenger);
-				binder.ConnectToServer();		
-			}
-		};
-		current.bindService(intent, ser, Context.BIND_AUTO_CREATE);
-	}
-	
-	private class eventHandler extends Handler{
-		
-		public void handleMessage(Message msg) 
-		{
-			switch (NetworkComBinder.EventType.values()[msg.what])
+			if (Math.random() < 0.5)
 			{
-				case CONNECTION_ESTABLISHED:
-					connected = true;
-					gameScreen.setStatusText("Connected!");
-					break;	
-				case CONNECTION_LOST:
-					connected = false;
-					break;
-				case CONNECTION_FAILED:
-					connected = false;
-					gameScreen.setStatusText("Connection failed");
-					break;
-				case UPDATE_RECEIVED:
-					String str = ((NetworkMessage)(((NetworkEvent)msg.obj).getMessage())).getMessage();
-					String [] args = str.split(",");
-					if (args[0].equals("battle"))
-					{
-						opponentNick = args[1];
-						opponentIndex = Integer.parseInt(args[2]);
-						gameScreen.setOppPoke(opponentIndex);
-						gameScreen.setOppNick(opponentNick);
-						gameScreen.setOppHealth(100);
-						acceptBattle();
-						setBattleTurn(G.basePokemon[opponentIndex].speed <= G.player.pokemon.get(0).getBase().speed);
-					}
-					else if (args[0].equals("accept"))
-					{
-						opponentNick = args[1];
-						opponentIndex = Integer.parseInt(args[2]);
-						battleSeed = Integer.parseInt(args[3]);
-						random = new Random(battleSeed);
-						gameScreen.setOppPoke(opponentIndex);
-						gameScreen.setOppNick(opponentNick);
-						gameScreen.setOppHealth(100);
-						setBattleTurn(G.basePokemon[opponentIndex].speed <= G.player.pokemon.get(0).getBase().speed);
-					}
-					else if (args[0].equals("run"))
-					{
-						gameScreen.removeOpp();
-						gameScreen.setStatusText(opponentNick + " ran away...");
-						gameScreen.enableAttackInterface(false);
-					}
-					else if (args[0].equals("attack"))
-					{
-						opponentMove = Integer.parseInt(args[1]);
-						Log.e(NetworkVariables.TAG, "move: " + opponentMove + " " + yourMove);
-						if (yourMove > -1) playTurn();
-					}
-					break;
+				double lon = Math.random() * 0.0004 + 52.527;
+				double lat = Math.random() * 0.001 + 13.415;
+				addPlayer(new NetworkPlayer(-1,"Test",G.Gender.FEMALE,new GeoPoint(lon,lat)));
+				Log.i("Players", "Player added (total: " + players.size() + ")");
 			}
+			add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*1000));
+		}
+	}
+	
+	// removes a random number of players from the game, proportional to the total number of players
+	private class PlayerRemoval extends TimerTask
+	{
+		public void run()
+		{
+			int numToBeRemoved = (int)(players.size() * Math.random());
+			for (int i = 0; i < numToBeRemoved; i++)
+				removePlayer(players.get((int)(Math.random()*players.size())));
+			Log.i("Players", numToBeRemoved + " players removed (total: " + players.size() + ")");
+			remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*1000));
 		}
 	}
 }
