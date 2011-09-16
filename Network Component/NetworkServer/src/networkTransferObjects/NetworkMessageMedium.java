@@ -15,12 +15,14 @@ public class NetworkMessageMedium extends NetworkMessage{
 
 	public ArrayList<Integer> integers;
 	public ArrayList<String> strings;
+	public ArrayList<Double> doubles;
 
     public NetworkMessageMedium(String message)
     {
         super(message);
         strings = new ArrayList<String>();
         integers = new ArrayList<Integer>();
+        doubles = new ArrayList<Double>();
     }
 
     public NetworkMessageMedium()

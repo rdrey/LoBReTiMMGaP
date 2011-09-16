@@ -15,6 +15,7 @@ import java.util.HashMap;
 public class NetworkMessageLarge extends NetworkMessage {
 
     public ArrayList<Integer> integers;
+    public ArrayList<Double> doubles;
 
     public HashMap<String, Object> objectDict;
 	public HashMap<String, String> stringDict;
@@ -28,6 +29,7 @@ public class NetworkMessageLarge extends NetworkMessage {
         objectDict = new HashMap<String, Object>();
         stringDict = new HashMap<String, String>();
         integers = new ArrayList<Integer>();
+        doubles = new ArrayList<Double>();
         strings = new ArrayList<String>();        
     }
 
