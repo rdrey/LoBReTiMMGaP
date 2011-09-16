@@ -9,7 +9,9 @@ public class NetworkThreadImplementation extends CoreNetworkThread {
 
 	@Override
 	public PlayerRegistrationMessage getPlayerRegistrationInformation() {
-		return new PlayerRegistrationMessage("Lawrence");
+		PlayerRegistrationMessage msg = new PlayerRegistrationMessage("Lawrence");
+		msg.integers.add(0); //Avatar
+		return msg;
 	}
 
 	@Override

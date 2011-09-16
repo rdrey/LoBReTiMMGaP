@@ -5,6 +5,8 @@
 
 package networkserver.Lokemon;
 
+import java.awt.Point;
+import java.awt.geom.Point2D;
 import networkserver.ServerVariables;
 
 /**
@@ -15,6 +17,18 @@ public class LokemonPlayer {
     private int playerID;
     private String playerName;
     private int avatar;
+
+    private Point2D.Double position;
+    private boolean busy = false;
+
+    public void setBusy(boolean busy) {
+        this.busy = busy;
+    }
+
+    public boolean isBusy()
+    {
+        return busy;
+    }
 
     public int getPlayerID() {
         return playerID;
@@ -47,6 +61,9 @@ public class LokemonPlayer {
         return (LokemonDaemonThread)ServerVariables.playerThreadMap.get(playerID);
     }
 
-
+    public void setPosition(Point2D.Double location)
+    {
+        position = location;
+    }
 
 }

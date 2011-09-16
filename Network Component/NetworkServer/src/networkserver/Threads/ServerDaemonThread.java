@@ -41,8 +41,8 @@ public abstract class ServerDaemonThread extends Thread{
     private static Schema<NetworkMessageLarge> largeMsgSchema = RuntimeSchema.getSchema(NetworkMessageLarge.class);
     private static Schema<NetworkMessage> networkMsgSchema = RuntimeSchema.getSchema(NetworkMessage.class);
 
-    public int playerID;
-    public String playerName;
+    protected int playerID;
+    protected String playerName;
 
     private long latencyStartTime, latencyEndTime;
 

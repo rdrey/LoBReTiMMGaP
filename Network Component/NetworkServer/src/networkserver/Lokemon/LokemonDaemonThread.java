@@ -5,11 +5,13 @@
 
 package networkserver.Lokemon;
 
-import java.awt.Rectangle;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.Vector;
 import networkTransferObjects.NetworkMessage;
 import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
+import networkserver.EventListeners.GameStateRequestReceivedListener;
 import networkserver.EventListeners.RequestReceivedListener;
 import networkserver.EventListeners.UpdateReceivedListener;
 import networkserver.Events.NetworkEvent;
@@ -29,8 +31,8 @@ public class LokemonDaemonThread extends ServerDaemonThread{
         super();
 
         //Register listeners
-        this.addNetworkListener(RequestReceivedListener.class, rrList);
-        this.addNetworkListener(UpdateReceivedListener.class, urList);
+        this.addNetworkListener(RequestReceivedListener.class, rrListen);
+        this.addNetworkListener(UpdateReceivedListener.class, urListen);
     }
 
     
@@ -52,8 +54,9 @@ public class LokemonDaemonThread extends ServerDaemonThread{
         return new Vector<ClientPeer>();
     }
 
-    //Listener processing
-    RequestReceivedListener rrList = new RequestReceivedListener() {
+    //============================================Listener processing==========================================================
+    
+    RequestReceivedListener rrListen = new RequestReceivedListener() {
 
         public void EventOccured(NetworkEvent e) {
             NetworkMessage msg = (NetworkMessage)e.getMessage();
@@ -61,16 +64,17 @@ public class LokemonDaemonThread extends ServerDaemonThread{
 
             if(sMsg.equals("MapDataRequest"));
             {
-                double topLeftX = ((NetworkMessageMedium)msg).integers.get(0);
-                double topLeftY = ((NetworkMessageMedium)msg).integers.get(1);
-                double width = ((NetworkMessageMedium)msg).integers.get(2);
-                double height = ((NetworkMessageMedium)msg).integers.get(3);
-                LokemonServerLogic.sendMapDataToPlayer(playerID, topLeftX, topLeftY, width, height);
+                double topLeftX = ((NetworkMessageMedium)msg).doubles.get(0);
+                double topLeftY = ((NetworkMessageMedium)msg).doubles.get(1);
+                double width = ((NetworkMessageMedium)msg).doubles.get(2);
+                double height = ((NetworkMessageMedium)msg).doubles.get(3);
+
+                LokemonServerLogic.sendMapDataToClient(playerID, new Rectangle2D.Double(topLeftX, topLeftY, width, height));
             }
         }
     };
 
-    UpdateReceivedListener urList = new UpdateReceivedListener() {
+    UpdateReceivedListener urListen = new UpdateReceivedListener() {
 
         public void EventOccured(NetworkEvent e) {
             NetworkMessage msg = (NetworkMessage)e.getMessage();
@@ -78,7 +82,22 @@ public class LokemonDaemonThread extends ServerDaemonThread{
 
             if(sMsg.equals("LocationUpdate"))
             {
-                
+                double x = ((NetworkMessageMedium)msg).doubles.get(0);
+                double y = ((NetworkMessageMedium)msg).doubles.get(1);
+                player.setPosition(new Point2D.Double(x, y));
+            }
+        }
+    };
+
+    GameStateRequestReceivedListener gsrrListen = new GameStateRequestReceivedListener() {
+
+        public void EventOccured(NetworkEvent e) {
+            NetworkMessage msg = (NetworkMessage)e.getMessage();
+            String sMsg = msg.getMessage();
+
+            if(sMsg.equals("GetPlayers"))
+            {
+                LokemonServerLogic.sendSurroundingPlayersToClient(playerID);
             }
         }
     };
