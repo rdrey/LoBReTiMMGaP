@@ -18,6 +18,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.text.method.ScrollingMovementMethod;
+import android.view.animation.BounceInterpolator;
 import android.widget.TextView;
 
 public class ExampleActivity extends Activity {
@@ -122,7 +123,7 @@ public class ExampleActivity extends Activity {
 					}	
 					break;					
 				default:
-					tv.append("Unrecognised event of type "+ NetworkComBinder.EventType.values()[msg.what] + " received.");
+					tv.append("Unrecognised event of type "+ NetworkComBinder.EventType.values()[msg.what] + " received.");					
 			}
 		}
 	}
