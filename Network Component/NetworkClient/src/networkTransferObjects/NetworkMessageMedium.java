@@ -13,9 +13,9 @@ import java.util.ArrayList;
  */
 public class NetworkMessageMedium extends NetworkMessage{
     
-	public ArrayList<Integer> integers;
-	public ArrayList<String> strings;
 	public ArrayList<Double> doubles;
+	public ArrayList<Integer> integers;
+	public ArrayList<String> strings;	
     
     public NetworkMessageMedium(String message)
     {

@@ -14,8 +14,8 @@ import java.util.HashMap;
  */
 public class NetworkMessageLarge extends NetworkMessage {
 
-    public ArrayList<Integer> integers;
-    public ArrayList<Double> doubles;
+	public ArrayList<Double> doubles;
+	public ArrayList<Integer> integers;    
 
     public HashMap<String, Object> objectDict;
 	public HashMap<String, String> stringDict;
