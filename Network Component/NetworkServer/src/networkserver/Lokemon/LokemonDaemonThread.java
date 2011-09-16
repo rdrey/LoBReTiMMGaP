@@ -5,12 +5,14 @@
 
 package networkserver.Lokemon;
 
-import java.awt.geom.Point2D;
+import networkTransferObjects.Lokemon.LokemonPlayer;
 import java.awt.geom.Rectangle2D;
 import java.util.Vector;
 import networkTransferObjects.NetworkMessage;
 import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
+import networkTransferObjects.UtilityObjects.Location;
+import networkserver.EventListeners.ConnectionLostListener;
 import networkserver.EventListeners.GameStateRequestReceivedListener;
 import networkserver.EventListeners.RequestReceivedListener;
 import networkserver.EventListeners.UpdateReceivedListener;
@@ -33,6 +35,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
         //Register listeners
         this.addNetworkListener(RequestReceivedListener.class, rrListen);
         this.addNetworkListener(UpdateReceivedListener.class, urListen);
+        this.addNetworkListener(ConnectionLostListener.class, clListen);
     }
 
     
@@ -84,7 +87,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
             {
                 double x = ((NetworkMessageMedium)msg).doubles.get(0);
                 double y = ((NetworkMessageMedium)msg).doubles.get(1);
-                player.setPosition(new Point2D.Double(x, y));
+                player.setPosition(new Location(x, y));
             }
         }
     };
@@ -97,8 +100,16 @@ public class LokemonDaemonThread extends ServerDaemonThread{
 
             if(sMsg.equals("GetPlayers"))
             {
-                LokemonServerLogic.sendSurroundingPlayersToClient(playerID);
+                LokemonServerLogic.sendSurroundingPlayersToClient(player);
             }
+        }
+    };
+
+    ConnectionLostListener clListen = new ConnectionLostListener() {
+
+        public void EventOccured(NetworkEvent e) {
+            //Lost connection to client, so remove them from our game states
+            LokemonSeverVariables.playerList.remove(player);
         }
     };
 

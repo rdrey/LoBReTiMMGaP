@@ -5,6 +5,7 @@
 
 package networkserver.Lokemon;
 
+import networkTransferObjects.Lokemon.LokemonPlayer;
 import java.util.ArrayList;
 
 /**
@@ -14,5 +15,6 @@ import java.util.ArrayList;
 public class LokemonSeverVariables {
 
     public static ArrayList<LokemonPlayer> playerList;
+    public static double areaOfInterest = 60.0;
 
 }

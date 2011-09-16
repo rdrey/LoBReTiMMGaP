@@ -3,11 +3,9 @@
  * and open the template in the editor.
  */
 
-package networkserver.Lokemon;
+package networkTransferObjects.Lokemon;
 
-import java.awt.Point;
-import java.awt.geom.Point2D;
-import networkserver.ServerVariables;
+import networkTransferObjects.UtilityObjects.Location;
 
 /**
  * @date 2011/09/16
@@ -18,8 +16,12 @@ public class LokemonPlayer {
     private String playerName;
     private int avatar;
 
-    private Point2D.Double position;
+    private Location position;
     private boolean busy = false;
+    
+    public Location getPosition() {
+        return position;
+    }    
 
     public void setBusy(boolean busy) {
         this.busy = busy;
@@ -50,20 +52,12 @@ public class LokemonPlayer {
     {
         this.playerID = playerID;
         this.playerName = playerName;
-    }
+    }    
     
-    /***
-     * Retrieves the networkThread associated with this player.
-     * @return the LokemonDaemonThread associated with this player.
-     */
-    public LokemonDaemonThread getPlayerThread()
-    {
-        return (LokemonDaemonThread)ServerVariables.playerThreadMap.get(playerID);
-    }
 
-    public void setPosition(Point2D.Double location)
+    public void setPosition(Location loc)
     {
-        position = location;
+        position = loc;
     }
 
 }

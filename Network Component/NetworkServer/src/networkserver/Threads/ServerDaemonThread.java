@@ -275,6 +275,7 @@ public abstract class ServerDaemonThread extends Thread{
             catch(NullPointerException e)
             {
                 System.err.println("Null Pointer Exception: +"+ e.getMessage());
+                fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
                 stopOperation = true;
             }
             catch(RuntimeException e)
