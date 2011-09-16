@@ -69,9 +69,9 @@ public class BasePokemon {
 		desc += " type Pokémon.";
 		if (evolution != null)
 		{
-			BasePokemon next = G.basePokemon[evolution[0]];
+			BasePokemon next = G.base_pokemon[evolution[0]];
 			desc += " It evolves into " + next.name + " at level " + evolution[1];
-			if (next.evolution != null) desc += " and " + G.basePokemon[next.evolution[0]].name + " at level " + next.evolution[1];
+			if (next.evolution != null) desc += " and " + G.base_pokemon[next.evolution[0]].name + " at level " + next.evolution[1];
 			desc += ".";
 		}
 		return desc;
@@ -90,12 +90,12 @@ public class BasePokemon {
 	public static void loadPokemon(String pokeJSON, Activity current) throws JSONException
 	{
 		JSONArray array = (JSONArray)(new JSONTokener(pokeJSON)).nextValue();
-		G.basePokemon = new BasePokemon[array.length()];
+		G.base_pokemon = new BasePokemon[array.length()];
 		for (int i = 0; i < array.length(); i++)
 		{
 			JSONObject object = (JSONObject)array.get(i);
 			BasePokemon poke = new BasePokemon(object, current); 
-			G.basePokemon[poke.index] = poke;
+			G.base_pokemon[poke.index] = poke;
 		}
 	}
 }

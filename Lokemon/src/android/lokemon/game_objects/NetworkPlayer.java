@@ -7,7 +7,7 @@ import android.lokemon.G;
 import android.lokemon.G.Gender;
 import android.lokemon.G.PlayerState;
 
-public class NetworkPlayer extends MapObject{
+public class NetworkPlayer extends MapItem{
 	
 	// public attributes
 	public Gender gender;

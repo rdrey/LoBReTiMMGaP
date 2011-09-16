@@ -5,7 +5,7 @@ import android.lokemon.R;
 import android.lokemon.G.Potions;
 import android.lokemon.R.drawable;
 
-public class Potion extends Item {
+public class Potion extends BagItem {
 	
 	private Potions type;
 	

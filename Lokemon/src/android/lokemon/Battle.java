@@ -1,7 +1,7 @@
 package android.lokemon;
 
 import android.lokemon.G.Mode;
-import android.lokemon.game_objects.Item;
+import android.lokemon.game_objects.BagItem;
 import android.lokemon.game_objects.Pokemon;
 import android.lokemon.screens.BattleScreen;
 import android.util.Log;
@@ -37,7 +37,7 @@ public class Battle {
 		if (pokeCount < 2)
 			display.disableSwitch();
 		
-		for (Item i:G.player.items)
+		for (BagItem i:G.player.items)
 			itemCount += i.getCount();
 		if (itemCount == 0)
 			display.disableBag();
@@ -64,7 +64,7 @@ public class Battle {
 		// battle logic here
 	}
 	
-	public void useItem(Item item)
+	public void useItem(BagItem item)
 	{
 		item.decrement();
 		itemCount--;

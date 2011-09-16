@@ -1,13 +1,13 @@
 package android.lokemon.game_objects;
 
-public abstract class Item {
+public abstract class BagItem {
 	private int max_count;
 	private String name;
 	private int count;
 	protected int spriteID;
 	private String description;
 	
-	public Item (String name, int count, int max_count, String desc)
+	public BagItem (String name, int count, int max_count, String desc)
 	{
 		this.name = name;
 		this.count = count;

@@ -3,7 +3,7 @@ package android.lokemon.game_objects;
 import android.lokemon.R;
 import android.lokemon.R.drawable;
 
-public class PokeBall extends Item {
+public class PokeBall extends BagItem {
 
 	public PokeBall(int count) 
 	{

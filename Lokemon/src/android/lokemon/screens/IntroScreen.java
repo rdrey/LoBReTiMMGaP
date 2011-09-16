@@ -65,8 +65,8 @@ public class IntroScreen extends Activity implements View.OnClickListener, Compo
         enableViews(third, false);
         enableViews(first, true);
         
-        ((TextView)second[4]).setText(G.basePokemon[0].getDescription());
-        ((TextView)second[5]).setText(Html.fromHtml(G.basePokemon[0].getBaseStats()));
+        ((TextView)second[4]).setText(G.base_pokemon[0].getDescription());
+        ((TextView)second[5]).setText(Html.fromHtml(G.base_pokemon[0].getBaseStats()));
     }
     
     public void onClick(View v)
@@ -104,12 +104,12 @@ public class IntroScreen extends Activity implements View.OnClickListener, Compo
     	{
     		TextView textView = (TextView)second[4];
     		TextView stats = (TextView)second[5];
-    		if (b == bulbasaur) {textView.setText(G.basePokemon[0].getDescription());
-    		stats.setText(Html.fromHtml(G.basePokemon[0].getBaseStats()));}
-    		else if (b == charmander) {textView.setText(G.basePokemon[3].getDescription());
-    		stats.setText(Html.fromHtml(G.basePokemon[3].getBaseStats()));}
-    		else if (b == squirtle){ textView.setText(G.basePokemon[6].getDescription());
-    		stats.setText(Html.fromHtml(G.basePokemon[6].getBaseStats()));}
+    		if (b == bulbasaur) {textView.setText(G.base_pokemon[0].getDescription());
+    		stats.setText(Html.fromHtml(G.base_pokemon[0].getBaseStats()));}
+    		else if (b == charmander) {textView.setText(G.base_pokemon[3].getDescription());
+    		stats.setText(Html.fromHtml(G.base_pokemon[3].getBaseStats()));}
+    		else if (b == squirtle){ textView.setText(G.base_pokemon[6].getDescription());
+    		stats.setText(Html.fromHtml(G.base_pokemon[6].getBaseStats()));}
     	}
     }
     

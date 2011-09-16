@@ -11,7 +11,7 @@ import android.lokemon.R;
 import android.lokemon.G.Mode;
 import android.lokemon.R.id;
 import android.lokemon.R.layout;
-import android.lokemon.game_objects.Item;
+import android.lokemon.game_objects.BagItem;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
@@ -19,13 +19,13 @@ import android.widget.*;
 
 public class BagPopup extends FadePopup{
 	
-	private ArrayList<Item> entries;
+	private ArrayList<BagItem> entries;
 	
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		entries = new ArrayList<Item>();
-		for (Item i:G.player.items)
+		entries = new ArrayList<BagItem>();
+		for (BagItem i:G.player.items)
 			if (i.getCount() > 0)
 				entries.add(i);
 		setListAdapter(new EntryAdapter(this, R.layout.bag_item, entries));
@@ -40,18 +40,18 @@ public class BagPopup extends FadePopup{
 		}
 	}
 	
-	private class EntryAdapter extends ArrayAdapter<Item>{
+	private class EntryAdapter extends ArrayAdapter<BagItem>{
 	
-        private ArrayList<Item> items;
+        private ArrayList<BagItem> items;
 
-        public EntryAdapter(Context context, int textViewResourceId, ArrayList<Item> items) {
+        public EntryAdapter(Context context, int textViewResourceId, ArrayList<BagItem> items) {
             super(context, textViewResourceId, items);
             this.items = items;
         }
 
         public View getView(int position, View convertView, ViewGroup parent) {
         	View v = convertView;
-        	Item entry = items.get(position);
+        	BagItem entry = items.get(position);
         	if (v == null)
         	{
         		LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);

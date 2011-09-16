@@ -16,11 +16,20 @@ public final class R {
     public static final class color {
         public static final int black=0x7f040002;
         public static final int blue=0x7f040001;
+        public static final int cave=0x7f040008;
+        public static final int forest=0x7f040009;
+        public static final int grassland=0x7f04000a;
+        public static final int mountain=0x7f04000b;
+        public static final int pokemart=0x7f040010;
+        public static final int pokemon_center=0x7f04000f;
         public static final int purple=0x7f040000;
         public static final int quarter_transparent=0x7f040007;
+        public static final int rough_terrain=0x7f04000c;
         public static final int semi_transparent=0x7f040006;
         public static final int transparent=0x7f040005;
         public static final int transparent_white=0x7f040004;
+        public static final int urban=0x7f04000d;
+        public static final int water_edge=0x7f04000e;
         public static final int white=0x7f040003;
     }
     public static final class drawable {

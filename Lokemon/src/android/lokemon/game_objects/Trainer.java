@@ -16,7 +16,7 @@ public class Trainer {
 	
 	public ArrayList<Pokemon> pokemon;
 	public String nickname;
-	public Item [] items;
+	public BagItem [] items;
 	
 	
 	public Trainer(String nick, int startPokemon)
@@ -26,7 +26,7 @@ public class Trainer {
 		pokemon.add(new Pokemon(startPokemon, 5));
 		pokemon.add(new Pokemon(3, 5));
 		pokemon.add(new Pokemon(6, 5));
-		items = new Item[6];
+		items = new BagItem[6];
 		items[0] = new PokeBall();
 		items[1] = new Potion(Potions.HP);
 		items[2] = new Potion(Potions.ATTACK);
@@ -40,7 +40,7 @@ public class Trainer {
 			items[0].increment();
 			items[1].increment();
 		}
-		catch(Item.MaxItemCountException e) {Log.e("Player creation", e.getMessage());}
+		catch(BagItem.MaxItemCountException e) {Log.e("Player creation", e.getMessage());}
 		G.player = this;
 	}
 	
@@ -48,7 +48,7 @@ public class Trainer {
 	{
 		this.nickname = nick;
 		this.pokemon = pokemon;
-		items = new Item[6];
+		items = new BagItem[6];
 		items[0] = new PokeBall(itemCount[0]);
 		items[1] = new Potion(Potions.HP,itemCount[1]);
 		items[2] = new Potion(Potions.ATTACK,itemCount[2]);
@@ -64,7 +64,7 @@ public class Trainer {
 		{
 			BufferedWriter output = new BufferedWriter(new OutputStreamWriter(current.openFileOutput("save_data", Context.MODE_PRIVATE)));
 			String str_out = "{\"nick\":\""+ G.player.nickname + "\",\"items\":[";
-			for (Item i:G.player.items) str_out += i.getCount() + ",";
+			for (BagItem i:G.player.items) str_out += i.getCount() + ",";
 			str_out = str_out.substring(0, str_out.length()-1) + "],\"pokemon\":[";
 			for (Pokemon p:G.player.pokemon) str_out += p.getJSON() + ",";
 			str_out = str_out.substring(0, str_out.length()-1) + "]}\n";

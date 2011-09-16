@@ -1,16 +1,16 @@
 package android.lokemon.screens;
 
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import android.lokemon.G;
 import android.lokemon.R;
 import android.lokemon.G.Mode;
-import android.lokemon.R.drawable;
-import android.lokemon.R.id;
-import android.lokemon.R.layout;
+import android.lokemon.G.PlayerState;
 import android.lokemon.game_objects.NetworkPlayer;
+import android.lokemon.game_objects.Region;
 import android.lokemon.popups.BagPopup;
 import android.lokemon.popups.PokemonPopup;
 import android.os.Bundle;
@@ -55,11 +55,11 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
         mapView.setKeepScreenOn(true);
         mapView.setClickable(true);
         mapView.setOnTouchListener(this);
-        mapView.setMapFile("/sdcard/Lokemon/berlin-0.2.4.map");
+        mapView.setMapFile("/sdcard/Lokemon/campus.map");
         
         mapController = mapView.getController();
         // UCT Upper Campus: (-33.957657, 18.46125)
-        mapController.setCenter(new GeoPoint(52.52696,13.415701));
+        mapController.setCenter(new GeoPoint(-33.957657,18.46125));
         mapController.setZoom(18);
         
         bag_button = (Button)findViewById(R.id.bag_button);
@@ -75,7 +75,7 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
 	           public void onClick(DialogInterface dialog, int id) {dialog.cancel();}});
         battleAlert = builder.create();
         
-        players = new ArrayItemizedOverlay(G.player_marker_available,this) {
+        players = new ArrayItemizedOverlay(G.player_marker_busy,this) {
         	public boolean onTap(int index) 
         	{
         		showBattleOutgoingDialog(); 
@@ -86,15 +86,26 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
         items = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.pokeball),this);
         shadows_item = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_shadow), this);
         regions = new ArrayWayOverlay(null, null);
+        // add region ways
+        for (Region r:G.game.getRegions())
+        	regions.addWay(r.getWay());
         
         // added in drawing order
-        //mapView.getOverlays().add(regions);
-        mapView.getOverlays().add(shadows_player);
+        mapView.getOverlays().add(regions);
         //mapView.getOverlays().add(shadows_item);
-        mapView.getOverlays().add(players);
+        mapView.getOverlays().add(shadows_player);
         //mapView.getOverlays().add(items);
+        mapView.getOverlays().add(players);
+        
+        // check if this is thread safe
+        /*for (NetworkPlayer p:G.game.getAllPlayers())
+        {
+        	players.addItem(p.getMarker());
+        	shadows_player.addItem(p.getShadow());
+        }*/
         
         self = this;
+        Log.i("Interface", "Map view created");
     }
     
     public void onResume()
@@ -111,6 +122,13 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
     	super.onPause();
     	hud.setVisibility(View.INVISIBLE);
     	overlayTimer.cancel();
+    }
+    
+    public void onDestroy()
+    {
+    	super.onDestroy();
+    	// have to set player states back to new so that they are re-added to view
+    	Log.i("Interface", "Map view destroyed");
     }
     
     // we want to disable panning and zooming using gestures (this is the only way with SDK version 2.2)
@@ -164,21 +182,21 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
     {
     	public void run()
     	{
-    		LinkedList<NetworkPlayer> list1 = G.game.getOldPlayers();
-    		while (list1.size() > 0)
-    		{
-    			NetworkPlayer p = list1.removeLast();
-    			shadows_player.removeItem(p.getShadow());
-    			players.removeItem(p.getMarker());
-    		}
-    		LinkedList<NetworkPlayer> list2 = G.game.getNewPlayers();
-    		while (list2.size() > 0)
-    		{
-    			NetworkPlayer p = list2.removeLast();
-    			shadows_player.addItem(p.getShadow());
-    			players.addItem(p.getMarker());
-    		}
-    		Log.i("Interface", "Overlays updated (Markers: " + players.size() + ", Players: " + G.game.getAllPlayers().size() +  ")");
+    		ConcurrentLinkedQueue<NetworkPlayer> new_players = G.game.getNewPlayers();
+    		ConcurrentLinkedQueue<NetworkPlayer> old_players = G.game.getOldPlayers();
+			while(new_players.size() > 0)
+			{
+				NetworkPlayer p = new_players.remove(); 
+				players.addItem(p.getMarker());
+				shadows_player.addItem(p.getShadow());
+			}
+			while(old_players.size() > 0)
+			{
+				NetworkPlayer p = old_players.remove();
+				players.removeItem(p.getMarker());
+				shadows_player.removeItem(p.getShadow());
+			}
+			Log.i("Interface", "Overlays updated (Markers: " + players.size() + ", Players: " + G.game.getAllPlayers().size() +  ")");
     	}
     }
 }

@@ -37,7 +37,7 @@ public class Pokemon {
 	{
 		index = pokeIndex;
 		inBattle = false;
-		base = G.basePokemon[index];
+		base = G.base_pokemon[index];
 		pp = new int[base.moves.length/2];
 		for (int i = 0; i < base.moves.length; i+=2) 
 			pp[i/2] = G.moves[base.moves[i]].pp;
@@ -55,7 +55,7 @@ public class Pokemon {
 	public Pokemon(int pokeIndex, int hp, int xp, int level, int [] IVs, int [] EVs, int [] stats, int [] pp)
 	{
 		index = pokeIndex;
-		base = G.basePokemon[index];
+		base = G.base_pokemon[index];
 		this.level = level;
 		this.xp = xp;
 		xp_to_level = (int)Math.pow(level+1, 3);
@@ -99,7 +99,7 @@ public class Pokemon {
 	private void evolve()
 	{
 		index = base.evolution[0];
-		base = G.basePokemon[index];
+		base = G.base_pokemon[index];
 		levelUp();
 	}
 	
