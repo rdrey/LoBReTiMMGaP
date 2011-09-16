@@ -16,8 +16,8 @@ import java.util.ArrayList;
  */
 public class PlayerRegistrationMessage extends NetworkMessage{
 
-	public ArrayList<Integer> integers;
-	public ArrayList<String> strings;
+    public ArrayList<Integer> integers;
+    public ArrayList<String> strings;
     public String playerName;
     public int playerID;
 

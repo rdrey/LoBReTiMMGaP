@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package networkserver.Implementation;
+package networkserver.Lokemon;
 
 import java.util.Vector;
 import networkTransferObjects.NetworkMessage;
@@ -15,7 +15,7 @@ import networkserver.Threads.ServerDaemonThread;
  * @date 2011/09/12
  * @author Lawrence Webley
  */
-public class ImplementationDaemonThread extends ServerDaemonThread{
+public class LokemonDaemonThread extends ServerDaemonThread{
 
     @Override
     protected void registerPlayer(PlayerRegistrationMessage initialMessage) {
