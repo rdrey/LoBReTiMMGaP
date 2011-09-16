@@ -13,14 +13,16 @@ import java.util.ArrayList;
  */
 public class NetworkMessageMedium extends NetworkMessage{
     
+	public ArrayList<Double> doubles;
 	public ArrayList<Integer> integers;
-	public ArrayList<String> strings;
+	public ArrayList<String> strings;	
     
     public NetworkMessageMedium(String message)
     {
         super(message);
         strings = new ArrayList<String>();
-        integers = new ArrayList<Integer>();        
+        integers = new ArrayList<Integer>(); 
+        doubles = new ArrayList<Double>();
     }
 
     public NetworkMessageMedium()

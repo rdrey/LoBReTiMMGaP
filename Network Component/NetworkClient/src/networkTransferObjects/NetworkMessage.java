@@ -63,20 +63,6 @@ public class NetworkMessage
     public MessageType getMessageType()
     {
         return messageType;
-    }
-    
-    /**
-     * Gets the runtime schema of this class for serialization.
-     * If you inherit from this class, you MUST OVERRIDE this method, 
-     * otherwise it will be serialized as its parent, and you will lose data.
-     * 
-     * Additionally you will need to add a case for it in the network read and write 
-     * methods, so that the receiving end knows what type of class to deserialize it as.
-     * @return
-     */
-    @SuppressWarnings("rawtypes")
-	public Schema getSchema()
-    {
-    	return RuntimeSchema.getSchema(NetworkMessage.class);
-    }
+    }   
+   
 }
