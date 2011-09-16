@@ -43,7 +43,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
     protected void registerPlayer(PlayerRegistrationMessage initialMessage) {
         System.out.println("Player Registerd: ID:"+initialMessage.playerID+", name: "+initialMessage.playerName);
         player = new LokemonPlayer(initialMessage.playerID, initialMessage.playerName);
-        LokemonSeverVariables.playerList.add(player);
+        LokemonServerVariables.playerList.add(player);
         player.setAvatar(initialMessage.integers.get(0));
     }
 
@@ -100,7 +100,11 @@ public class LokemonDaemonThread extends ServerDaemonThread{
 
             if(sMsg.equals("GetPlayers"))
             {
-                LokemonServerLogic.sendSurroundingPlayersToClient(player);
+                LokemonServerLogic.sendPlayersToClient(player);
+            }
+            if(sMsg.equals("GetGameObjects"))
+            {
+                LokemonServerLogic.sendGameObjectsToClient(player);
             }
         }
     };
@@ -109,7 +113,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
 
         public void EventOccured(NetworkEvent e) {
             //Lost connection to client, so remove them from our game states
-            LokemonSeverVariables.playerList.remove(player);
+            LokemonServerVariables.playerList.remove(player);
         }
     };
 
