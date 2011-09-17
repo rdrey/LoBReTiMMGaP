@@ -146,7 +146,7 @@ public class NetworkWriteThread extends Thread
             	}
             	
             	if(!keepAliveBreak)
-            	{
+            	{            		
 	            	//Serialize the message
 	                byte [] serializedObject = ProtostuffIOUtil.toByteArray(msg, schema, buffer);
 	                                

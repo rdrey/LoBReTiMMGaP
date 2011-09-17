@@ -1,20 +1,16 @@
-
 package networkTransferObjects;
 
-import com.dyuproject.protostuff.Schema;
-import com.dyuproject.protostuff.runtime.RuntimeSchema;
-
 /**
- * Used to pass information between the client and the server
+ * Used to pass information between the client and the server.
  * @date 2011/08/02
  * @author Lawrence Webley
  */
-public class NetworkMessage
-{
+public class NetworkMessage {
 
     //Used internally for network message classification.
     public enum MessageType //Comments show where the type can be received
     {
+
         UPDATE_MESSAGE, //Client and Server
         REQUEST_MESSAGE,//Client and Server
         INITIAL_GAME_STATE_MESSAGE, //Client only
@@ -27,40 +23,41 @@ public class NetworkMessage
         LATENCY_REQUEST_MESSAGE, //Server & Client.
         LATENCY_RESPONSE_MESSAGE, //Server & Client
         DIRECT_COMMUNICATION_MESSAGE //client to client (router through server sometimes)
-
     }
-
     private MessageType messageType;
-    private String primeMessage;    
+    private String primeMessage;
+    private long timeStamp;
 
-    public NetworkMessage(String message)
-    {
-        primeMessage = message;        
+    public NetworkMessage(String message) {
+        setMessage(message);
     }
 
-    public NetworkMessage()
-    {
-    	primeMessage = "";    	
+    public NetworkMessage() {
+        primeMessage = "";
     }
 
-    public String getMessage()
-    {
+    public String getMessage() {
         return primeMessage;
     }
 
-    public void setMessage(String message)
-    {
-    	primeMessage = message;
+    public void setMessage(String message) {
+        this.primeMessage = message;
     }
 
     //Used internally for network message classification. Don't use this.
-    public void setMessageType(MessageType mType)
-    {
+    public void setMessageType(MessageType mType) {
         messageType = mType;
     }
 
-    public MessageType getMessageType()
-    {
+    public MessageType getMessageType() {
         return messageType;
-    }   
+    }
+
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
 }
