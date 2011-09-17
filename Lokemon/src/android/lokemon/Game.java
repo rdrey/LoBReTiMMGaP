@@ -8,11 +8,8 @@ import android.graphics.Paint.Style;
 import android.lokemon.G.PlayerState;
 import android.lokemon.G.Potions;
 import android.lokemon.G.Regions;
-import android.lokemon.game_objects.BasePokemon;
-import android.lokemon.game_objects.ElemType;
-import android.lokemon.game_objects.Move;
-import android.lokemon.game_objects.NetworkPlayer;
-import android.lokemon.game_objects.Region;
+import android.lokemon.game_objects.*;
+import android.lokemon.screens.MapScreen;
 import android.util.Log;
 import android.app.Activity;
 
@@ -40,7 +37,9 @@ public class Game {
 	private ConcurrentLinkedQueue<NetworkPlayer> old_players;
 	private ConcurrentLinkedQueue<NetworkPlayer> new_players;
 	// item list
-	private List<Potions> items;
+	private List<WorldPotion> items;
+	private ConcurrentLinkedQueue<WorldPotion> old_items;
+	private ConcurrentLinkedQueue<WorldPotion> new_items;
 	// region list
 	private List<Region> regions;
 
@@ -58,7 +57,9 @@ public class Game {
 		new_players = new ConcurrentLinkedQueue<NetworkPlayer>();
 		
 		// create item list
-		items = Collections.synchronizedList(new ArrayList<Potions>());
+		items = Collections.synchronizedList(new ArrayList<WorldPotion>());
+		old_items = new ConcurrentLinkedQueue<WorldPotion>();
+		new_items = new ConcurrentLinkedQueue<WorldPotion>();
 		
 		// create region list
 		regions = new LinkedList<Region>();
@@ -102,22 +103,26 @@ public class Game {
 	}
 	
 	// adds it to the main item list and adds it to a new item list
-	public void addItem(Potions item)
+	public void addItem(WorldPotion item)
 	{
 		items.add(item);
+		new_items.add(item);
 	}
 	
 	// removes it from the main item list and adds it to an old item list
-	public void removeItem(Potions item)
+	public void removeItem(WorldPotion item)
 	{
 		items.remove(item);
+		old_items.add(item);
 	}
 	
 	// these methods are used by the map screen to update its overlays
 	public List<NetworkPlayer> getAllPlayers() {return players;}
 	public ConcurrentLinkedQueue<NetworkPlayer> getOldPlayers() {return old_players;}
 	public ConcurrentLinkedQueue<NetworkPlayer> getNewPlayers() {return new_players;}
-	public List<Potions> getAllItems() {return items;}
+	public List<WorldPotion> getAllItems() {return items;}
+	public ConcurrentLinkedQueue<WorldPotion> getOldItems() {return old_items;}
+	public ConcurrentLinkedQueue<WorldPotion> getNewItems() {return new_items;}
 	public List<Region> getRegions() {return regions;}
 	
 	/*
@@ -209,7 +214,7 @@ public class Game {
 	 * TimerTask classes to generate/remove players (only used for testing)
 	 */
 	
-	// adds a player to the game with a 50% chance
+	// adds a player & item to the game with a 50% chance
 	private class PlayerGeneration extends TimerTask
 	{
 		public void run()
@@ -221,11 +226,18 @@ public class Game {
 				addPlayer(new NetworkPlayer(-1,"Test",G.Gender.FEMALE,new GeoPoint(lon,lat)));
 				Log.i("Players", "Player added (total: " + players.size() + ")");
 			}
+			if (Math.random() < 0.5)
+			{
+				double lon = Math.random() * -0.005 - 33.955;
+				double lat = Math.random() * 0.0008 + 18.4606;
+				addItem(new WorldPotion(Potions.values()[(int)(Math.random()*5)],new GeoPoint(lon,lat)));
+				Log.i("Items", "Item added (total: " + items.size() + ")");
+			}
 			add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*1000));
 		}
 	}
 	
-	// removes a random number of players from the game, proportional to the total number of players
+	// removes a random number of players & items from the game
 	private class PlayerRemoval extends TimerTask
 	{
 		public void run()
@@ -236,9 +248,15 @@ public class Game {
 				if (Math.random() < 0.5)
 					removePlayer(players.get((int)(Math.random()*players.size())));
 				else
+				{
 					players.get((int)(Math.random()*players.size())).setPlayerState(PlayerState.BUSY);
+				}
 			}
+			numToBeRemoved = (int)(items.size() * Math.random());
+			for (int i = 0; i < numToBeRemoved; i++)
+				removeItem(items.get((int)(Math.random()*items.size())));
 			Log.i("Players", numToBeRemoved + " players removed (total: " + players.size() + ")");
+			Log.i("Items", numToBeRemoved + " items removed (total: " + items.size() + ")");
 			remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*1000));
 		}
 	}

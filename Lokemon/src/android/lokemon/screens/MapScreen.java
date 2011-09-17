@@ -11,6 +11,7 @@ import android.lokemon.G.Mode;
 import android.lokemon.G.PlayerState;
 import android.lokemon.game_objects.NetworkPlayer;
 import android.lokemon.game_objects.Region;
+import android.lokemon.game_objects.WorldPotion;
 import android.lokemon.popups.BagPopup;
 import android.lokemon.popups.PokemonPopup;
 import android.os.Bundle;
@@ -39,8 +40,8 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
 	// map overlays (declared in drawing order)
 	private ArrayWayOverlay regions;
 	private ArrayItemizedOverlay shadows_player;
-	private ArrayItemizedOverlay shadows_item;
-	private ArrayItemizedOverlay players;
+	private ArrayItemizedOverlay players_busy; // this overlay should not be necessary but there is a bug in mapsforge...
+	private ArrayItemizedOverlay players_available;
 	private ArrayItemizedOverlay items;
 	
 	// timer used to update the overlays
@@ -75,16 +76,17 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
 	           public void onClick(DialogInterface dialog, int id) {dialog.cancel();}});
         battleAlert = builder.create();
         
-        players = new ArrayItemizedOverlay(G.player_marker_busy,this) {
+        players_busy = new ArrayItemizedOverlay(G.player_marker_busy,this);
+        players_available = new ArrayItemizedOverlay(G.player_marker_available,this) {
         	public boolean onTap(int index) 
         	{
-        		showBattleOutgoingDialog(); 
+        		//showBattleOutgoingDialog(); 
+        		showPlayerBusyDialog();
         		return true;
         	}
         };
         shadows_player = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_shadow), this);
-        items = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.pokeball),this);
-        shadows_item = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_shadow), this);
+        items = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_item),this);
         regions = new ArrayWayOverlay(null, null);
         // add region ways
         for (Region r:G.game.getRegions())
@@ -92,10 +94,9 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
         
         // added in drawing order
         mapView.getOverlays().add(regions);
-        //mapView.getOverlays().add(shadows_item);
         mapView.getOverlays().add(shadows_player);
-        //mapView.getOverlays().add(items);
-        mapView.getOverlays().add(players);
+        mapView.getOverlays().add(players_available);
+        mapView.getOverlays().add(items);
         
         // check if this is thread safe
         /*for (NetworkPlayer p:G.game.getAllPlayers())
@@ -114,7 +115,7 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
     	G.mode = Mode.MAP;
     	hud.setVisibility(View.VISIBLE);
     	overlayTimer = new Timer();
-    	overlayTimer.scheduleAtFixedRate(new OverlayUpdate(),0, 1000);
+    	overlayTimer.schedule(new OverlayUpdate(),0,1000);
     }
     
     public void onPause()
@@ -164,6 +165,13 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
 		battleAlert.show();
     }
     
+    public void showPlayerBusyDialog()
+    {
+    	// create alert dialog to notify the user when a player is busy
+    	battleAlert.setTitle("Trainer engaged battle");
+    	battleAlert.setMessage("The trainer is engaged in battle right now. Try again later.");
+    	battleAlert.show();
+    }
     public void onClick(View v)
     {
     	if (v == bag_button)
@@ -182,21 +190,39 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
     {
     	public void run()
     	{
+    		// add new players and remove old players
     		ConcurrentLinkedQueue<NetworkPlayer> new_players = G.game.getNewPlayers();
     		ConcurrentLinkedQueue<NetworkPlayer> old_players = G.game.getOldPlayers();
 			while(new_players.size() > 0)
 			{
 				NetworkPlayer p = new_players.remove(); 
-				players.addItem(p.getMarker());
+				players_available.addItem(p.getMarker());
 				shadows_player.addItem(p.getShadow());
 			}
 			while(old_players.size() > 0)
 			{
 				NetworkPlayer p = old_players.remove();
-				players.removeItem(p.getMarker());
+				players_available.removeItem(p.getMarker());
 				shadows_player.removeItem(p.getShadow());
 			}
-			Log.i("Interface", "Overlays updated (Markers: " + players.size() + ", Players: " + G.game.getAllPlayers().size() +  ")");
+			
+			// add new items and remove old items
+			ConcurrentLinkedQueue<WorldPotion> new_items = G.game.getNewItems();
+    		ConcurrentLinkedQueue<WorldPotion> old_items = G.game.getOldItems();
+			while(new_items.size() > 0)
+				items.addItem(new_items.remove().getMarker());
+			while(old_items.size() > 0)
+				items.removeItem(old_items.remove().getMarker());
+			
+			// when player markers are changed the overlay needs to be redrawn (but this doesn't work??)
+			/*if (redrawPlayers)
+			{
+				redrawPlayers = false;
+				players_available.requestRedraw();
+				Log.i("Interface", "Redraw requested for overlay 'players'");
+			}*/
+			Log.i("Interface", "Overlays updated (Markers: " + players_available.size() + ", Players: " + G.game.getAllPlayers().size() +  ")");
+			Log.i("Interface", "Overlays updated (Markers: " + items.size() + ", Items: " + G.game.getAllItems().size() +  ")");
     	}
     }
 }
