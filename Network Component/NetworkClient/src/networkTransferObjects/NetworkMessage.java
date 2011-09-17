@@ -1,8 +1,6 @@
 
 package networkTransferObjects;
 
-import com.dyuproject.protostuff.Schema;
-import com.dyuproject.protostuff.runtime.RuntimeSchema;
 
 /**
  * Used to pass information between the client and the server.
@@ -30,28 +28,29 @@ public class NetworkMessage
 
     }
 
-    private MessageType messageType;
-    private String primeMessage;
+    private long timeStamp;
+	private MessageType messageType;
+    private String message;
     
 
     public NetworkMessage(String message)
     {
-        primeMessage = message;        
+    	setMessage(message);       
     }
 
     public NetworkMessage()
     {
-    	primeMessage = "";    	
+    	message = "";    	
     }
 
     public String getMessage()
     {
-        return primeMessage;
+        return message;
     }
 
     public void setMessage(String message)
     {
-    	primeMessage = message;
+    	this.message = message;
     }
 
     //Used internally for network message classification. Don't use this.
@@ -63,6 +62,14 @@ public class NetworkMessage
     public MessageType getMessageType()
     {
         return messageType;
-    }   
+    }
+    
+    public long getTimeStamp() {
+		return timeStamp;
+	}
+
+	public void setTimeStamp(long timeStamp) {
+		this.timeStamp = timeStamp;
+	}
    
 }

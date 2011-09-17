@@ -35,6 +35,7 @@ import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 import com.Lobretimgap.NetworkClient.Exceptions.NotYetRegisteredException;
 import com.Lobretimgap.NetworkClient.Peer2Peer.ClientPeer;
 import com.Lobretimgap.NetworkClient.Utility.EventListenerList;
+import com.Lobretimgap.NetworkClient.Utility.GameClock;
 import com.dyuproject.protostuff.LinkedBuffer;
 import com.dyuproject.protostuff.ProtostuffIOUtil;
 import com.dyuproject.protostuff.Schema;
@@ -59,18 +60,16 @@ public abstract class CoreNetworkThread extends Thread
     private static Schema<NetworkMessageLarge> largeMsgSchema = RuntimeSchema.getSchema(NetworkMessageLarge.class);
     private static Schema<NetworkMessage> networkMsgSchema = RuntimeSchema.getSchema(NetworkMessage.class);
     
-    private long latencyStartTime, latencyEndTime;
-    
-    private EventListenerList listeners = new EventListenerList();
-    
+    private long latencyStartTime, latencyEndTime;    
+    private EventListenerList listeners = new EventListenerList();    
     public Vector<ClientPeer> peers;
+    private GameClock gameClock;
 	
 	public CoreNetworkThread()
 	{
 		peers = new Vector<ClientPeer>();
 		b.order(ByteOrder.BIG_ENDIAN);		
-			
-		
+		gameClock = new GameClock();		
 	}
 	
 	/**
