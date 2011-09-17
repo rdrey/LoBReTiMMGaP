@@ -89,6 +89,14 @@ public class LokemonDaemonThread extends ServerDaemonThread{
                 double y = ((NetworkMessageMedium)msg).doubles.get(1);
                 player.setPosition(new Location(x, y));
             }
+            else if (sMsg.equals("EnteredBattle"))
+            {
+                player.setBusy(true);
+            }
+            else if (sMsg.equals("ExitedBattle"))
+            {
+                player.setBusy(false);
+            }
         }
     };
 
@@ -102,7 +110,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
             {
                 LokemonServerLogic.sendPlayersToClient(player);
             }
-            if(sMsg.equals("GetGameObjects"))
+            else if(sMsg.equals("GetGameObjects"))
             {
                 LokemonServerLogic.sendGameObjectsToClient(player);
             }
