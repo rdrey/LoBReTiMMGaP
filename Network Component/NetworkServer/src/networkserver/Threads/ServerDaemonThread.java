@@ -292,6 +292,10 @@ public abstract class ServerDaemonThread extends Thread{
 
     private void processNetworkMessage(NetworkMessage message)
     {
+        if(message.getTimeStamp() == 0)
+        {
+            System.err.println("Error: Timestamp on message was 0!");
+        }
         if(message instanceof PlayerRegistrationMessage)
         {            
             PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;            

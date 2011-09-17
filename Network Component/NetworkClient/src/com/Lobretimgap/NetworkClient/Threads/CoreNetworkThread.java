@@ -523,7 +523,8 @@ public abstract class CoreNetworkThread extends Thread
     	try
     	{
     		if(object != null)
-    		{
+    		{	
+    			object.setTimeStamp(gameClock.currentTimeMillis());    			
     			out.writeMessage(object);
     		}
     		else

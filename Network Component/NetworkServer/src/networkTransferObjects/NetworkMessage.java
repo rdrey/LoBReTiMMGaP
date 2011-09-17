@@ -25,7 +25,7 @@ public class NetworkMessage {
         DIRECT_COMMUNICATION_MESSAGE //client to client (router through server sometimes)
     }
     private MessageType messageType;
-    private String message;
+    private String primeMessage;
     private long timeStamp;
 
     public NetworkMessage(String message) {
@@ -33,15 +33,15 @@ public class NetworkMessage {
     }
 
     public NetworkMessage() {
-        message = "";
+        primeMessage = "";
     }
 
     public String getMessage() {
-        return message;
+        return primeMessage;
     }
 
     public void setMessage(String message) {
-        this.message = message;
+        this.primeMessage = message;
     }
 
     //Used internally for network message classification. Don't use this.
