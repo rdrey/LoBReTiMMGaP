@@ -1,15 +1,15 @@
 package android.lokemon;
 
 import android.content.res.*;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
+import android.graphics.drawable.BitmapDrawable;
+import android.location.Location;
 import android.lokemon.G.PlayerState;
 import android.lokemon.G.Potions;
 import android.lokemon.G.Regions;
 import android.lokemon.game_objects.*;
-import android.lokemon.screens.MapScreen;
 import android.util.Log;
 import android.app.Activity;
 
@@ -223,7 +223,8 @@ public class Game {
 			{
 				double lon = Math.random() * -0.005 - 33.955;
 				double lat = Math.random() * 0.0008 + 18.4606;
-				addPlayer(new NetworkPlayer(-1,"Test",G.Gender.FEMALE,new GeoPoint(lon,lat)));
+				NetworkPlayer p = new NetworkPlayer(-1,"Test",G.Gender.FEMALE,new GeoPoint(lon,lat));
+				addPlayer(p);
 				Log.i("Players", "Player added (total: " + players.size() + ")");
 			}
 			if (Math.random() < 0.5)

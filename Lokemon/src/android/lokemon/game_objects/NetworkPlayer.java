@@ -2,10 +2,10 @@ package android.lokemon.game_objects;
 
 import org.mapsforge.android.maps.*;
 
-import android.graphics.drawable.BitmapDrawable;
 import android.lokemon.G;
 import android.lokemon.G.Gender;
 import android.lokemon.G.PlayerState;
+import android.location.Location;
 
 public class NetworkPlayer extends MapItem{
 	

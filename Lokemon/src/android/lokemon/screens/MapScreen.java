@@ -9,6 +9,7 @@ import android.lokemon.G;
 import android.lokemon.R;
 import android.lokemon.G.Mode;
 import android.lokemon.G.PlayerState;
+import android.lokemon.game_objects.MapItem;
 import android.lokemon.game_objects.NetworkPlayer;
 import android.lokemon.game_objects.Region;
 import android.lokemon.game_objects.WorldPotion;
@@ -18,6 +19,9 @@ import android.os.Bundle;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
@@ -39,6 +43,7 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
 	
 	// map overlays (declared in drawing order)
 	private ArrayWayOverlay regions;
+	private ArrayCircleOverlay trainer_aura;
 	private ArrayItemizedOverlay shadows_player;
 	private ArrayItemizedOverlay players_busy; // this overlay should not be necessary but there is a bug in mapsforge...
 	private ArrayItemizedOverlay players_available;
@@ -52,7 +57,8 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
         setContentView(R.layout.map);
         
         mapView = (MapView)findViewById(R.id.mapview);
-        mapView.setZoomMin((byte)16);
+        //mapView.setZoomMin((byte)19);
+        mapView.setZoomMax((byte)20);
         mapView.setKeepScreenOn(true);
         mapView.setClickable(true);
         mapView.setOnTouchListener(this);
@@ -61,7 +67,7 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
         mapController = mapView.getController();
         // UCT Upper Campus: (-33.957657, 18.46125)
         mapController.setCenter(new GeoPoint(-33.957657,18.46125));
-        mapController.setZoom(18);
+        mapController.setZoom(19);
         
         bag_button = (Button)findViewById(R.id.bag_button);
         bag_button.setOnClickListener(this);
@@ -88,12 +94,28 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
         shadows_player = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_shadow), this);
         items = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_item),this);
         regions = new ArrayWayOverlay(null, null);
+        Paint fill = new Paint();
+        fill.setColor(Color.YELLOW);
+        fill.setAlpha(32);
+        fill.setStyle(Style.FILL);
+        fill.setAntiAlias(true);
+        Paint outline = new Paint();
+        outline.setAlpha(255);
+        outline.setColor(Color.GRAY);
+        outline.setStyle(Style.STROKE);
+        outline.setStrokeWidth(2);
+        outline.setAntiAlias(true);
+        trainer_aura = new ArrayCircleOverlay(fill,outline,this);
+        
         // add region ways
         for (Region r:G.game.getRegions())
         	regions.addWay(r.getWay());
+        // add trainer aura
+        trainer_aura.addCircle(G.player.aura);
         
         // added in drawing order
         mapView.getOverlays().add(regions);
+        mapView.getOverlays().add(trainer_aura);
         mapView.getOverlays().add(shadows_player);
         mapView.getOverlays().add(players_available);
         mapView.getOverlays().add(items);

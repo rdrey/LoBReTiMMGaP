@@ -3,8 +3,10 @@ package android.lokemon.game_objects;
 import java.io.*;
 import java.util.ArrayList;
 import org.json.*;
+import org.mapsforge.android.maps.*;
 
 import android.content.*;
+import android.location.Location;
 import android.lokemon.G;
 import android.lokemon.G.Potions;
 import android.util.Log;
@@ -17,7 +19,9 @@ public class Trainer {
 	public ArrayList<Pokemon> pokemon;
 	public String nickname;
 	public BagItem [] items;
+	public OverlayCircle aura;
 	
+	private Location location;
 	
 	public Trainer(String nick, int startPokemon)
 	{
@@ -41,6 +45,10 @@ public class Trainer {
 			items[1].increment();
 		}
 		catch(BagItem.MaxItemCountException e) {Log.e("Player creation", e.getMessage());}
+		
+		this.aura = new OverlayCircle();
+		this.setDefaultLocation();
+		
 		G.player = this;
 	}
 	
@@ -55,6 +63,10 @@ public class Trainer {
 		items[3] = new Potion(Potions.DEFENSE,itemCount[3]);
 		items[4] = new Potion(Potions.SPECIAL,itemCount[4]);
 		items[5] = new Potion(Potions.SPEED,itemCount[5]);
+		
+		this.aura = new OverlayCircle();
+		this.setDefaultLocation();
+		
 		G.player = this;
 	}
 	
@@ -93,5 +105,20 @@ public class Trainer {
 			Log.i("Data load", "Trainer data loaded");
 		}
 		catch (Exception e) {Log.e("Data load", e.getMessage());}
+	}
+	
+	public Location getLocation(){return location;}
+	public void setLocation(Location loc)
+	{
+		location = loc;
+		aura.setCircleData(new GeoPoint(loc.getLatitude(),loc.getLongitude()), 20);
+	}
+	
+	public void setDefaultLocation()
+	{
+		Location loc = new Location("");
+		loc.setLatitude(-33.957657);
+		loc.setLongitude(18.46125);
+		setLocation(loc);
 	}
 }
