@@ -1,8 +1,16 @@
 package android.lokemon;
 
-import android.content.*;
 import android.content.res.*;
-import android.os.*;
+import android.graphics.Paint;
+import android.graphics.Paint.Join;
+import android.graphics.Paint.Style;
+import android.graphics.drawable.BitmapDrawable;
+import android.location.Location;
+import android.lokemon.G.PlayerState;
+import android.lokemon.G.Potions;
+import android.lokemon.G.Regions;
+import android.lokemon.game_objects.*;
+import android.lokemon.screens.MapScreen;
 import android.util.Log;
 import android.app.Activity;
 
@@ -10,7 +18,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.mapsforge.android.maps.GeoPoint;
 
 //networking components
 import com.Lobretimgap.NetworkClient.NetworkComBinder;
@@ -20,43 +31,109 @@ import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 
 import networkTransferObjects.NetworkMessage;
 
-public class Game {
+public class Game {	
 	
-	// network variables
-	private boolean connected;
-	private boolean networkBound;
-	private NetworkComBinder binder;
-	private final Messenger eventMessenger = new Messenger(new eventHandler());
+	// player list
+	private List<NetworkPlayer> players;
+	// item list
+	private List<WorldPotion> items;
+	// region list
+	private List<Region> regions;
+
+	// testing threads for generating and removing players
+	private Timer add_players_timer;
+	private Timer remove_players_timer;
 	
-	// battle variables
-	private int battleSeed;
-	private int opponentIndex;
-	private String opponentNick;
-	private int opponentMove;
-	private int yourMove;
-	private int myHealth;
-	private int oppHealth;
-	private Random random;
+	// a reference to the screen that displays the game world
+	private MapScreen display;
 	
-	// display variables
-	GameScreen gameScreen;
-	
-	private Game()
+	public Game(MapScreen display)
 	{
 		G.game = this;
-		connected = false;
-		networkBound = false;
-		battleSeed = 0;
-		gameScreen = null;
-		opponentMove = -1;
-		yourMove = -1;
-		myHealth = 100;
-		oppHealth = 100;
+		
+		this.display = display;
+		
+		// create player list
+		players = Collections.synchronizedList(new ArrayList<NetworkPlayer>());
+		
+		// create item list
+		items = Collections.synchronizedList(new ArrayList<WorldPotion>());
+		
+		// create region list
+		regions = new LinkedList<Region>();
+		// create testing region
+		GeoPoint [] points = {new GeoPoint(-33.957411, 18.460988),
+				new GeoPoint(-33.95792, 18.460888),
+				new GeoPoint(-33.958005, 18.461639),
+				new GeoPoint(-33.957511, 18.461701),
+				new GeoPoint(-33.957411, 18.460988)};
+		regions.add(new Region(points,Regions.ROUGH_TERRAIN));
+		
+		display.addRegions(regions);
+		
+		// start testing threads 
+		add_players_timer = new Timer();
+		remove_players_timer = new Timer();
+		add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*1000));
+		remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*1000));
 	}
+	
+	/*
+	 * Methods related to adding, removing and updating network players and items
+	 */
+	
+	// addition method for players
+	private synchronized void addPlayer(NetworkPlayer player)
+	{
+		players.add(player);
+		display.addPlayer(player);
+	}
+	
+	// removal method for players
+	private synchronized void removePlayer(NetworkPlayer player)
+	{
+		players.remove(player);
+		display.removePlayer(player);
+	}
+	
+	// adds it to the main item list and adds it to a new item list
+	private void addItem(WorldPotion item)
+	{
+		items.add(item);
+		display.addItem(item);
+	}
+	
+	// removes it from the main item list and adds it to an old item list
+	private void removeItem(WorldPotion item)
+	{
+		items.remove(item);
+		display.removeItem(item);
+	}
+	
+	/*
+	 * Methods related to initiating battles
+	 */
+	
+	public synchronized void requestBattle(int playerIndex)
+	{
+		NetworkPlayer p = players.get(playerIndex);
+		if (G.player.getDistanceFrom(p.getAndroidLocation()) < 20)
+		{
+			if (p.getPlayerState() == PlayerState.BUSY)
+				display.showToast("Player is engaged in battle");
+			else
+				display.showBattleOutgoingDialog(p.nickname);
+		}
+		else
+			display.showToast("Player is too far away");
+	}
+	
+	/*
+	 * Methods related to saving and loading game state
+	 */
 	
 	public static void loadGameData(Activity current)
 	{
-		new Game();
 		try
 		{
 			AssetManager assetManager = current.getAssets();
@@ -67,8 +144,48 @@ public class Game {
 			BasePokemon.loadPokemon(Game.readFile(assetManager.open("base_pokemon.json")), current);
 			Log.i("Data load", "Pokemon loaded");
 			//assetManager.close(); // started causing a RuntimeException for no apparent reason
+			
+			Resources res = current.getResources();
+			
+			// load map markers
+			G.player_marker_available = res.getDrawable(R.drawable.marker_available);
+			G.player_marker_busy = res.getDrawable(R.drawable.marker_busy);
+			
+			// load region colours and paint objects
+			G.region_colours = new int[9];
+			G.region_colours[0] = res.getColor(R.color.cave);
+			G.region_colours[1] = res.getColor(R.color.forest);
+			G.region_colours[2] = res.getColor(R.color.grassland);
+			G.region_colours[3] = res.getColor(R.color.mountain);
+			G.region_colours[4] = res.getColor(R.color.rough_terrain);
+			G.region_colours[5] = res.getColor(R.color.urban);
+			G.region_colours[6] = res.getColor(R.color.water_edge);
+			G.region_colours[7] = res.getColor(R.color.pokemon_center);
+			G.region_colours[8] = res.getColor(R.color.pokemart);
+			
+			G.region_fill = new Paint[9];
+			G.region_outline = new Paint[9];
+			for (int i = 0; i < 9; i++)
+			{
+				// the settings for the fill
+				Paint fill = new Paint();
+				fill.setColor(G.region_colours[i]);
+				fill.setAlpha(128);
+				fill.setStyle(Style.FILL);
+				fill.setAntiAlias(true);
+				G.region_fill[i] = fill;
+				
+				// the settings for the outline
+				Paint outline = new Paint();
+				outline.setColor(G.region_colours[i]);
+				outline.setStrokeWidth(2);
+				outline.setStrokeJoin(Join.ROUND);
+				outline.setStyle(Style.STROKE);
+				outline.setAntiAlias(true);
+				G.region_outline[i] = outline;
+			}
 		}
-		catch (Exception e) {Log.e("Data load", e.getMessage());}
+		catch (Exception e) {Log.e("Data load", e.toString());}
 	}
 	
 	// read all from a file
@@ -86,152 +203,55 @@ public class Game {
 		return str;
 	}
 	
-	public static void startGame(GameScreen current)
-	{
-		G.game.gameScreen = current;
-		G.game.createConnection(current);
-	}
+	/*
+	 * TimerTask classes to generate/remove players (only used for testing)
+	 */
 	
-	public static void endGame()
+	// adds a player & item to the game with a 50% chance
+	private class PlayerGeneration extends TimerTask
 	{
-		if(G.game.binder != null)G.game.binder.sendTerminationRequest(new NetworkMessage("Bye bye!"));
-		else Log.e(NetworkVariables.TAG, "Binder is null");
-	}
-	
-	public static void pauseGame()
-	{
-		
-	}
-	
-	public void initiateBattle()
-	{
-		binder.sendGameUpdate(new NetworkMessage("battle,"+G.player.nickname + "," + G.player.pokemon.get(0).index));
-	}
-	
-	public void acceptBattle()
-	{
-		battleSeed = (int)(Math.random()*100);
-		random = new Random(battleSeed);
-		binder.sendGameUpdate(new NetworkMessage("accept,"+G.player.nickname + "," + G.player.pokemon.get(0).index + "," + battleSeed));
-		gameScreen.setStatusText("Accepted battle...");
-	}
-	
-	public void runAway()
-	{
-		binder.sendGameUpdate(new NetworkMessage("run"));
-	}
-	
-	public void attack(int moveIndex)
-	{
-		yourMove = moveIndex;
-		Log.e(NetworkVariables.TAG, "move: " + opponentMove + " " + yourMove);
-		binder.sendGameUpdate(new NetworkMessage("attack," + moveIndex));
-		if (opponentMove > -1) playTurn();
-	}
-	
-	public void playTurn()
-	{
-		myHealth -= random.nextInt()%10;
-		oppHealth -= random.nextInt()%10;
-		gameScreen.setMyHealth(myHealth);
-		gameScreen.setOppHealth(oppHealth);
-		yourMove = -1;
-		opponentMove = -1;
-		Log.e(NetworkVariables.TAG, "move played by " + G.player.nickname);
-		setBattleTurn(G.basePokemon[opponentIndex].speed <= G.player.pokemon.get(0).getBase().speed);
-	}
-	
-	public void setBattleTurn(boolean self)
-	{
-		if (self)
+		public void run()
 		{
-			gameScreen.setStatusText("Your turn...");
-		}
-		else
-		{
-			gameScreen.setStatusText("Opponent's turn...");
-		}
-		gameScreen.enableAttackInterface(true);
-	}
-	
-	private void createConnection(Activity current)
-	{
-		// bind network component
-		Intent intent = new Intent(current, NetworkComService.class);
-		ServiceConnection ser = new ServiceConnection() {
-			
-			public void onServiceDisconnected(ComponentName name) {
-				networkBound = false;
-				Log.i(NetworkVariables.TAG, "Service disconnected");
-			}
-			
-			public void onServiceConnected(ComponentName name, IBinder service) {
-				gameScreen.setStatusText("Connecting to game server...");
-				// get an instance of the binder for the service
-				binder = (NetworkComBinder)service;
-				networkBound = true;
-				binder.registerMessenger(eventMessenger);
-				binder.ConnectToServer();		
-			}
-		};
-		current.bindService(intent, ser, Context.BIND_AUTO_CREATE);
-	}
-	
-	private class eventHandler extends Handler{
-		
-		public void handleMessage(Message msg) 
-		{
-			switch (NetworkComBinder.EventType.values()[msg.what])
+			if (Math.random() < 0.5)
 			{
-				case CONNECTION_ESTABLISHED:
-					connected = true;
-					gameScreen.setStatusText("Connected!");
-					break;	
-				case CONNECTION_LOST:
-					connected = false;
-					break;
-				case CONNECTION_FAILED:
-					connected = false;
-					gameScreen.setStatusText("Connection failed");
-					break;
-				case UPDATE_RECEIVED:
-					String str = ((NetworkMessage)(((NetworkEvent)msg.obj).getMessage())).getMessage();
-					String [] args = str.split(",");
-					if (args[0].equals("battle"))
-					{
-						opponentNick = args[1];
-						opponentIndex = Integer.parseInt(args[2]);
-						gameScreen.setOppPoke(opponentIndex);
-						gameScreen.setOppNick(opponentNick);
-						gameScreen.setOppHealth(100);
-						acceptBattle();
-						setBattleTurn(G.basePokemon[opponentIndex].speed <= G.player.pokemon.get(0).getBase().speed);
-					}
-					else if (args[0].equals("accept"))
-					{
-						opponentNick = args[1];
-						opponentIndex = Integer.parseInt(args[2]);
-						battleSeed = Integer.parseInt(args[3]);
-						random = new Random(battleSeed);
-						gameScreen.setOppPoke(opponentIndex);
-						gameScreen.setOppNick(opponentNick);
-						gameScreen.setOppHealth(100);
-						setBattleTurn(G.basePokemon[opponentIndex].speed <= G.player.pokemon.get(0).getBase().speed);
-					}
-					else if (args[0].equals("run"))
-					{
-						gameScreen.removeOpp();
-						gameScreen.setStatusText(opponentNick + " ran away...");
-						gameScreen.enableAttackInterface(false);
-					}
-					else if (args[0].equals("attack"))
-					{
-						opponentMove = Integer.parseInt(args[1]);
-						Log.e(NetworkVariables.TAG, "move: " + opponentMove + " " + yourMove);
-						if (yourMove > -1) playTurn();
-					}
-					break;
+				double lon = Math.random() * -0.005 - 33.955;
+				double lat = Math.random() * 0.0008 + 18.4606;
+				NetworkPlayer p = new NetworkPlayer(-1,"Test",G.Gender.FEMALE,new GeoPoint(lon,lat));
+				addPlayer(p);
+				Log.i("Players", "Player added (total: " + players.size() + ")");
 			}
+			if (Math.random() < 0.5)
+			{
+				double lon = Math.random() * -0.005 - 33.955;
+				double lat = Math.random() * 0.0008 + 18.4606;
+				addItem(new WorldPotion(Potions.values()[(int)(Math.random()*5)],new GeoPoint(lon,lat)));
+				Log.i("Items", "Item added (total: " + items.size() + ")");
+			}
+			add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*1000));
+		}
+	}
+	
+	// removes a random number of players & items from the game
+	private class PlayerRemoval extends TimerTask
+	{
+		public void run()
+		{
+			int numToBeRemoved = (int)(players.size() * Math.random());
+			for (int i = 0; i < numToBeRemoved; i++)
+			{
+				if (Math.random() < 0.5)
+					removePlayer(players.get((int)(Math.random()*players.size())));
+				else
+				{
+					players.get((int)(Math.random()*players.size())).setPlayerState(PlayerState.BUSY);
+				}
+			}
+			numToBeRemoved = (int)(items.size() * Math.random());
+			for (int i = 0; i < numToBeRemoved; i++)
+				removeItem(items.get((int)(Math.random()*items.size())));
+			Log.i("Players", numToBeRemoved + " players removed (total: " + players.size() + ")");
+			Log.i("Items", numToBeRemoved + " items removed (total: " + items.size() + ")");
+			remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*1000));
 		}
 	}
 }

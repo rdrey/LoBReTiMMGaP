@@ -11,21 +11,25 @@
     <uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
-        <activity android:name="LaunchScreen"
+        <activity android:name=".screens.LaunchScreen"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-		<activity android:name="IntroScreen"></activity>
-		<activity android:name="GameScreen"></activity>
-		<activity android:name="BattleScreen"></activity>
-		<activity android:name="PokemonPopup" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
-		<activity android:name="MovesPopup" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
-		<activity android:name="Wait" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
+		<activity android:name=".screens.IntroScreen"></activity>
+		<activity android:name=".screens.GameScreen"></activity>
+		<activity android:name=".screens.BattleScreen"></activity>
+		<activity android:name=".screens.MapScreen"></activity>
+		<activity android:name=".test.AnimationTest"></activity>
+		<activity android:name=".popups.PokemonPopup" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
+		<activity android:name=".popups.MovesPopup" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
+		<activity android:name=".popups.BagPopup" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
+		<activity android:name=".screens.Wait" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
 		<service android:name="com.Lobretimgap.NetworkClient.NetworkComService" />
     </application>
 </manifest>

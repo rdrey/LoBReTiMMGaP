@@ -4,6 +4,17 @@
     <color name="blue">#0096bd</color>
     <color name="black">#000000</color>
     <color name="white">#ffffff</color>
+    <color name="transparent_white">#7fffffff</color>
     <color name="transparent">#00000000</color>
     <color name="semi_transparent">#7f000000</color>
+    <color name="quarter_transparent">#c0000000</color>
+    <color name="cave">#b8a870</color>
+    <color name="forest">#489078</color>
+    <color name="grassland">#88c840</color>
+    <color name="mountain">#c8d0b8</color>
+    <color name="rough_terrain">#b0b840</color>
+    <color name="urban">#c83800</color>
+    <color name="water_edge">#5ac6ef</color>
+    <color name="pokemon_center">#e7772f</color>
+    <color name="pokemart">#78c7e0</color>
 </resources>

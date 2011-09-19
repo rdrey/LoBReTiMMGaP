@@ -18,7 +18,7 @@ public class CoreNetworkThreadLokemon extends CoreNetworkThread {
 	@Override
 	public void processInitialGameState(NetworkMessage message) {
 		Log.d(NetworkVariables.TAG, "Received initial game state. Message: "+message.getMessage());
-		if (Integer.parseInt(message.getMessage()) > 1) G.game.initiateBattle(); 
+		//if (Integer.parseInt(message.getMessage()) > 1) G.game.initiateBattle(); 
 	}
 
 }
