@@ -14,10 +14,11 @@ import org.mobiloc.lobgasp.util.HibernateUtil;
 import org.hibernate.Transaction;
 import org.mobiloc.lobgasp.model.SpatialDBEntity;
 import org.mobiloc.lobgasp.model.EntityToObject;
-import org.mobiloc.lobgasp.osm.model.BuildingEntity;
-import org.mobiloc.lobgasp.osm.model.LibraryEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.BuildingEntity;
+import org.mobiloc.lobgasp.osm.model.POIs.LibraryEntity;
 import org.mobiloc.lobgasp.osm.model.POIEntity;
-import org.mobiloc.lobgasp.osm.model.PubEntity;
+import org.mobiloc.lobgasp.osm.model.POIs.PubEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.RoadEntity;
 
 /**
  * Hello world!
@@ -32,9 +33,10 @@ public class App {
         //TODO interface for custom objects
         sp.register(PubEntity.class, PubEntity.class);
         sp.register(LibraryEntity.class, LibraryEntity.class);
+        sp.register(RoadEntity.class, RoadEntity.class);
+        sp.register(BuildingEntity.class, BuildingEntity.class);
+        
         sp.initFromFile("campus.osm");
-
-        //
 
         Session s = HibernateUtil.getSessionFactory().getCurrentSession();
         Transaction tx = s.beginTransaction();
