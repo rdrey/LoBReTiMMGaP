@@ -15,12 +15,12 @@
 
         <mapping class="org.mobiloc.lobgasp.model.SpatialDBEntity"/>
         <mapping class="org.mobiloc.lobgasp.osm.model.POIEntity"/>
-        <mapping class="org.mobiloc.lobgasp.osm.model.POIs.NamedPOIEntity"/>
-        <mapping class="org.mobiloc.lobgasp.osm.model.POIs.PubEntity"/>
-        <mapping class="org.mobiloc.lobgasp.osm.model.POIs.LibraryEntity"/>
+        <mapping class="org.mobiloc.lobgasp.osm.model.NamedPOIEntity"/>
+        <mapping class="org.mobiloc.lobgasp.osm.model.PubEntity"/>
+        <mapping class="org.mobiloc.lobgasp.osm.model.LibraryEntity"/>
 
         <mapping class="org.mobiloc.lobgasp.osm.model.WayEntity"/>
-        <mapping class="org.mobiloc.lobgasp.osm.model.Ways.RoadEntity"/>
-        <mapping class="org.mobiloc.lobgasp.osm.model.Ways.BuildingEntity"/>
+        <mapping class="org.mobiloc.lobgasp.osm.model.RoadEntity"/>
+        <mapping class="org.mobiloc.lobgasp.osm.model.BuildingEntity"/>
     </session-factory>
 </hibernate-configuration>
