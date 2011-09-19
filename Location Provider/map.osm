@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="CGImap 0.0.2">
+ <bounds minlat="-33.9559340" minlon="18.4629540" maxlat="-33.9558400" maxlon="18.4630720"/>
+ <node id="331146319" lat="-33.9558697" lon="18.4630120" user="Adrian Frith" uid="5616" visible="true" version="1" changeset="771469" timestamp="2009-01-11T09:58:09Z">
+  <tag k="amenity" v="pub"/>
+  <tag k="created_by" v="Potlatch 0.10f"/>
+  <tag k="name" v="UCT Club"/>
+ </node>
+</osm>
