@@ -10,6 +10,7 @@ import android.lokemon.G.PlayerState;
 import android.lokemon.G.Potions;
 import android.lokemon.G.Regions;
 import android.lokemon.game_objects.*;
+import android.lokemon.screens.MapScreen;
 import android.util.Log;
 import android.app.Activity;
 
@@ -34,12 +35,8 @@ public class Game {
 	
 	// player list
 	private List<NetworkPlayer> players;
-	private ConcurrentLinkedQueue<NetworkPlayer> old_players;
-	private ConcurrentLinkedQueue<NetworkPlayer> new_players;
 	// item list
 	private List<WorldPotion> items;
-	private ConcurrentLinkedQueue<WorldPotion> old_items;
-	private ConcurrentLinkedQueue<WorldPotion> new_items;
 	// region list
 	private List<Region> regions;
 
@@ -47,19 +44,20 @@ public class Game {
 	private Timer add_players_timer;
 	private Timer remove_players_timer;
 	
-	private Game()
+	// a reference to the screen that displays the game world
+	private MapScreen display;
+	
+	public Game(MapScreen display)
 	{
 		G.game = this;
 		
+		this.display = display;
+		
 		// create player list
 		players = Collections.synchronizedList(new ArrayList<NetworkPlayer>());
-		old_players = new ConcurrentLinkedQueue<NetworkPlayer>();
-		new_players = new ConcurrentLinkedQueue<NetworkPlayer>();
 		
 		// create item list
 		items = Collections.synchronizedList(new ArrayList<WorldPotion>());
-		old_items = new ConcurrentLinkedQueue<WorldPotion>();
-		new_items = new ConcurrentLinkedQueue<WorldPotion>();
 		
 		// create region list
 		regions = new LinkedList<Region>();
@@ -71,11 +69,7 @@ public class Game {
 				new GeoPoint(-33.957411, 18.460988)};
 		regions.add(new Region(points,Regions.ROUGH_TERRAIN));
 		
-		// some test players
-		addPlayer(new NetworkPlayer(121,"Test1", G.Gender.FEMALE,new GeoPoint(52.52709,13.416012)));
-		addPlayer(new NetworkPlayer(435,"Test2", G.Gender.MALE,new GeoPoint(52.527312,13.415609)));     
-		addPlayer(new NetworkPlayer(234,"Test3", G.Gender.FEMALE,new GeoPoint(52.527407,13.415114)));
-		addPlayer(new NetworkPlayer(287,"Test4", G.Gender.MALE,new GeoPoint(52.327198,13.415969)));
+		display.addRegions(regions);
 		
 		// start testing threads 
 		add_players_timer = new Timer();
@@ -89,49 +83,49 @@ public class Game {
 	 */
 	
 	// addition method for players
-	public void addPlayer(NetworkPlayer player)
+	private synchronized void addPlayer(NetworkPlayer player)
 	{
 		players.add(player);
-		new_players.add(player);
+		display.addPlayer(player);
 	}
 	
 	// removal method for players
-	public void removePlayer(NetworkPlayer player)
+	private synchronized void removePlayer(NetworkPlayer player)
 	{
 		players.remove(player);
-		old_players.add(player);
+		display.removePlayer(player);
 	}
 	
 	// adds it to the main item list and adds it to a new item list
-	public void addItem(WorldPotion item)
+	private void addItem(WorldPotion item)
 	{
 		items.add(item);
-		new_items.add(item);
+		display.addItem(item);
 	}
 	
 	// removes it from the main item list and adds it to an old item list
-	public void removeItem(WorldPotion item)
+	private void removeItem(WorldPotion item)
 	{
 		items.remove(item);
-		old_items.add(item);
+		display.removeItem(item);
 	}
-	
-	// these methods are used by the map screen to update its overlays
-	public List<NetworkPlayer> getAllPlayers() {return players;}
-	public ConcurrentLinkedQueue<NetworkPlayer> getOldPlayers() {return old_players;}
-	public ConcurrentLinkedQueue<NetworkPlayer> getNewPlayers() {return new_players;}
-	public List<WorldPotion> getAllItems() {return items;}
-	public ConcurrentLinkedQueue<WorldPotion> getOldItems() {return old_items;}
-	public ConcurrentLinkedQueue<WorldPotion> getNewItems() {return new_items;}
-	public List<Region> getRegions() {return regions;}
 	
 	/*
 	 * Methods related to initiating battles
 	 */
 	
-	public void requestBattle(int playerIndex)
+	public synchronized void requestBattle(int playerIndex)
 	{
-		
+		NetworkPlayer p = players.get(playerIndex);
+		if (G.player.getDistanceFrom(p.getAndroidLocation()) < 20)
+		{
+			if (p.getPlayerState() == PlayerState.BUSY)
+				display.showToast("Player is engaged in battle");
+			else
+				display.showBattleOutgoingDialog(p.nickname);
+		}
+		else
+			display.showToast("Player is too far away");
 	}
 	
 	/*
@@ -192,7 +186,6 @@ public class Game {
 			}
 		}
 		catch (Exception e) {Log.e("Data load", e.toString());}
-		new Game();
 	}
 	
 	// read all from a file

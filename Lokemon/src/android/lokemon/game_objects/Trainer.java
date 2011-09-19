@@ -19,7 +19,8 @@ public class Trainer {
 	public ArrayList<Pokemon> pokemon;
 	public String nickname;
 	public BagItem [] items;
-	public OverlayCircle aura;
+	public OverlayItem aura;
+	public OverlayCircle circle;
 	
 	private Location location;
 	
@@ -46,7 +47,8 @@ public class Trainer {
 		}
 		catch(BagItem.MaxItemCountException e) {Log.e("Player creation", e.getMessage());}
 		
-		this.aura = new OverlayCircle();
+		this.aura = new OverlayItem();
+		this.circle = new OverlayCircle();
 		this.setDefaultLocation();
 		
 		G.player = this;
@@ -64,7 +66,8 @@ public class Trainer {
 		items[4] = new Potion(Potions.SPECIAL,itemCount[4]);
 		items[5] = new Potion(Potions.SPEED,itemCount[5]);
 		
-		this.aura = new OverlayCircle();
+		this.aura = new OverlayItem();
+		this.circle = new OverlayCircle();
 		this.setDefaultLocation();
 		
 		G.player = this;
@@ -107,14 +110,18 @@ public class Trainer {
 		catch (Exception e) {Log.e("Data load", e.getMessage());}
 	}
 	
+	public float getDistanceFrom(Location loc) {return location.distanceTo(loc);}
+	
 	public Location getLocation(){return location;}
 	public void setLocation(Location loc)
 	{
 		location = loc;
-		aura.setCircleData(new GeoPoint(loc.getLatitude(),loc.getLongitude()), 20);
+		GeoPoint mapPoint = new GeoPoint(loc.getLatitude(),loc.getLongitude());
+		aura.setPoint(mapPoint);
+		circle.setCircleData(mapPoint, 20);
 	}
 	
-	public void setDefaultLocation()
+	private void setDefaultLocation()
 	{
 		Location loc = new Location("");
 		loc.setLatitude(-33.957657);

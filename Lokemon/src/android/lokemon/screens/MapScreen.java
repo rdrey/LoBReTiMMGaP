@@ -6,6 +6,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import android.lokemon.G;
+import android.lokemon.Game;
 import android.lokemon.R;
 import android.lokemon.G.Mode;
 import android.lokemon.G.PlayerState;
@@ -15,21 +16,28 @@ import android.lokemon.game_objects.Region;
 import android.lokemon.game_objects.WorldPotion;
 import android.lokemon.popups.BagPopup;
 import android.lokemon.popups.PokemonPopup;
+import android.lokemon.test.AnimationTest;
 import android.os.Bundle;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.Paint;
+import android.graphics.*;
 import android.graphics.Paint.Style;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.text.Html;
 import android.util.Log;
 import android.view.*;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.*;
 import org.mapsforge.android.maps.*;
 
+import com.example.android.apis.graphics.AnimateDrawable;
+
 public class MapScreen extends MapActivity implements View.OnTouchListener, View.OnClickListener{
     
-	private MapScreen self; // for use in inner classes
 	private MapController mapController; // used to zoom in/out and pan
 	private MapView mapView;
 	
@@ -43,14 +51,13 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
 	
 	// map overlays (declared in drawing order)
 	private ArrayWayOverlay regions;
-	private ArrayCircleOverlay trainer_aura;
+	private ArrayItemizedOverlay trainer_aura;
+	private ArrayCircleOverlay trainer_circle;
 	private ArrayItemizedOverlay shadows_player;
-	private ArrayItemizedOverlay players_busy; // this overlay should not be necessary but there is a bug in mapsforge...
-	private ArrayItemizedOverlay players_available;
+	private ArrayItemizedOverlay players;
 	private ArrayItemizedOverlay items;
 	
-	// timer used to update the overlays
-	private Timer overlayTimer;
+	private int lastTouch;
 	
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,7 +65,8 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
         
         mapView = (MapView)findViewById(R.id.mapview);
         //mapView.setZoomMin((byte)19);
-        mapView.setZoomMax((byte)20);
+        //mapView.setZoomMax((byte)20);
+        //mapView.setZoomMin((byte)19);
         mapView.setKeepScreenOn(true);
         mapView.setClickable(true);
         mapView.setOnTouchListener(this);
@@ -82,42 +90,31 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
 	           public void onClick(DialogInterface dialog, int id) {dialog.cancel();}});
         battleAlert = builder.create();
         
-        players_busy = new ArrayItemizedOverlay(G.player_marker_busy,this);
-        players_available = new ArrayItemizedOverlay(G.player_marker_available,this) {
+        players = new ArrayItemizedOverlay(G.player_marker_available,this) {
         	public boolean onTap(int index) 
         	{
-        		//showBattleOutgoingDialog(); 
-        		showPlayerBusyDialog();
+        		G.game.requestBattle(index);
         		return true;
         	}
         };
+        ItemizedOverlay.boundCenterBottom(G.player_marker_busy);
+        
         shadows_player = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_shadow), this);
         items = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_item),this);
         regions = new ArrayWayOverlay(null, null);
-        Paint fill = new Paint();
-        fill.setColor(Color.YELLOW);
-        fill.setAlpha(32);
-        fill.setStyle(Style.FILL);
-        fill.setAntiAlias(true);
-        Paint outline = new Paint();
-        outline.setAlpha(255);
-        outline.setColor(Color.GRAY);
-        outline.setStyle(Style.STROKE);
-        outline.setStrokeWidth(2);
-        outline.setAntiAlias(true);
-        trainer_aura = new ArrayCircleOverlay(fill,outline,this);
+        //setupTrainerAura();
+        setupTrainerCircle();
         
-        // add region ways
-        for (Region r:G.game.getRegions())
-        	regions.addWay(r.getWay());
         // add trainer aura
-        trainer_aura.addCircle(G.player.aura);
+        //trainer_aura.addItem(G.player.aura);
+        trainer_circle.addCircle(G.player.circle);
         
         // added in drawing order
         mapView.getOverlays().add(regions);
-        mapView.getOverlays().add(trainer_aura);
+        //mapView.getOverlays().add(trainer_aura);
+        mapView.getOverlays().add(trainer_circle);
         mapView.getOverlays().add(shadows_player);
-        mapView.getOverlays().add(players_available);
+        mapView.getOverlays().add(players);
         mapView.getOverlays().add(items);
         
         // check if this is thread safe
@@ -127,8 +124,11 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
         	shadows_player.addItem(p.getShadow());
         }*/
         
-        self = this;
+        lastTouch = -1;
+        
         Log.i("Interface", "Map view created");
+        
+        new Game(this);
     }
     
     public void onResume()
@@ -136,64 +136,61 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
     	super.onResume();
     	G.mode = Mode.MAP;
     	hud.setVisibility(View.VISIBLE);
-    	overlayTimer = new Timer();
-    	overlayTimer.schedule(new OverlayUpdate(),0,1000);
     }
     
     public void onPause()
     {
     	super.onPause();
     	hud.setVisibility(View.INVISIBLE);
-    	overlayTimer.cancel();
     }
     
     public void onDestroy()
     {
     	super.onDestroy();
-    	// have to set player states back to new so that they are re-added to view
     	Log.i("Interface", "Map view destroyed");
     }
     
     // we want to disable panning and zooming using gestures (this is the only way with SDK version 2.2)
     public boolean onTouch(View v, MotionEvent e)
     {
-    	/*if (e.getAction() == MotionEvent.ACTION_UP)
-    	{
-    		Intent intent = new Intent(v.getContext(), BattleScreen.class);
-            startActivity(intent);
-    	}*/
-    	return false;
-    }
+    	if (e.getAction() == MotionEvent.ACTION_MOVE)
+    		return true;
+    	else
+    		return false;
+    }    
     
-    public void showBattleOutgoingDialog()
+    // create alert dialog to ask for outgoing battle confirmation
+    public void showBattleOutgoingDialog(String playerName)
     {
-    	// create alert dialog to ask for outgoing battle confirmation
-    	battleAlert.setTitle("Battle Request");
-    	battleAlert.setMessage("Do you want to request a battle?");
-    	battleAlert.setButton("Yes", new DialogInterface.OnClickListener() 
+    	battleAlert.setMessage(Html.fromHtml("Do you want to ask <i>" + playerName + "</i> to battle?"));
+    	battleAlert.setButton("Send request", new DialogInterface.OnClickListener() 
 			{
 				public void onClick(DialogInterface dialog, int id){}});
+    	battleAlert.setButton2("Don't send", new DialogInterface.OnClickListener() 
+			{public void onClick(DialogInterface dialog, int id){dialog.cancel();}});
 		battleAlert.show();
     }
     
-    public void showBattleIncomingDialog()
+    // create alert dialog to ask for incoming battle confirmation
+    public void showBattleIncomingDialog(String playerName)
     {
-    	// create alert dialog to ask for incoming battle confirmation
-    	battleAlert.setTitle("Battle Offer");
-    	battleAlert.setMessage("Do you want to enter into battle?");
-		battleAlert.setButton("Yes", new DialogInterface.OnClickListener() 
+    	battleAlert.setMessage(Html.fromHtml("Do you want to battle <i>" + playerName + "</i>?"));
+		battleAlert.setButton("Battle!", new DialogInterface.OnClickListener() 
 			{
 				public void onClick(DialogInterface dialog, int id){}});
+		battleAlert.setButton2("Don't battle", new DialogInterface.OnClickListener() 
+		{public void onClick(DialogInterface dialog, int id){dialog.cancel();}});
 		battleAlert.show();
     }
     
-    public void showPlayerBusyDialog()
+    // create alert dialog to notify the user of important events
+    public void showToast(String message) 
     {
-    	// create alert dialog to notify the user when a player is busy
-    	battleAlert.setTitle("Trainer engaged battle");
-    	battleAlert.setMessage("The trainer is engaged in battle right now. Try again later.");
-    	battleAlert.show();
+    	Toast toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
+    	toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
+    	toast.show();
     }
+    
     public void onClick(View v)
     {
     	if (v == bag_button)
@@ -208,43 +205,75 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
     	}
     }
     
-    private class OverlayUpdate extends TimerTask
+    private void setupTrainerAura()
     {
-    	public void run()
-    	{
-    		// add new players and remove old players
-    		ConcurrentLinkedQueue<NetworkPlayer> new_players = G.game.getNewPlayers();
-    		ConcurrentLinkedQueue<NetworkPlayer> old_players = G.game.getOldPlayers();
-			while(new_players.size() > 0)
-			{
-				NetworkPlayer p = new_players.remove(); 
-				players_available.addItem(p.getMarker());
-				shadows_player.addItem(p.getShadow());
-			}
-			while(old_players.size() > 0)
-			{
-				NetworkPlayer p = old_players.remove();
-				players_available.removeItem(p.getMarker());
-				shadows_player.removeItem(p.getShadow());
-			}
-			
-			// add new items and remove old items
-			ConcurrentLinkedQueue<WorldPotion> new_items = G.game.getNewItems();
-    		ConcurrentLinkedQueue<WorldPotion> old_items = G.game.getOldItems();
-			while(new_items.size() > 0)
-				items.addItem(new_items.remove().getMarker());
-			while(old_items.size() > 0)
-				items.removeItem(old_items.remove().getMarker());
-			
-			// when player markers are changed the overlay needs to be redrawn (but this doesn't work??)
-			/*if (redrawPlayers)
-			{
-				redrawPlayers = false;
-				players_available.requestRedraw();
-				Log.i("Interface", "Redraw requested for overlay 'players'");
-			}*/
-			Log.i("Interface", "Overlays updated (Markers: " + players_available.size() + ", Players: " + G.game.getAllPlayers().size() +  ")");
-			Log.i("Interface", "Overlays updated (Markers: " + items.size() + ", Items: " + G.game.getAllItems().size() +  ")");
-    	}
+    	BitmapDrawable aura = (BitmapDrawable)getResources().getDrawable(R.drawable.aura);
+        aura.setAntiAlias(true);
+        aura.setDither(true);
+        Display display = getWindowManager().getDefaultDisplay();
+        int left = (display.getWidth()-aura.getIntrinsicWidth())/2;
+        int top = (display.getHeight()-aura.getIntrinsicHeight())/2;
+        aura.setBounds(left, top, left+aura.getIntrinsicWidth(), top+aura.getIntrinsicHeight());
+        RotateAnimation anim = new RotateAnimation(0, 360, Animation.RELATIVE_TO_PARENT,0.5f,Animation.RELATIVE_TO_PARENT, 0.5f);
+        anim.setInterpolator(new LinearInterpolator());
+        anim.setDuration(4000);
+        anim.setRepeatCount(Animation.INFINITE);
+        anim.setRepeatMode(Animation.RESTART);
+        anim.initialize(aura.getIntrinsicWidth(), aura.getIntrinsicHeight(), display.getWidth(), display.getHeight());
+        AnimateDrawable animAura = new AnimateDrawable(aura, anim);
+        
+        trainer_aura = new ArrayItemizedOverlay(animAura, this) {
+        	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition, Projection projection, byte drawZoomLevel)
+        	{
+        		super.drawOverlayBitmap(canvas, drawPosition, projection, drawZoomLevel);
+        		requestRedraw();
+        	}
+        };
+        ItemizedOverlay.boundCenter(animAura);
+        anim.startNow();
+    }
+    
+    private void setupTrainerCircle()
+    {
+    	Paint fill = new Paint();
+    	fill.setStyle(Style.FILL);
+    	fill.setColor(Color.MAGENTA);
+    	fill.setAlpha(32);
+    	fill.setAntiAlias(true);
+    	Paint outline = new Paint();
+    	outline.setStyle(Style.STROKE);
+    	outline.setStrokeWidth(2);
+    	outline.setColor(Color.MAGENTA);
+    	outline.setAntiAlias(true);
+    	trainer_circle = new ArrayCircleOverlay(fill,outline,this);	
+    }
+    
+    public void addPlayer(NetworkPlayer p)
+    {
+    	players.addItem(p.getMarker());
+		shadows_player.addItem(p.getShadow());
+    }
+    
+    public void removePlayer(NetworkPlayer p)
+    {
+    	players.removeItem(p.getMarker());
+		shadows_player.removeItem(p.getShadow());
+    }
+    
+    public void addItem(WorldPotion p)
+    {
+    	items.addItem(p.getMarker());
+    }
+    
+    public void removeItem(WorldPotion p)
+    {
+    	items.removeItem(p.getMarker());
+    }
+    
+    // add region ways
+    public void addRegions(List<Region> regions)
+    {
+        for (Region r:regions)
+        	this.regions.addWay(r.getWay());
     }
 }
