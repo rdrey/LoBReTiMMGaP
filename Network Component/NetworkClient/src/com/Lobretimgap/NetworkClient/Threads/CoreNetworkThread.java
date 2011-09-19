@@ -63,7 +63,11 @@ public abstract class CoreNetworkThread extends Thread
     private long latencyStartTime, latencyEndTime;    
     private EventListenerList listeners = new EventListenerList();    
     public Vector<ClientPeer> peers;
+    
+    //Timing variables
     private GameClock gameClock;
+    private boolean timeSyncInProgress = false;
+    private int timeSyncReceived = 0;
 	
 	public CoreNetworkThread()
 	{
@@ -162,6 +166,29 @@ public abstract class CoreNetworkThread extends Thread
 	{
 		writeOut(message);
 	}
+	
+	/***
+	 * Used to start a time synchronisation protocal with the server. This is 
+	 * automatically run upon first contact with the server, but can be manually 
+	 * run again if the network latency has changed drastically (IE change from wifi
+	 * to EDGE). If a time sync is already in progress, calls to this method will be ignored.
+	 */
+	public void requestNetworkTimeSync()
+	{
+		if(!timeSyncInProgress)
+		{
+			timeSyncInProgress = true;
+			timeSyncReceived = 0;
+			NetworkMessage msg = new NetworkMessage("TimeRequest");
+			msg.setMessageType(NetworkMessage.MessageType.TIME_REQUEST);
+			writeOut(msg);
+			
+			//Now we schedule a timer task to send another 5 requests, at 2 second intervals.
+			
+		}
+	}
+	
+	
 	
 	/**
      * Sends an update message to the server. Can be anything the implementer
@@ -412,6 +439,9 @@ public abstract class CoreNetworkThread extends Thread
         {
         	playerId = ((PlayerRegistrationMessage)message).playerID;
         	Log.i(NetworkVariables.TAG, "Received player ID of "+playerId+" from the server.");
+        	//Start the time sync
+        	
+        	requestNetworkTimeSync();
         }		
 		else if(message instanceof NetworkMessage)
 		{
@@ -492,6 +522,34 @@ public abstract class CoreNetworkThread extends Thread
 	            	}
 	            	
 	            	break;
+	            case TIME_REQUEST:
+	            	//Do nothing, only clients send this to server
+	            	break;
+	            case TIME_RESPONSE:
+	            	if(timeSyncReceived == 0 && timeSyncInProgress)//First part. Sync to server on single response
+	            	{
+	            		long sentTime = Long.parseLong(msg.getMessage());
+	            		long currentTime = gameClock.currentTimeMillis();
+	            		long latency = (currentTime - sentTime)/2;
+	            		
+	            		long serverTime = msg.getTimeStamp();
+	            		long clockDelta = (currentTime - latency) - serverTime ; //difference between local time and server time
+	            		Log.i(NetworkVariables.TAG, "Client-server time delta is: "+clockDelta);
+	            		gameClock.setTimeDelta(clockDelta);
+	            		timeSyncReceived++;
+	            		//Next packets will be sent by a scheduled timer, to ensure a 2 second delay between messages
+	            		
+	            	}
+	            	else if (timeSyncReceived <= 5 && timeSyncInProgress)
+	            	{
+	            		
+	            	}
+	            	else
+	            	{
+	            		timeSyncReceived = 0;
+	            		timeSyncInProgress = false;
+	            	}
+	            	break;
 	            default:
 	                fireEvent(new NetworkEvent(this, msg),  UnknownMessageTypeReceivedListener.class);
 	                //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
@@ -500,7 +558,6 @@ public abstract class CoreNetworkThread extends Thread
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	private void handlePeerListUpdate(NetworkMessage msg)
 	{
 		//Terminate communication with existing peers

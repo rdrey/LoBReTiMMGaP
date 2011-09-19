@@ -391,6 +391,14 @@ public abstract class ServerDaemonThread extends Thread{
                                 "communication with an unrecognised object type");
                     }
                     break;
+                case TIME_REQUEST:
+                    //Reply with a new message. Timestamp will automatically be added in
+                    //write phase, but we also want to add the client sent time, so the client
+                    //can compute time differences.
+                    NetworkMessage newMsg = new NetworkMessage("" + msg.getTimeStamp());
+                    newMsg.setMessageType(NetworkMessage.MessageType.TIME_RESPONSE);
+                    writeOut(newMsg);
+                    break;
                 default:
                     fireEvent(new NetworkEvent(this, msg),  UnknownMessageTypeReceivedListener.class);
                     //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
@@ -407,6 +415,7 @@ public abstract class ServerDaemonThread extends Thread{
     {
         //Later perhaps we can more gracefully deal with this. Perhaps add wait
         //a little while and then try again?
+        object.setTimeStamp(System.currentTimeMillis());
         if(!out.writeMessage(object))
         {
             throw new BufferOverflowException();

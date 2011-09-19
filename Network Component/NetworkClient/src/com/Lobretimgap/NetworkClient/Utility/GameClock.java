@@ -24,7 +24,7 @@ public class GameClock implements TimeSource {
 	}
 
 	public long currentTimeMillis() {
-		return System.currentTimeMillis() + timeDelta;
+		return System.currentTimeMillis() - timeDelta;
 	}
 	
 	
