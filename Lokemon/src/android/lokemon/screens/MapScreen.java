@@ -76,47 +76,57 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 			public boolean onTouch(View v, MotionEvent e) {
 				if (e.getAction() == MotionEvent.ACTION_MOVE)
 		    		return true;
-				else if (G.testMode == TestMode.CONTROL && SystemClock.uptimeMillis() - e.getDownTime() > 500)
+				else if (e.getAction() == MotionEvent.ACTION_UP)
 				{
-					animTimer.cancel();					
-					GeoPoint point = mapView.getProjection().fromPixels((int)e.getX(), (int)e.getY());
-					end = point;		
-					end_loc = new Location("");
-					end_loc.setLatitude(end.getLatitude());
-					end_loc.setLongitude(end.getLatitude());
-					animTimer = new Timer();
-					lastTime = SystemClock.uptimeMillis();
-					animTimer.scheduleAtFixedRate(new TimerTask(){
-						public void run()
+					if (G.testMode == TestMode.CONTROL)
+					{
+						if (SystemClock.uptimeMillis() - e.getDownTime() > 500)
+							return false;
+						else
 						{
-							double timeStep = (SystemClock.uptimeMillis() - lastTime) / 333.0f;
+							animTimer.cancel();					
+							GeoPoint point = mapView.getProjection().fromPixels((int)e.getX(), (int)e.getY());
+							end = point;		
+							end_loc = new Location("");
+							end_loc.setLatitude(end.getLatitude());
+							end_loc.setLongitude(end.getLatitude());
+							animTimer = new Timer();
 							lastTime = SystemClock.uptimeMillis();
-							double newLat = start.getLatitude() + (end.getLatitude() - start.getLatitude()) * timeStep;
-							double newLon = start.getLongitude() + (end.getLongitude() - start.getLongitude()) * timeStep;
-							start = new GeoPoint(newLat, newLon);
-							Location loc = new Location("");
-							loc.setLatitude(start.getLatitude());
-							loc.setLongitude(start.getLongitude());
-							if (loc.distanceTo(end_loc) < 5)
-							{
-								G.player.setLocation (end_loc);
-								mapController.setCenter(end);
-								cancel();
-							}
-							else
-							{
-								G.player.setLocation(loc);
-								mapController.setCenter(start);
-							}
+							animTimer.scheduleAtFixedRate(new TimerTask(){
+								public void run()
+								{
+									double timeStep = (SystemClock.uptimeMillis() - lastTime) / 333.0f;
+									lastTime = SystemClock.uptimeMillis();
+									double newLat = start.getLatitude() + (end.getLatitude() - start.getLatitude()) * timeStep;
+									double newLon = start.getLongitude() + (end.getLongitude() - start.getLongitude()) * timeStep;
+									start = new GeoPoint(newLat, newLon);
+									Location loc = new Location("");
+									loc.setLatitude(start.getLatitude());
+									loc.setLongitude(start.getLongitude());
+									if (loc.distanceTo(end_loc) < 5)
+									{
+										G.player.setLocation (end_loc);
+										mapController.setCenter(end);
+										cancel();
+									}
+									else
+									{
+										G.player.setLocation(loc);
+										mapController.setCenter(start);
+									}
+								}
+							}, 60, 60);
+							// if framerate becomes a big problem don't animate
+							/*G.player.setLocation (end_loc);
+							mapController.setCenter(end);*/
+							return true;
 						}
-					}, 60, 60);
-					// if framerate becomes a big problem don't animate
-					/*G.player.setLocation (end_loc);
-					mapController.setCenter(end);*/
-					return true;
+					}
+					else
+						return false;
 				}
 				else
-		    		return false;
+					return false;
 			}
 		});
         mapView.setMapFile("/sdcard/Lokemon/campus.map");
