@@ -1,3 +1,8 @@
 *.out
+*.map
 .DS_Store
 */target/
+
+/Network Component/NetworkClient/bin
+/Network Component/NetworkServer/build
+/Network Component/NetworkServer/dist
