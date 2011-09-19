@@ -13,12 +13,16 @@ import org.hibernate.Session;
 import org.mobiloc.lobgasp.util.HibernateUtil;
 import org.hibernate.Transaction;
 import org.mobiloc.lobgasp.model.SpatialDBEntity;
-import org.mobiloc.lobgasp.model.EntityToObject;
 import org.mobiloc.lobgasp.osm.model.Ways.BuildingEntity;
 import org.mobiloc.lobgasp.osm.model.POIs.LibraryEntity;
-import org.mobiloc.lobgasp.osm.model.POIEntity;
 import org.mobiloc.lobgasp.osm.model.POIs.PubEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.FieldEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.ForestEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.ParkingEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.ReservoirEntity;
 import org.mobiloc.lobgasp.osm.model.Ways.RoadEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.StepsEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.TunnelEntity;
 
 /**
  * Hello world!
@@ -33,6 +37,13 @@ public class App {
         //TODO interface for custom objects
         sp.register(PubEntity.class, PubEntity.class);
         sp.register(LibraryEntity.class, LibraryEntity.class);
+
+        sp.register(TunnelEntity.class, TunnelEntity.class);
+        sp.register(StepsEntity.class, StepsEntity.class);
+        sp.register(ParkingEntity.class, ParkingEntity.class);
+        sp.register(ForestEntity.class, ForestEntity.class);
+        sp.register(FieldEntity.class, FieldEntity.class);
+        sp.register(ReservoirEntity.class, ReservoirEntity.class);
         sp.register(RoadEntity.class, RoadEntity.class);
         sp.register(BuildingEntity.class, BuildingEntity.class);
         

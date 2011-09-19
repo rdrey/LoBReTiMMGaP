@@ -1,5 +1,8 @@
 package org.mobiloc.lobgasp.osm.model.Ways;
 
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.LinearRing;
 import javax.persistence.*;
 import org.mobiloc.lobgasp.model.SpatialDBEntity;
 import org.mobiloc.lobgasp.osm.model.WayEntity;
@@ -12,20 +15,24 @@ import org.mobiloc.lobgasp.osm.parser.model.Way;
  */
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public class RoadEntity extends WayEntity {
+public class ForestEntity extends WayEntity {
 
     @Override
     public SpatialDBEntity construct(AbstractNode in)
     {
         this.setName(in.tags.get("name"));
         this.setOSMid(Long.parseLong(in.id));
-        this.setGeom(((Way) in).getLineString());
+        LineString lineString = ((Way) in).getLineString();
+        LinearRing ring = lineString.getFactory().createLinearRing(lineString.getCoordinateSequence());
+        Geometry poly = lineString.getFactory().createPolygon(ring, null);
+//        Logger.getLogger(ForestEntity.class.getName()).log(Level.INFO, "message {0}", poly.getNumPoints());
+        this.setGeom(poly);
         return this;
     }
 
     @Override
     public boolean xmlRule(AbstractNode in) {
-        if (in.tags.containsKey("highway")) {
+        if (in.tags.containsKey("landuse") && in.tags.get("landuse").equals("forest")) {
             return true;
         }
         return false;

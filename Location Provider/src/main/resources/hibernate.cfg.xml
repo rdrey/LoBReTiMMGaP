@@ -20,6 +20,12 @@
         <mapping class="org.mobiloc.lobgasp.osm.model.POIs.LibraryEntity"/>
 
         <mapping class="org.mobiloc.lobgasp.osm.model.WayEntity"/>
+        <mapping class="org.mobiloc.lobgasp.osm.model.Ways.TunnelEntity"/>
+        <mapping class="org.mobiloc.lobgasp.osm.model.Ways.StepsEntity"/>
+        <mapping class="org.mobiloc.lobgasp.osm.model.Ways.ForestEntity"/>
+        <mapping class="org.mobiloc.lobgasp.osm.model.Ways.FieldEntity"/>
+        <mapping class="org.mobiloc.lobgasp.osm.model.Ways.ReservoirEntity"/>
+        <mapping class="org.mobiloc.lobgasp.osm.model.Ways.ParkingEntity"/>
         <mapping class="org.mobiloc.lobgasp.osm.model.Ways.RoadEntity"/>
         <mapping class="org.mobiloc.lobgasp.osm.model.Ways.BuildingEntity"/>
     </session-factory>

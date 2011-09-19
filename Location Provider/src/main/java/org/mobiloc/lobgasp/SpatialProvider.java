@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.mobiloc.lobgasp;
 
 import com.vividsolutions.jts.geom.Point;
@@ -103,7 +99,4 @@ public class SpatialProvider {
             Logger.getLogger(SpatialProvider.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
-
-
 }
