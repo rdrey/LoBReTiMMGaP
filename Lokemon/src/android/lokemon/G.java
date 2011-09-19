@@ -17,6 +17,7 @@ public class G {
 	public static Trainer player;
 	public static Game game;
 	public static Mode mode;
+	public static TestMode testMode = TestMode.CONTROL;
 	public static ElemType [] types;
 	public static Battle battle;
 	public static int [] region_colours;
@@ -31,6 +32,7 @@ public class G {
 	// enums
 	public static enum Types {bug, electric, fire, flying, grass, ground, normal, poison, psychic, rock, steel, water};
 	public static enum Mode {BATTLE, MAP};
+	public static enum TestMode {CONTROL, EXPERIMENT};
 	public static enum Potions {HP, ATTACK, DEFENSE, SPECIAL, SPEED}
 	public static enum Gender {FEMALE, MALE};
 	public static enum PlayerState{BUSY, AVAILABLE};

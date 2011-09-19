@@ -3,28 +3,24 @@ package android.lokemon.screens;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
+import android.location.Location;
 import android.lokemon.G;
+import android.lokemon.G.TestMode;
 import android.lokemon.Game;
 import android.lokemon.R;
 import android.lokemon.G.Mode;
-import android.lokemon.G.PlayerState;
-import android.lokemon.game_objects.MapItem;
-import android.lokemon.game_objects.NetworkPlayer;
+import android.lokemon.game_objects.*;
 import android.lokemon.game_objects.Region;
-import android.lokemon.game_objects.WorldPotion;
 import android.lokemon.popups.BagPopup;
 import android.lokemon.popups.PokemonPopup;
-import android.lokemon.test.AnimationTest;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.*;
 import android.graphics.Paint.Style;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.text.Html;
 import android.util.Log;
 import android.view.*;
@@ -36,7 +32,7 @@ import org.mapsforge.android.maps.*;
 
 import com.example.android.apis.graphics.AnimateDrawable;
 
-public class MapScreen extends MapActivity implements View.OnTouchListener, View.OnClickListener{
+public class MapScreen extends MapActivity implements View.OnClickListener{
     
 	private MapController mapController; // used to zoom in/out and pan
 	private MapView mapView;
@@ -57,24 +53,78 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
 	private ArrayItemizedOverlay players;
 	private ArrayItemizedOverlay items;
 	
-	private int lastTouch;
+	// map animation variables
+	private GeoPoint start;
+	private GeoPoint end;
+	private Location end_loc;
+	private Timer animTimer;
+	private long lastTime;
 	
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.map);
-        
         mapView = (MapView)findViewById(R.id.mapview);
-        //mapView.setZoomMin((byte)19);
-        //mapView.setZoomMax((byte)20);
-        //mapView.setZoomMin((byte)19);
         mapView.setKeepScreenOn(true);
+        mapView.setZoomMax((byte)19);
+        mapView.setZoomMin((byte)19);
         mapView.setClickable(true);
-        mapView.setOnTouchListener(this);
+        
+        animTimer = new Timer();
+        
+        // we want to disable panning and zooming using gestures (this is the only way with SDK version 2.2)
+        mapView.setOnTouchListener(new View.OnTouchListener() {
+			public boolean onTouch(View v, MotionEvent e) {
+				if (e.getAction() == MotionEvent.ACTION_MOVE)
+		    		return true;
+				else if (G.testMode == TestMode.CONTROL && SystemClock.uptimeMillis() - e.getDownTime() > 500)
+				{
+					animTimer.cancel();					
+					GeoPoint point = mapView.getProjection().fromPixels((int)e.getX(), (int)e.getY());
+					end = point;		
+					end_loc = new Location("");
+					end_loc.setLatitude(end.getLatitude());
+					end_loc.setLongitude(end.getLatitude());
+					animTimer = new Timer();
+					lastTime = SystemClock.uptimeMillis();
+					animTimer.scheduleAtFixedRate(new TimerTask(){
+						public void run()
+						{
+							double timeStep = (SystemClock.uptimeMillis() - lastTime) / 333.0f;
+							lastTime = SystemClock.uptimeMillis();
+							double newLat = start.getLatitude() + (end.getLatitude() - start.getLatitude()) * timeStep;
+							double newLon = start.getLongitude() + (end.getLongitude() - start.getLongitude()) * timeStep;
+							start = new GeoPoint(newLat, newLon);
+							Location loc = new Location("");
+							loc.setLatitude(start.getLatitude());
+							loc.setLongitude(start.getLongitude());
+							if (loc.distanceTo(end_loc) < 5)
+							{
+								G.player.setLocation (end_loc);
+								mapController.setCenter(end);
+								cancel();
+							}
+							else
+							{
+								G.player.setLocation(loc);
+								mapController.setCenter(start);
+							}
+						}
+					}, 60, 60);
+					// if framerate becomes a big problem don't animate
+					/*G.player.setLocation (end_loc);
+					mapController.setCenter(end);*/
+					return true;
+				}
+				else
+		    		return false;
+			}
+		});
         mapView.setMapFile("/sdcard/Lokemon/campus.map");
         
         mapController = mapView.getController();
         // UCT Upper Campus: (-33.957657, 18.46125)
         mapController.setCenter(new GeoPoint(-33.957657,18.46125));
+        start = new GeoPoint(-33.957657,18.46125);
         mapController.setZoom(19);
         
         bag_button = (Button)findViewById(R.id.bag_button);
@@ -124,8 +174,6 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
         	shadows_player.addItem(p.getShadow());
         }*/
         
-        lastTouch = -1;
-        
         Log.i("Interface", "Map view created");
         
         new Game(this);
@@ -149,15 +197,6 @@ public class MapScreen extends MapActivity implements View.OnTouchListener, View
     	super.onDestroy();
     	Log.i("Interface", "Map view destroyed");
     }
-    
-    // we want to disable panning and zooming using gestures (this is the only way with SDK version 2.2)
-    public boolean onTouch(View v, MotionEvent e)
-    {
-    	if (e.getAction() == MotionEvent.ACTION_MOVE)
-    		return true;
-    	else
-    		return false;
-    }    
     
     // create alert dialog to ask for outgoing battle confirmation
     public void showBattleOutgoingDialog(String playerName)
