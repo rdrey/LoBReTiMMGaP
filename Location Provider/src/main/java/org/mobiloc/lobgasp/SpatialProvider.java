@@ -8,19 +8,18 @@ import com.vividsolutions.jts.geom.Point;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.mobiloc.lobgasp.model.SpatialDBEntity;
-import org.mobiloc.lobgasp.osm.model.BuildingEntity;
+import org.mobiloc.lobgasp.model.SpatialObject;
 import org.mobiloc.lobgasp.osm.model.POIEntity;
-import org.mobiloc.lobgasp.osm.model.RoadEntity;
 import org.mobiloc.lobgasp.osm.model.WayEntity;
 import org.mobiloc.lobgasp.osm.parser.OSMParser;
+import org.mobiloc.lobgasp.osm.parser.model.AbstractNode;
 import org.mobiloc.lobgasp.osm.parser.model.OSM;
-import org.mobiloc.lobgasp.osm.parser.model.OSMNode;
-import org.mobiloc.lobgasp.osm.parser.model.Way;
 import org.mobiloc.lobgasp.util.HibernateUtil;
 
 /**
@@ -29,10 +28,12 @@ import org.mobiloc.lobgasp.util.HibernateUtil;
  */
 public class SpatialProvider {
 
-    HashMap<SpatialDBEntity, SpatialDBEntity> objects;
+    HashMap<POIEntity, SpatialObject> pointsOfInterest;
+    HashMap<WayEntity, SpatialObject> waysOfInterest;
 
     public SpatialProvider() {
-        objects = new HashMap<SpatialDBEntity, SpatialDBEntity>();
+        pointsOfInterest = new HashMap<POIEntity, SpatialObject>();
+        waysOfInterest = new HashMap<WayEntity, SpatialObject>();
     }
 
     void init() {
@@ -52,56 +53,30 @@ public class SpatialProvider {
             Logger.getLogger(SpatialProvider.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        //Nodes first
-        for (OSMNode node : osm.getNodes()) {
-            boolean found = false;
-            for (SpatialDBEntity so : objects.keySet()) {
-                if (so.xmlRule(node)) {
-                    SpatialDBEntity temp = new POIEntity();
+        //Save nodes that match pointsOfInterest
+        saveCollections(s, pointsOfInterest, osm.getNodes());
+        //Now ways
+        saveCollections(s, waysOfInterest, osm.getWays());
+
+        tx.commit();
+    }
+
+    private void saveCollections(Session s, HashMap mappings, Set nodes) {
+        for (Object poiOrWay : nodes) {
+            for (Object so : mappings.keySet()) {
+                if (((SpatialDBEntity)so).xmlRule((AbstractNode) poiOrWay)) {
                     try {
-                        temp = so.getClass().newInstance();
+                        SpatialDBEntity temp = ((SpatialDBEntity)so).getClass().newInstance();
+                        System.out.println("Found " + so.getClass());
+                        Serializable save = s.save(temp.construct((AbstractNode) poiOrWay));
                     } catch (InstantiationException ex) {
                         Logger.getLogger(SpatialProvider.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (IllegalAccessException ex) {
                         Logger.getLogger(SpatialProvider.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    System.out.println("Found " + so.getClass());
-                    Serializable save = s.save(temp.construct(node));
-                    Logger.getLogger(SpatialProvider.class.getName()).log(Level.INFO, save.toString());
-                    found = true;
                 }
             }
-//            if (!found) {
-//                POIEntity poi = new POIEntity();
-//                poi.construct(node);
-//                s.save(poi);
-//            }
         }
-
-        //Now ways
-//        BuildingEntity building = new BuildingEntity();
-//        RoadEntity road = new RoadEntity();
-//
-//        for (Way way : osm.getWays()) {
-//            if (building.xmlRule(way)) {
-//                BuildingEntity tempBuilding = new BuildingEntity();
-//                tempBuilding.construct(way);
-//                s.save(tempBuilding);
-//            } else if (road.xmlRule(way)) {
-//                RoadEntity tempRoad = new RoadEntity();
-//                tempRoad.construct(way);
-//                s.save(tempRoad);
-//            } else {
-//                WayEntity dbWay = new WayEntity();
-//                dbWay.construct(way);
-//                s.save(dbWay);
-//            }
-//        }
-
-        //Then relations
-
-        tx.commit();
-
     }
 
     List<SpatialDBEntity> provide(Point p, float radius) {
@@ -109,14 +84,26 @@ public class SpatialProvider {
         return null;
     }
 
-    void register(Class<? extends SpatialDBEntity> source, Class<? extends SpatialDBEntity> result) {
+    void register(Class<? extends SpatialDBEntity> source, Class<? extends SpatialObject> result) {
         try {
-            objects.put(source.newInstance(), result.newInstance());
+
+            if (source.newInstance() instanceof POIEntity) {
+                Logger.getLogger(SpatialProvider.class.getName()).log(Level.INFO, "Registered in POIs: {0}", source.getSimpleName());
+                pointsOfInterest.put((POIEntity) source.newInstance(),result.newInstance());
+            }
+
+            else if (source.newInstance() instanceof WayEntity) {
+                Logger.getLogger(SpatialProvider.class.getName()).log(Level.INFO, "Registered in Ways: {0}", source.getSimpleName());
+                waysOfInterest.put((WayEntity) source.newInstance(),result.newInstance());
+            }
+
         } catch (InstantiationException ex) {
             Logger.getLogger(SpatialProvider.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
             Logger.getLogger(SpatialProvider.class.getName()).log(Level.SEVERE, null, ex);
         }
-        System.out.println(source);
     }
+
+
+
 }
