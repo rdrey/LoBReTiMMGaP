@@ -10,6 +10,8 @@ import java.net.UnknownHostException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.Vector;
 
 import networkTransferObjects.NetworkMessage;
@@ -36,6 +38,7 @@ import com.Lobretimgap.NetworkClient.Exceptions.NotYetRegisteredException;
 import com.Lobretimgap.NetworkClient.Peer2Peer.ClientPeer;
 import com.Lobretimgap.NetworkClient.Utility.EventListenerList;
 import com.Lobretimgap.NetworkClient.Utility.GameClock;
+import com.Lobretimgap.NetworkClient.Utility.GameClock.TimeSyncPacket;
 import com.dyuproject.protostuff.LinkedBuffer;
 import com.dyuproject.protostuff.ProtostuffIOUtil;
 import com.dyuproject.protostuff.Schema;
@@ -68,6 +71,7 @@ public abstract class CoreNetworkThread extends Thread
     private GameClock gameClock;
     private boolean timeSyncInProgress = false;
     private int timeSyncReceived = 0;
+    private Timer syncTimer = new Timer();
 	
 	public CoreNetworkThread()
 	{
@@ -184,7 +188,14 @@ public abstract class CoreNetworkThread extends Thread
 			writeOut(msg);
 			
 			//Now we schedule a timer task to send another 5 requests, at 2 second intervals.
-			
+			syncTimer.schedule(new TimerTask() {				
+				@Override
+				public void run() {
+					NetworkMessage msg = new NetworkMessage("TimeRequest");
+					msg.setMessageType(NetworkMessage.MessageType.TIME_REQUEST);
+					writeOut(msg);
+				}
+			}, 2000, 2000);
 		}
 	}
 	
@@ -542,12 +553,25 @@ public abstract class CoreNetworkThread extends Thread
 	            	}
 	            	else if (timeSyncReceived <= 5 && timeSyncInProgress)
 	            	{
+	            		long sentTime = Long.parseLong(msg.getMessage());
+	            		long currentTime = gameClock.currentTimeMillis();
+	            		long latency = (currentTime - sentTime)/2;
 	            		
+	            		long serverTime = msg.getTimeStamp();
+	            		long clockDelta = (currentTime - latency) - serverTime ; //difference between local time and server time
+	            		
+	            		gameClock.accumulateSyncPacket(gameClock.new TimeSyncPacket(latency, clockDelta));
+	            		timeSyncReceived++;
+	            		if(timeSyncReceived == 5)
+	            		{
+	            			gameClock.convergeSyncPackets();
+	            		}
 	            	}
 	            	else
-	            	{
+	            	{	            		
 	            		timeSyncReceived = 0;
 	            		timeSyncInProgress = false;
+	            		syncTimer.cancel();
 	            	}
 	            	break;
 	            default:
