@@ -1,5 +1,8 @@
 package org.mobiloc.lobgasp;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -13,6 +16,7 @@ import org.mobiloc.lobgasp.model.SpatialDBEntity;
 import org.mobiloc.lobgasp.model.SpatialObject;
 import org.mobiloc.lobgasp.osm.model.POIEntity;
 import org.mobiloc.lobgasp.osm.model.WayEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.ForestEntity;
 import org.mobiloc.lobgasp.osm.parser.OSMParser;
 import org.mobiloc.lobgasp.osm.parser.model.AbstractNode;
 import org.mobiloc.lobgasp.osm.parser.model.OSM;
@@ -26,10 +30,12 @@ public class SpatialProvider {
 
     HashMap<POIEntity, SpatialObject> pointsOfInterest;
     HashMap<WayEntity, SpatialObject> waysOfInterest;
+    Geometry example;
 
     public SpatialProvider() {
         pointsOfInterest = new HashMap<POIEntity, SpatialObject>();
         waysOfInterest = new HashMap<WayEntity, SpatialObject>();
+        example = new GeometryFactory().createPoint(new Coordinate(0.0, 0.0));
     }
 
     void init() {
@@ -63,7 +69,7 @@ public class SpatialProvider {
                 if (((SpatialDBEntity)so).xmlRule((AbstractNode) poiOrWay)) {
                     try {
                         SpatialDBEntity temp = ((SpatialDBEntity)so).getClass().newInstance();
-                        System.out.println("Found " + so.getClass());
+//                        System.out.println("Found " + so.getClass());
                         Serializable save = s.save(temp.construct((AbstractNode) poiOrWay));
                     } catch (InstantiationException ex) {
                         Logger.getLogger(SpatialProvider.class.getName()).log(Level.SEVERE, null, ex);
@@ -72,6 +78,28 @@ public class SpatialProvider {
                     }
                 }
             }
+        }
+    }
+
+    public void addCustomAreaAroundPoint(Class<? extends SpatialDBEntity> aClass, Coordinate coordinate) {
+        addCustomAreaAroundPoint(aClass, coordinate, 0.0001f);
+    }
+
+    public void addCustomAreaAroundPoint(Class<? extends SpatialDBEntity> type, Coordinate coordinate, float radius) {
+        try {
+            Session s = HibernateUtil.getSessionFactory().getCurrentSession();
+            Transaction tx = s.beginTransaction();
+
+            SpatialDBEntity entity = type.newInstance();
+            Point point = GeometryFactory.createPointFromInternalCoord(coordinate, example);
+            entity.setGeom(point.buffer(radius));
+            s.save(entity);
+
+            tx.commit();
+        } catch (InstantiationException ex) {
+            Logger.getLogger(SpatialProvider.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            Logger.getLogger(SpatialProvider.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

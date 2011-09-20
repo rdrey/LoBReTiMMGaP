@@ -15,7 +15,7 @@ import org.mobiloc.lobgasp.osm.parser.model.Way;
  */
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public class FieldEntity extends WayEntity {
+public class NatureReserveEntity extends WayEntity {
 
     @Override
     public SpatialDBEntity construct(AbstractNode in)
@@ -32,9 +32,7 @@ public class FieldEntity extends WayEntity {
 
     @Override
     public boolean xmlRule(AbstractNode in) {
-        if (in.tags.containsKey("leisure") && !in.tags.containsKey("building") && (
-                in.tags.get("leisure").equals("pitch") || 
-                in.tags.get("leisure").equals("sports_centre"))) {
+        if (in.tags.containsKey("leisure") && in.tags.get("leisure").equals("nature_reserve")) {
             return true;
         }
         return false;
