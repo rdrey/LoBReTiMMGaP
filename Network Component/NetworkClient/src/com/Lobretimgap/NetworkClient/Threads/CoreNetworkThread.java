@@ -67,7 +67,7 @@ public abstract class CoreNetworkThread extends Thread
     public Vector<ClientPeer> peers;
     
     //Timing variables
-    private GameClock gameClock;
+    public GameClock gameClock;
     private boolean timeSyncInProgress = false;
     private int timeSyncReceived = 0;
     private Timer syncTimer = new Timer();
