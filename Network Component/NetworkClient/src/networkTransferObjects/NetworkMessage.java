@@ -22,7 +22,9 @@ public class NetworkMessage {
         PEER_LIST_REQUEST_MESSAGE, //Server Only
         LATENCY_REQUEST_MESSAGE, //Server & Client.
         LATENCY_RESPONSE_MESSAGE, //Server & Client
-        DIRECT_COMMUNICATION_MESSAGE //client to client (router through server sometimes)
+        DIRECT_COMMUNICATION_MESSAGE, //client to client (router through server sometimes)
+        TIME_REQUEST, //Sent from client to server, to request server time
+        TIME_RESPONSE //sent from server to client, providing server time.
     }
     private MessageType messageType;
     private String primeMessage;
