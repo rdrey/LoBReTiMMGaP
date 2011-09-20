@@ -1,8 +1,6 @@
 package android.lokemon.screens;
 
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import android.location.Location;
 import android.lokemon.G;
 import android.lokemon.G.TestMode;
@@ -14,6 +12,7 @@ import android.lokemon.game_objects.Region;
 import android.lokemon.popups.BagPopup;
 import android.lokemon.popups.PokemonPopup;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -28,11 +27,11 @@ import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.*;
+import android.lbg.*;
 import org.mapsforge.android.maps.*;
-
 import com.example.android.apis.graphics.AnimateDrawable;
 
-public class MapScreen extends MapActivity implements View.OnClickListener{
+public class MapScreen extends MapActivity implements View.OnClickListener, LBGLocationAdapter.LocationListener{
     
 	private MapController mapController; // used to zoom in/out and pan
 	private MapView mapView;
@@ -57,8 +56,12 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 	private GeoPoint start;
 	private GeoPoint end;
 	private Location end_loc;
-	private Timer animTimer;
 	private long lastTime;
+	private Runnable animator;
+	private Handler animHandler;
+	
+	// GPS variables
+	LBGLocationAdapter location_adapter;
 	
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,8 +71,35 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         mapView.setZoomMax((byte)19);
         mapView.setZoomMin((byte)19);
         mapView.setClickable(true);
+        mapView.setMapFile("/sdcard/Lokemon/campus.map");
         
-        animTimer = new Timer();
+        // animation runnable
+        animator = new Runnable(){
+			public void run() {
+				double timeStep = (System.currentTimeMillis() - lastTime) * 0.003;
+				lastTime = System.currentTimeMillis();
+				double newLat = start.getLatitude() + (end.getLatitude() - start.getLatitude()) * timeStep;
+				double newLon = start.getLongitude() + (end.getLongitude() - start.getLongitude()) * timeStep;
+				start = new GeoPoint(newLat, newLon);
+				Location loc = new Location("");
+				loc.setLatitude(start.getLatitude());
+				loc.setLongitude(start.getLongitude());
+				if (loc.distanceTo(end_loc) < 1)
+				{
+					G.player.setLocation (end_loc);
+					mapController.setCenter(end);
+					animHandler.removeCallbacks(animator);
+					Log.i("Interface", "Animation done");
+				}
+				else
+				{
+					G.player.setLocation(loc);
+					mapController.setCenter(start);
+					animHandler.postDelayed(animator, 50);
+				}
+			}        	
+        };
+        animHandler = new Handler();
         
         // we want to disable panning and zooming using gestures (this is the only way with SDK version 2.2)
         mapView.setOnTouchListener(new View.OnTouchListener() {
@@ -83,39 +113,15 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 						if (SystemClock.uptimeMillis() - e.getDownTime() > 500)
 							return false;
 						else
-						{
-							animTimer.cancel();					
+						{			
 							GeoPoint point = mapView.getProjection().fromPixels((int)e.getX(), (int)e.getY());
 							end = point;		
 							end_loc = new Location("");
 							end_loc.setLatitude(end.getLatitude());
-							end_loc.setLongitude(end.getLatitude());
-							animTimer = new Timer();
-							lastTime = SystemClock.uptimeMillis();
-							animTimer.scheduleAtFixedRate(new TimerTask(){
-								public void run()
-								{
-									double timeStep = (SystemClock.uptimeMillis() - lastTime) / 333.0f;
-									lastTime = SystemClock.uptimeMillis();
-									double newLat = start.getLatitude() + (end.getLatitude() - start.getLatitude()) * timeStep;
-									double newLon = start.getLongitude() + (end.getLongitude() - start.getLongitude()) * timeStep;
-									start = new GeoPoint(newLat, newLon);
-									Location loc = new Location("");
-									loc.setLatitude(start.getLatitude());
-									loc.setLongitude(start.getLongitude());
-									if (loc.distanceTo(end_loc) < 5)
-									{
-										G.player.setLocation (end_loc);
-										mapController.setCenter(end);
-										cancel();
-									}
-									else
-									{
-										G.player.setLocation(loc);
-										mapController.setCenter(start);
-									}
-								}
-							}, 60, 60);
+							end_loc.setLongitude(end.getLongitude());
+							lastTime = System.currentTimeMillis();
+							animHandler.removeCallbacks(animator);
+							animHandler.postDelayed(animator, 50);
 							// if framerate becomes a big problem don't animate
 							/*G.player.setLocation (end_loc);
 							mapController.setCenter(end);*/
@@ -129,7 +135,6 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 					return false;
 			}
 		});
-        mapView.setMapFile("/sdcard/Lokemon/campus.map");
         
         mapController = mapView.getController();
         // UCT Upper Campus: (-33.957657, 18.46125)
@@ -177,12 +182,9 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         mapView.getOverlays().add(players);
         mapView.getOverlays().add(items);
         
-        // check if this is thread safe
-        /*for (NetworkPlayer p:G.game.getAllPlayers())
-        {
-        	players.addItem(p.getMarker());
-        	shadows_player.addItem(p.getShadow());
-        }*/
+        // only use GPS for experimental group
+        if (G.testMode == TestMode.EXPERIMENT)
+        	location_adapter = new LBGLocationAdapter(this,this);
         
         Log.i("Interface", "Map view created");
         
@@ -194,12 +196,18 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     	super.onResume();
     	G.mode = Mode.MAP;
     	hud.setVisibility(View.VISIBLE);
+    	
+    	if (G.testMode == TestMode.EXPERIMENT)
+    		location_adapter.startTracking();
     }
     
     public void onPause()
     {
     	super.onPause();
     	hud.setVisibility(View.INVISIBLE);
+    	
+    	if (G.testMode == TestMode.EXPERIMENT)
+    		location_adapter.stopTracking();
     }
     
     public void onDestroy()
@@ -325,4 +333,18 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         for (Region r:regions)
         	this.regions.addWay(r.getWay());
     }
+
+	
+	public void onLocationChanged(Location location) 
+	{
+		G.player.setLocation(location);
+		mapController.setCenter(new GeoPoint(location.getLatitude(), location.getLongitude()));
+		showToast("Location accuracy " + location.getAccuracy() + " metres");
+	}
+
+	@Override
+	public void onLocationError(int errorCode) 
+	{
+		// do nothing for now
+	}
 }
