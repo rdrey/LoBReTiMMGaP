@@ -6,7 +6,6 @@ import java.util.Arrays;
 import android.util.Log;
 
 import com.Lobretimgap.NetworkClient.NetworkVariables;
-import com.Lobretimgap.NetworkClient.Utility.GameClock.TimeSyncPacket;
 
 /***
  * Class to mimic the server game clock. Modifies local time with the difference in 
@@ -23,7 +22,7 @@ public class GameClock implements TimeSource {
 	 */
 	private long timeDelta = 0;
 	
-	private ArrayList<TimeSyncPacket> accumulationList;
+	private ArrayList<TimeSyncPacket> accumulationList = new ArrayList<GameClock.TimeSyncPacket>();
 	
 	public long getTimeDelta() {
 		return timeDelta;
@@ -55,21 +54,23 @@ public class GameClock implements TimeSource {
 	 */
 	public void convergeSyncPackets()
 	{
+		
 		//Transform to an array so we can sort.
-		TimeSyncPacket [] workList = (GameClock.TimeSyncPacket[])accumulationList.toArray();
+		Object [] workList = accumulationList.toArray();
+		Log.i(NetworkVariables.TAG, "Got here!");
 		//Sort based on latency (see the comparable interface in TimeSyncPacket)
 		Arrays.sort(workList);
 		
 		//Get the median latency
-		long medianLatency = workList[3].latency;
+		long medianLatency = ((TimeSyncPacket)workList[2]).latency;
 		Log.i(NetworkVariables.TAG, "Median latency was: "+ medianLatency);
 		
 		//Now lets work out the standard deviation
 		//First we need the mean
 		long meanLatency = 0;
-		for(TimeSyncPacket pct : workList)
+		for(Object pct : workList)
 		{
-			meanLatency += pct.latency;
+			meanLatency += ((TimeSyncPacket)pct).latency;
 		}
 		
 		meanLatency /= workList.length;
@@ -77,9 +78,9 @@ public class GameClock implements TimeSource {
 		
 		//Now we can get the square differences and finally std deviation
 		double stdDeviation = 0;
-		for(TimeSyncPacket pct : workList)
+		for(Object pct : workList)
 		{
-			stdDeviation += (pct.latency - meanLatency) * (pct.latency - meanLatency);
+			stdDeviation += (((TimeSyncPacket)pct).latency - meanLatency) * (((TimeSyncPacket)pct).latency - meanLatency);
 		}
 		stdDeviation /= workList.length;
 		stdDeviation = Math.sqrt(stdDeviation);
@@ -90,11 +91,11 @@ public class GameClock implements TimeSource {
 		//get the mean of the remaining samples' timeDeltas.
 		long averageTimeDelta = 0;
 		int deltaCount = 0;
-		for(TimeSyncPacket pct: workList)
+		for(Object pct: workList)
 		{
-			if(Math.abs(meanLatency - pct.latency) <= stdDeviation)
+			if(Math.abs(meanLatency - ((TimeSyncPacket)pct).latency) <= stdDeviation)
 			{
-				averageTimeDelta += pct.timedel;
+				averageTimeDelta += ((TimeSyncPacket)pct).timedel;
 				deltaCount++;
 			}
 		}
