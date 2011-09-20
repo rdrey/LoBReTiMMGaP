@@ -6,6 +6,8 @@ import android.os.Binder;
 import com.Lobretimgap.NetworkClient.EventListeners.*;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
+import com.Lobretimgap.NetworkClient.Utility.GameClock;
+
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -168,6 +170,30 @@ public class NetworkComBinder extends Binder {
 			return false;
 		}
 	}	
+	
+	/***
+	 * Returns a clock that is in sync with the server time, allowing for calculations using the network message
+	 * time stamps. Adjusting the clock delta is not advised, as it will cause the network component to get 
+	 * out of sync with the server. Running forceTimeSync will remedy the problem if it occurs.
+	 * @return
+	 */
+	public GameClock getGameClock()
+	{
+		return networkThread.gameClock;
+	}
+	
+	/***
+	 * Restarts the time synchronisation protocol with the server, in case our clocks have
+	 * gone out of sync. Possible causes of this would be changing from Wifi to EDGE.
+	 * If the protocol is already in progress this call is ignored.
+	 */
+	public void forceTimeSync()
+	{
+		if(isConnected)
+		{
+			networkThread.requestNetworkTimeSync();
+		}
+	}
 	
 	/**
 	 * Use this method to sign up for various events from the network thread. This is the 
