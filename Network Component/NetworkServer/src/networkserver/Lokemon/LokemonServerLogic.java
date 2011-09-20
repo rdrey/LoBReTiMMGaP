@@ -110,23 +110,27 @@ public class LokemonServerLogic extends Thread{
                     //Now we would like to spawn a random item around each one of the players.
                     for(LokemonPlayer pl : LokemonServerVariables.playerList)
                     {
-                        Location center = pl.getPosition();
-                        //Creates a random distance between itemSpawnRangeMin and itemSpawnRangeMax
-                        double randomDist = (Math.random()
-                                * (LokemonServerVariables.itemSpawnRangeMax - LokemonServerVariables.itemSpawnRangeMin)) 
-                                + LokemonServerVariables.itemSpawnRangeMin;
-                        //Create a random angle away from the play at which distance the point of the item will be.
-                        double randomAngle = Math.random() * 360;
+                        //Make sure the player has a set location
+                        if(pl.getPosition() != null)
+                        {
+                            Location center = pl.getPosition();
+                            //Creates a random distance between itemSpawnRangeMin and itemSpawnRangeMax
+                            double randomDist = (Math.random()
+                                    * (LokemonServerVariables.itemSpawnRangeMax - LokemonServerVariables.itemSpawnRangeMin))
+                                    + LokemonServerVariables.itemSpawnRangeMin;
+                            //Create a random angle away from the play at which distance the point of the item will be.
+                            double randomAngle = Math.random() * 360;
 
-                        //Now determine a point randomDist away from center, at angle randomAngle.
-                        //Formula (x?,y?)=(x+dcosα,y+dsinα)
-                        double x = center.getX() + randomDist*Math.cos(randomAngle);
-                        double y = center.getY() + randomDist*Math.sin(randomAngle);
+                            //Now determine a point randomDist away from center, at angle randomAngle.
+                            //Formula (x?,y?)=(x+dcosα,y+dsinα)
+                            double x = center.getX() + randomDist*Math.cos(randomAngle);
+                            double y = center.getY() + randomDist*Math.sin(randomAngle);
 
-                        LokemonPotion pot = new LokemonPotion(
-                                LokemonPotion.PotionType.values()[((int)Math.random()*LokemonPotion.PotionType.values().length)]);
-                        pot.setPosition(new Location(x, y));
-                        LokemonServerVariables.itemList.add(pot);
+                            LokemonPotion pot = new LokemonPotion(
+                                    LokemonPotion.PotionType.values()[((int)Math.random()*LokemonPotion.PotionType.values().length)]);
+                            pot.setPosition(new Location(x, y));
+                            LokemonServerVariables.itemList.add(pot);
+                        }
                     }
                 }
 
@@ -135,6 +139,10 @@ public class LokemonServerLogic extends Thread{
             catch(InterruptedException e)
             {
                 //Expected on shutdown.
+            }
+            catch(Exception e)
+            {
+                System.err.println("Unexpected error occuring in server logic! (Ignoring and continuing), Error:\n"+e);
             }
         }
     }

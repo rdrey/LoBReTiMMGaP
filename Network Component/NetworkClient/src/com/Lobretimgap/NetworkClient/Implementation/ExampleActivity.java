@@ -18,7 +18,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.text.method.ScrollingMovementMethod;
-import android.view.animation.BounceInterpolator;
 import android.widget.TextView;
 
 public class ExampleActivity extends Activity {
@@ -107,6 +106,7 @@ public class ExampleActivity extends Activity {
 					
 				case CONNECTION_FAILED:
 					tv.append("Failed to connect to host...\n");
+					break;
 					
 				case LATENCY_UPDATE_RECEIVED:
 					tv.append("Latency reported as: " + ((NetworkEvent)msg.obj).getMessage()+"ms\n");
