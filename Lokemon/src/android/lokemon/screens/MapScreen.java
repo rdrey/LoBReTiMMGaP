@@ -182,7 +182,13 @@ public class MapScreen extends MapActivity implements View.OnClickListener, LBGL
         ItemizedOverlay.boundCenterBottom(G.player_marker_busy);
         
         shadows_player = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_shadow), this);
-        items = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_item),this);
+        items = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_item),this) {
+        	public boolean onTap(int index) 
+        	{
+        		G.game.requestItem(index);
+        		return true;
+        	}
+        };
         regions = new ArrayWayOverlay(null, null);
         setupTrainerAura();
         setupTrainerCircle();

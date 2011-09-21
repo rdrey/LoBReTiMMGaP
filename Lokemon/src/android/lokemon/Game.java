@@ -47,8 +47,9 @@ public class Game {
 	// a reference to the screen that displays the game world
 	private MapScreen display;
 	
-	// battle initiation variables
+	// interaction variables
 	private NetworkPlayer selectedPlayer;
+	private WorldPotion selectedItem;
 	
 	public Game(MapScreen display)
 	{
@@ -102,17 +103,42 @@ public class Game {
 	}
 	
 	// adds it to the main item list and adds it to a new item list
-	private void addItem(WorldPotion item)
+	private synchronized void addItem(WorldPotion item)
 	{
 		items.add(item);
 		display.addItem(item);
 	}
 	
 	// removes it from the main item list and adds it to an old item list
-	private void removeItem(WorldPotion item)
+	private synchronized void removeItem(WorldPotion item)
 	{
 		items.remove(item);
 		display.removeItem(item);
+	}
+	
+	/*
+	 * Methods related to initiating battles
+	 */
+	
+	public synchronized void requestItem(int itemIndex)
+	{
+		selectedItem = items.get(itemIndex);
+		if (G.player.getDistanceFrom(selectedItem.getAndroidLocation()) < 20)
+		{
+			BagItem item = G.player.items[selectedItem.potionType.ordinal()+1];
+			if (item.atMax())
+				display.showToast("You have the max no. of " + item.getName() + "s");
+			else
+			{
+				// !!!send item request!!!
+				item.increment();
+				display.showToast("You have picked up a " + item.getName());
+				removeItem(selectedItem);
+				selectedItem = null;
+			}
+		}
+		else
+			display.showToast("Item is too far away");
 	}
 	
 	/*
