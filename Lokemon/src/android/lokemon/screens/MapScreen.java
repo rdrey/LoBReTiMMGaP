@@ -199,8 +199,8 @@ public class MapScreen extends MapActivity implements View.OnClickListener, LBGL
         
         // added in drawing order
         mapView.getOverlays().add(regions);
-        mapView.getOverlays().add(trainer_aura);
         mapView.getOverlays().add(trainer_circle);
+        mapView.getOverlays().add(trainer_aura);
         mapView.getOverlays().add(shadows_player);
         mapView.getOverlays().add(players);
         mapView.getOverlays().add(items);
