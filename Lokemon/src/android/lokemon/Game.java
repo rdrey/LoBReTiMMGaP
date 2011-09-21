@@ -47,6 +47,9 @@ public class Game {
 	// a reference to the screen that displays the game world
 	private MapScreen display;
 	
+	// battle initiation variables
+	private NetworkPlayer selectedPlayer;
+	
 	public Game(MapScreen display)
 	{
 		G.game = this;
@@ -94,6 +97,8 @@ public class Game {
 	{
 		players.remove(player);
 		display.removePlayer(player);
+		if (selectedPlayer != null && player.id == selectedPlayer.id)
+			selectedPlayer = null;
 	}
 	
 	// adds it to the main item list and adds it to a new item list
@@ -114,18 +119,35 @@ public class Game {
 	 * Methods related to initiating battles
 	 */
 	
-	public synchronized void requestBattle(int playerIndex)
+	public synchronized void requestPlayer(int playerIndex)
 	{
-		NetworkPlayer p = players.get(playerIndex);
-		if (G.player.getDistanceFrom(p.getAndroidLocation()) < 20)
+		selectedPlayer = players.get(playerIndex);	
+		if (G.player.getDistanceFrom(selectedPlayer.getAndroidLocation()) < 20)
 		{
-			if (p.getPlayerState() == PlayerState.BUSY)
+			if (selectedPlayer.getPlayerState() == PlayerState.BUSY)
 				display.showToast("Player is engaged in battle");
 			else
-				display.showBattleOutgoingDialog(p.nickname);
+				display.showBattleOutgoingDialog(selectedPlayer.nickname);
 		}
 		else
 			display.showToast("Player is too far away");
+	}
+	
+	public synchronized void requestBattle()
+	{
+		if (selectedPlayer == null)
+			display.showToast("Player is no longer online");
+		else
+		{
+			display.showProgressDialog("Waiting for player response...");
+			// !!!send player request!!!
+			display.switchToBattle();
+		}
+	}
+	
+	public void acceptBattle()
+	{
+		
 	}
 	
 	/*
@@ -227,7 +249,7 @@ public class Game {
 				addItem(new WorldPotion(Potions.values()[(int)(Math.random()*5)],new GeoPoint(lon,lat)));
 				Log.i("Items", "Item added (total: " + items.size() + ")");
 			}
-			add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*1000));
+			add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*5000));
 		}
 	}
 	
@@ -251,7 +273,7 @@ public class Game {
 				removeItem(items.get((int)(Math.random()*items.size())));
 			Log.i("Players", numToBeRemoved + " players removed (total: " + players.size() + ")");
 			Log.i("Items", numToBeRemoved + " items removed (total: " + items.size() + ")");
-			remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*1000));
+			remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*5000));
 		}
 	}
 }

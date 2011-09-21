@@ -20,6 +20,7 @@ public abstract class BagItem {
 	public int getSprite() {return spriteID;}
 	public int getMax() {return max_count;}
 	public String getDescription () {return description;}
+	public abstract int getIndex();
 	
 	public void decrement() {if (count > 0) count--;}
 	

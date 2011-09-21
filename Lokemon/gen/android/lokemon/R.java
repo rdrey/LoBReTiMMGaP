@@ -98,7 +98,6 @@ public final class R {
         public static final int bottom_left=0x7f070008;
         public static final int bulbasaur=0x7f070026;
         public static final int buttons=0x7f070013;
-        public static final int center=0x7f070058;
         public static final int charmander=0x7f070027;
         public static final int coins=0x7f070034;
         public static final int coins_label=0x7f070035;
@@ -126,7 +125,6 @@ public final class R {
         public static final int lock_overlay=0x7f070044;
         public static final int lv_label=0x7f070056;
         public static final int mapview=0x7f07002f;
-        public static final int message=0x7f07005a;
         public static final int moves_spinner=0x7f07001b;
         public static final int my_health=0x7f070010;
         public static final int my_health_num=0x7f070012;
@@ -153,7 +151,6 @@ public final class R {
         public static final int pokemon=0x7f070025;
         public static final int power=0x7f070041;
         public static final int pp=0x7f07003e;
-        public static final int progress=0x7f070059;
         public static final int rank=0x7f070037;
         public static final int rank_label=0x7f070038;
         public static final int red=0x7f070021;
@@ -187,7 +184,6 @@ public final class R {
         public static final int map=0x7f030007;
         public static final int move_item=0x7f030008;
         public static final int pokemon_item=0x7f030009;
-        public static final int wait=0x7f03000a;
     }
     public static final class string {
         public static final int app_name=0x7f050001;

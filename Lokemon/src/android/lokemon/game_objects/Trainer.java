@@ -21,12 +21,14 @@ public class Trainer {
 	public BagItem [] items;
 	public OverlayItem aura;
 	public OverlayCircle circle;
+	public int coins;
 	
 	private Location location;
 	
 	public Trainer(String nick, int startPokemon)
 	{
 		this.nickname = nick;
+		this.coins = 3;
 		pokemon = new ArrayList<Pokemon>();
 		pokemon.add(new Pokemon(startPokemon, 5));
 		pokemon.add(new Pokemon(3, 5));
@@ -54,10 +56,11 @@ public class Trainer {
 		G.player = this;
 	}
 	
-	public Trainer(String nick, ArrayList<Pokemon> pokemon, int [] itemCount)
+	public Trainer(String nick, ArrayList<Pokemon> pokemon, int [] itemCount, int coins)
 	{
 		this.nickname = nick;
 		this.pokemon = pokemon;
+		this.coins = coins;
 		items = new BagItem[6];
 		items[0] = new PokeBall(itemCount[0]);
 		items[1] = new Potion(Potions.HP,itemCount[1]);
@@ -78,7 +81,7 @@ public class Trainer {
 		try
 		{
 			BufferedWriter output = new BufferedWriter(new OutputStreamWriter(current.openFileOutput("save_data", Context.MODE_PRIVATE)));
-			String str_out = "{\"nick\":\""+ G.player.nickname + "\",\"items\":[";
+			String str_out = "{\"nick\":\""+ G.player.nickname + "\",\"coins\":" + G.player.coins + ",\"items\":[";
 			for (BagItem i:G.player.items) str_out += i.getCount() + ",";
 			str_out = str_out.substring(0, str_out.length()-1) + "],\"pokemon\":[";
 			for (Pokemon p:G.player.pokemon) str_out += p.getJSON() + ",";
@@ -104,7 +107,7 @@ public class Trainer {
 			int [] count = new int[array.length()];
 			for (int i = 0; i < array.length(); i++)
 				count[i] = array.getInt(i);
-			new Trainer(object.getString("nick"),pokes,count);
+			new Trainer(object.getString("nick"),pokes,count,object.getInt("coins"));
 			Log.i("Data load", "Trainer data loaded");
 		}
 		catch (Exception e) {Log.e("Data load", e.getMessage());}

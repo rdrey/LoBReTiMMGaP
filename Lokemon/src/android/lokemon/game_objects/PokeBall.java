@@ -1,7 +1,6 @@
 package android.lokemon.game_objects;
 
 import android.lokemon.R;
-import android.lokemon.R.drawable;
 
 public class PokeBall extends BagItem {
 
@@ -12,4 +11,6 @@ public class PokeBall extends BagItem {
 	}
 	
 	public PokeBall() {this(0);}
+
+	public int getIndex() {return 0;}
 }

@@ -76,4 +76,6 @@ public class Potion extends BagItem {
 			return -1;
 		}
 	}
+
+	public int getIndex() {return type.ordinal()+1;}
 }

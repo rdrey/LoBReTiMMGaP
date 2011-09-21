@@ -27,7 +27,7 @@ public class Battle {
 		itemCount = 0;
 		G.mode = Mode.BATTLE;
 		
-		switchPlayerPoke(G.player.pokemon.get(0));
+		switchPlayerPoke(0);
 		switchOppPoke(G.player.pokemon.get(2));
 		
 		for (int i = 0; i < G.player.pokemon.size(); i++)
@@ -45,8 +45,9 @@ public class Battle {
 		G.battle = this;
 	}
 	
-	public void switchPlayerPoke(Pokemon newPoke)
+	public void switchPlayerPoke(int index)
 	{
+		Pokemon newPoke = G.player.pokemon.get(index);
 		if (poke_player != null) poke_player.inBattle = false;
 		newPoke.inBattle = true;
 		poke_player = newPoke;
@@ -64,8 +65,9 @@ public class Battle {
 		// battle logic here
 	}
 	
-	public void useItem(BagItem item)
+	public void useItem(int itemIndex)
 	{
+		BagItem item = G.player.items[itemIndex];
 		item.decrement();
 		itemCount--;
 		if (itemCount == 0)
