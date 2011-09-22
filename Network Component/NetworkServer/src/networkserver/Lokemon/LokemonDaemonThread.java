@@ -65,7 +65,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
             NetworkMessage msg = (NetworkMessage)e.getMessage();
             String sMsg = msg.getMessage();
 
-            if(sMsg.equals("MapDataRequest"));
+            if(sMsg.equals("MapDataRequest"))
             {
                 double topLeftX = ((NetworkMessageMedium)msg).doubles.get(0);
                 double topLeftY = ((NetworkMessageMedium)msg).doubles.get(1);
@@ -73,6 +73,12 @@ public class LokemonDaemonThread extends ServerDaemonThread{
                 double height = ((NetworkMessageMedium)msg).doubles.get(3);
 
                 LokemonServerLogic.sendMapDataToClient(playerID, new Rectangle2D.Double(topLeftX, topLeftY, width, height));
+            }
+            else if(sMsg.equals("ItemPickupRequest"))
+            {
+                int itemId = ((NetworkMessageMedium)msg).integers.get(0);
+                
+                LokemonServerLogic.pickUpGameObject(player, itemId, msg.getTimeStamp());
             }
         }
     };

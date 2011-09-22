@@ -7,6 +7,7 @@ package networkserver.Lokemon;
 
 import networkTransferObjects.Lokemon.LokemonPlayer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import networkTransferObjects.Lokemon.LokemonPotion;
 
 /**
@@ -16,13 +17,16 @@ import networkTransferObjects.Lokemon.LokemonPotion;
 public class LokemonServerVariables {
 
     public static ArrayList<LokemonPlayer> playerList = new ArrayList<LokemonPlayer>();
-    public static ArrayList<LokemonPotion> itemList = new ArrayList<LokemonPotion>();
+    public static HashMap<Integer, LokemonPotion> itemMap = new HashMap<Integer, LokemonPotion>();    
     public static final double areaOfInterest = 60.0;
 
     public static final double itemSpawnRangeMin = 50.0;
     public static final double itemSpawnRangeMax = 150.0;
     //Time in miliseconds before new items are spawned. Set at 30seconds by default
     public static final int itemSpawnTimer = 30000;
+
+    //Miliseconds to wait for additional item pickup requests before sending an ack to the player.
+    public static final long pickupLatency = 200;
 
 
 }

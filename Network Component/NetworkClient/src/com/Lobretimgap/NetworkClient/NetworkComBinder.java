@@ -49,7 +49,10 @@ public class NetworkComBinder extends Binder {
 	 */
 	public void requestLatency()
 	{
-		networkThread.requestNetworkLatency();
+		if(isConnected)
+		{
+			networkThread.requestNetworkLatency();
+		}
 	}
 	
 	/**
