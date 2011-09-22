@@ -131,6 +131,11 @@ public class NetworkComBinder extends Binder {
 		}
 	}
 	
+	public void sendDirectCommunication(NetworkMessage msg, int destPlayerID)
+	{
+		networkThread.sendDirectCommunicationMessage(msg, destPlayerID);
+	}
+	
 	/**
 	 * Attempts to send game termination request to the server. After this message, 
 	 * the network thread will shut down, and no more messages can be sent.
