@@ -1,21 +1,22 @@
 package android.lokemon.screens;
 
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import android.location.Location;
 import android.lokemon.G;
 import android.lokemon.G.TestMode;
 import android.lokemon.Game;
 import android.lokemon.R;
 import android.lokemon.G.Mode;
+import android.lokemon.Util;
 import android.lokemon.game_objects.*;
 import android.lokemon.game_objects.Region;
 import android.lokemon.popups.BagPopup;
 import android.lokemon.popups.PokemonPopup;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.*;
@@ -28,8 +29,8 @@ import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.*;
+import android.lbg.*;
 import org.mapsforge.android.maps.*;
-
 import com.example.android.apis.graphics.AnimateDrawable;
 
 public class MapScreen extends MapActivity implements View.OnClickListener{
@@ -40,10 +41,13 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 	// buttons
 	private Button poke_button;
 	private Button bag_button;
+	private TextView coins;
+	private TextView rank;
 	private ViewGroup hud;
 	
-	// battle alert dialog
+	// dialogs
 	private AlertDialog battleAlert;
+	private ProgressDialog progressDialog;
 	
 	// map overlays (declared in drawing order)
 	private ArrayWayOverlay regions;
@@ -57,8 +61,12 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 	private GeoPoint start;
 	private GeoPoint end;
 	private Location end_loc;
-	private Timer animTimer;
 	private long lastTime;
+	private Runnable animator;
+	private Handler animHandler;
+	
+	// GPS variables
+	LBGLocationAdapter location_adapter;
 	
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,58 +76,68 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         mapView.setZoomMax((byte)19);
         mapView.setZoomMin((byte)19);
         mapView.setClickable(true);
+        mapView.setMapFile("/sdcard/Lokemon/campus.map");
         
-        animTimer = new Timer();
+        // animation runnable
+        animator = new Runnable(){
+			public void run() {
+				double timeStep = (System.currentTimeMillis() - lastTime) * 0.003;
+				lastTime = System.currentTimeMillis();
+				if (end != null)
+				{
+					double newLat = start.getLatitude() + (end.getLatitude() - start.getLatitude()) * timeStep;
+					double newLon = start.getLongitude() + (end.getLongitude() - start.getLongitude()) * timeStep;
+					start = new GeoPoint(newLat, newLon);
+					Location loc = Util.fromGeoPoint(start);
+					if (loc.distanceTo(end_loc) < 1)
+					{
+						G.player.setLocation (end_loc);
+						mapController.setCenter(end);
+						end = null;
+						//animHandler.removeCallbacks(animator);
+						Log.i("Interface", "Animation done");
+					}
+					else
+					{
+						G.player.setLocation(loc);
+						mapController.setCenter(start);
+						//animHandler.postDelayed(animator, 50);
+					}
+				}
+				trainer_aura.requestRedraw();
+				animHandler.postDelayed(animator, 50);
+			}        	
+        };
+        animHandler = new Handler();
         
         // we want to disable panning and zooming using gestures (this is the only way with SDK version 2.2)
         mapView.setOnTouchListener(new View.OnTouchListener() {
 			public boolean onTouch(View v, MotionEvent e) {
 				if (e.getAction() == MotionEvent.ACTION_MOVE)
 		    		return true;
-				else if (G.testMode == TestMode.CONTROL && SystemClock.uptimeMillis() - e.getDownTime() > 500)
+				else if (e.getAction() == MotionEvent.ACTION_UP)
 				{
-					animTimer.cancel();					
-					GeoPoint point = mapView.getProjection().fromPixels((int)e.getX(), (int)e.getY());
-					end = point;		
-					end_loc = new Location("");
-					end_loc.setLatitude(end.getLatitude());
-					end_loc.setLongitude(end.getLatitude());
-					animTimer = new Timer();
-					lastTime = SystemClock.uptimeMillis();
-					animTimer.scheduleAtFixedRate(new TimerTask(){
-						public void run()
-						{
-							double timeStep = (SystemClock.uptimeMillis() - lastTime) / 333.0f;
-							lastTime = SystemClock.uptimeMillis();
-							double newLat = start.getLatitude() + (end.getLatitude() - start.getLatitude()) * timeStep;
-							double newLon = start.getLongitude() + (end.getLongitude() - start.getLongitude()) * timeStep;
-							start = new GeoPoint(newLat, newLon);
-							Location loc = new Location("");
-							loc.setLatitude(start.getLatitude());
-							loc.setLongitude(start.getLongitude());
-							if (loc.distanceTo(end_loc) < 5)
-							{
-								G.player.setLocation (end_loc);
-								mapController.setCenter(end);
-								cancel();
-							}
-							else
-							{
-								G.player.setLocation(loc);
-								mapController.setCenter(start);
-							}
+					if (G.testMode == TestMode.CONTROL)
+					{
+						if (SystemClock.uptimeMillis() - e.getDownTime() > 500)
+							return false;
+						else
+						{			
+							GeoPoint point = mapView.getProjection().fromPixels((int)e.getX(), (int)e.getY());
+							G.game.onLocationChanged(Util.fromGeoPoint(point));
+							// if framerate becomes a big problem don't animate
+							/*G.player.setLocation (end_loc);
+							mapController.setCenter(end);*/
+							return true;
 						}
-					}, 60, 60);
-					// if framerate becomes a big problem don't animate
-					/*G.player.setLocation (end_loc);
-					mapController.setCenter(end);*/
-					return true;
+					}
+					else
+						return false;
 				}
 				else
-		    		return false;
+					return false;
 			}
 		});
-        mapView.setMapFile("/sdcard/Lokemon/campus.map");
         
         mapController = mapView.getController();
         // UCT Upper Campus: (-33.957657, 18.46125)
@@ -131,6 +149,10 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         bag_button.setOnClickListener(this);
         poke_button = (Button)findViewById(R.id.poke_button);
         poke_button.setOnClickListener(this);
+        coins = (TextView)findViewById(R.id.coins_label);
+        coins.setText(G.player.coins + "");
+        rank = (TextView)findViewById(R.id.rank_label);
+        rank.setText("?");
         
         hud = (ViewGroup)findViewById(R.id.hud);
         
@@ -140,62 +162,99 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 	           public void onClick(DialogInterface dialog, int id) {dialog.cancel();}});
         battleAlert = builder.create();
         
+        progressDialog = new ProgressDialog(this, ProgressDialog.STYLE_SPINNER);
+    	progressDialog.setCancelable(false);
+        
         players = new ArrayItemizedOverlay(G.player_marker_available,this) {
         	public boolean onTap(int index) 
         	{
-        		G.game.requestBattle(index);
+        		G.game.requestPlayer(index);
         		return true;
         	}
         };
         ItemizedOverlay.boundCenterBottom(G.player_marker_busy);
         
         shadows_player = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_shadow), this);
-        items = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_item),this);
+        items = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_item),this) {
+        	public boolean onTap(int index) 
+        	{
+        		G.game.requestItem(index);
+        		return true;
+        	}
+        };
         regions = new ArrayWayOverlay(null, null);
-        //setupTrainerAura();
+        setupTrainerAura();
         setupTrainerCircle();
         
         // add trainer aura
-        //trainer_aura.addItem(G.player.aura);
+        trainer_aura.addItem(G.player.aura);
         trainer_circle.addCircle(G.player.circle);
         
         // added in drawing order
         mapView.getOverlays().add(regions);
-        //mapView.getOverlays().add(trainer_aura);
         mapView.getOverlays().add(trainer_circle);
+        mapView.getOverlays().add(trainer_aura);
         mapView.getOverlays().add(shadows_player);
         mapView.getOverlays().add(players);
         mapView.getOverlays().add(items);
         
-        // check if this is thread safe
-        /*for (NetworkPlayer p:G.game.getAllPlayers())
-        {
-        	players.addItem(p.getMarker());
-        	shadows_player.addItem(p.getShadow());
-        }*/
-        
         Log.i("Interface", "Map view created");
         
         new Game(this);
+        
+        // only use GPS for experimental group
+        if (G.testMode == TestMode.EXPERIMENT)
+        	location_adapter = new LBGLocationAdapter(this, LBGLocationAdapter.GPS_LOCATION_ONLY, 0, 2, G.game);
     }
     
-    public void onResume()
+    protected void onResume()
     {
     	super.onResume();
     	G.mode = Mode.MAP;
     	hud.setVisibility(View.VISIBLE);
+    	
+    	if (G.testMode == TestMode.EXPERIMENT)
+    		location_adapter.startTracking();
+    	
+    	lastTime = System.currentTimeMillis();
+    	animHandler.postDelayed(animator, 50);
     }
     
-    public void onPause()
+    protected void onPause()
     {
     	super.onPause();
     	hud.setVisibility(View.INVISIBLE);
+    	
+    	if (G.testMode == TestMode.EXPERIMENT)
+    		location_adapter.stopTracking();
+    	
+    	animHandler.removeCallbacks(animator);
     }
     
-    public void onDestroy()
+    protected void onActivityResult (int requestCode, int resultCode, Intent data)
+    {
+    	if (requestCode == 1)
+    	{
+    		switch (resultCode)
+    		{
+    		default:
+    			break;
+    		}
+    	}
+    }
+    
+    protected void onDestroy()
     {
     	super.onDestroy();
     	Log.i("Interface", "Map view destroyed");
+    }
+    
+    public void switchToBattle()
+    {
+    	if (progressDialog.isShowing())
+    		progressDialog.cancel();
+    	Intent intent = new Intent(this, BattleScreen.class);
+    	startActivityForResult(intent, 1);  	
     }
     
     // create alert dialog to ask for outgoing battle confirmation
@@ -204,9 +263,9 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     	battleAlert.setMessage(Html.fromHtml("Do you want to ask <i>" + playerName + "</i> to battle?"));
     	battleAlert.setButton("Send request", new DialogInterface.OnClickListener() 
 			{
-				public void onClick(DialogInterface dialog, int id){}});
+				public void onClick(DialogInterface dialog, int id){G.game.requestBattle();}});
     	battleAlert.setButton2("Don't send", new DialogInterface.OnClickListener() 
-			{public void onClick(DialogInterface dialog, int id){dialog.cancel();}});
+			{public void onClick(DialogInterface dialog, int id){G.game.rejectBattle(false);dialog.cancel();}});
 		battleAlert.show();
     }
     
@@ -216,9 +275,9 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     	battleAlert.setMessage(Html.fromHtml("Do you want to battle <i>" + playerName + "</i>?"));
 		battleAlert.setButton("Battle!", new DialogInterface.OnClickListener() 
 			{
-				public void onClick(DialogInterface dialog, int id){}});
+				public void onClick(DialogInterface dialog, int id){G.game.acceptBattle();}});
 		battleAlert.setButton2("Don't battle", new DialogInterface.OnClickListener() 
-		{public void onClick(DialogInterface dialog, int id){dialog.cancel();}});
+		{public void onClick(DialogInterface dialog, int id){G.game.rejectBattle(true);dialog.cancel();}});
 		battleAlert.show();
     }
     
@@ -228,6 +287,12 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     	Toast toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
     	toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
     	toast.show();
+    }
+    
+    public void showProgressDialog(String message)
+    {
+    	progressDialog.setMessage(message);
+    	progressDialog.show();
     }
     
     public void onClick(View v)
@@ -261,13 +326,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         anim.initialize(aura.getIntrinsicWidth(), aura.getIntrinsicHeight(), display.getWidth(), display.getHeight());
         AnimateDrawable animAura = new AnimateDrawable(aura, anim);
         
-        trainer_aura = new ArrayItemizedOverlay(animAura, this) {
-        	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition, Projection projection, byte drawZoomLevel)
-        	{
-        		super.drawOverlayBitmap(canvas, drawPosition, projection, drawZoomLevel);
-        		requestRedraw();
-        	}
-        };
+        trainer_aura = new ArrayItemizedOverlay(animAura, this);
         ItemizedOverlay.boundCenter(animAura);
         anim.startNow();
     }
@@ -315,4 +374,11 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         for (Region r:regions)
         	this.regions.addWay(r.getWay());
     }
+	
+	public void updateLocation(Location location) 
+	{
+		end = Util.fromLocation(location);
+		end_loc = location;
+		showToast("Location accuracy " + location.getAccuracy() + " metres");
+	}
 }

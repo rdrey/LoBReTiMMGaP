@@ -18,21 +18,16 @@ public abstract class BagItem {
 	public String getName () {return name;}
 	public int getCount() {return count;}	
 	public int getSprite() {return spriteID;}
+	public boolean atMax() {return count == max_count;}
 	public int getMax() {return max_count;}
 	public String getDescription () {return description;}
+	public abstract int getIndex();
 	
 	public void decrement() {if (count > 0) count--;}
 	
-	public void increment() throws MaxItemCountException 
+	public void increment()
 	{
 		if (count < max_count) 
 			count++;
-		else throw new MaxItemCountException();
-	}
-	
-	public class MaxItemCountException extends Exception
-	{
-		private static final long serialVersionUID = -2335643164296341875L;
-		public MaxItemCountException () {super("You cannot have more of that item.");}
 	}
 }

@@ -1,6 +1,8 @@
 package android.lokemon.popups;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
@@ -40,7 +42,18 @@ public class PokemonPopup extends FadePopup{
 	{
 		if (G.mode == Mode.BATTLE)
 		{
-			G.battle.switchPlayerPoke(entries.get(pos));
+			Iterator<Pokemon> i = G.player.pokemon.iterator();
+			int index = 0;
+			Pokemon selected = entries.get(pos);
+			while(i.hasNext())
+			{
+				if (i.next() == selected)
+				{
+					setResult(index);
+					break;
+				}
+				index++;
+			}
 			finish();
 		}
 		else if (G.mode == Mode.MAP)
