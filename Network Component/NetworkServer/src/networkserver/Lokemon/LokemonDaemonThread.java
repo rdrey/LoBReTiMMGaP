@@ -27,6 +27,8 @@ import networkserver.Threads.ServerDaemonThread;
 public class LokemonDaemonThread extends ServerDaemonThread{
 
     LokemonPlayer player;
+    
+    private final double DEGREE_METER_HACK = 111111;
 
     public LokemonDaemonThread()
     {
@@ -67,12 +69,14 @@ public class LokemonDaemonThread extends ServerDaemonThread{
 
             if(sMsg.equals("MapDataRequest"))
             {
-                double topLeftX = ((NetworkMessageMedium)msg).doubles.get(0);
-                double topLeftY = ((NetworkMessageMedium)msg).doubles.get(1);
-                double width = ((NetworkMessageMedium)msg).doubles.get(2);
-                double height = ((NetworkMessageMedium)msg).doubles.get(3);
+                double lat = ((NetworkMessageMedium)msg).doubles.get(0);
+                double lng = ((NetworkMessageMedium)msg).doubles.get(1);
+                double radius = ((NetworkMessageMedium)msg).doubles.get(2);
+                
+                //Convert radius from meters to degrees.
+                radius /= DEGREE_METER_HACK;              
 
-                LokemonServerLogic.sendMapDataToClient(playerID, new Rectangle2D.Double(topLeftX, topLeftY, width, height));
+                LokemonServerLogic.sendMapDataToClient(playerID, lat, lng, radius);
             }
             else if(sMsg.equals("ItemPickupRequest"))
             {

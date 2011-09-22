@@ -34,7 +34,12 @@ public class NetworkMessageLarge extends NetworkMessage {
     }
 
     public NetworkMessageLarge()
-    {
+    {    	
         super();
+        objectDict = new HashMap<String, Object>();
+        stringDict = new HashMap<String, String>();
+        integers = new ArrayList<Integer>();
+        doubles = new ArrayList<Double>();
+        strings = new ArrayList<String>();
     }
 }

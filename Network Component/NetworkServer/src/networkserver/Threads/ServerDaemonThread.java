@@ -381,6 +381,8 @@ public abstract class ServerDaemonThread extends Thread{
                     }else if (msg instanceof NetworkMessageMedium)
                     {
                         int targetPlayerId = ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-2);
+                        System.out.println("Sending Direct Communication from: "+ ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-1)
+                                + " to: "+targetPlayerId);
                         if(ServerVariables.playerThreadMap.get(targetPlayerId) != null)
                         {
                             ServerVariables.playerThreadMap.get(targetPlayerId).forwardDirectCommunication(msg);
