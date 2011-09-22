@@ -6,6 +6,7 @@ import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
+import android.lokemon.G.Action;
 import android.lokemon.G.PlayerState;
 import android.lokemon.G.Potions;
 import android.lokemon.G.Regions;
@@ -13,6 +14,7 @@ import android.lokemon.game_objects.*;
 import android.lokemon.screens.MapScreen;
 import android.util.Log;
 import android.app.Activity;
+import android.lbg.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,7 +33,7 @@ import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 
 import networkTransferObjects.NetworkMessage;
 
-public class Game {	
+public class Game implements LBGLocationAdapter.LocationListener{	
 	
 	// player list
 	private List<NetworkPlayer> players;
@@ -50,6 +52,7 @@ public class Game {
 	// interaction variables
 	private NetworkPlayer selectedPlayer;
 	private WorldPotion selectedItem;
+	private boolean networkReqLock;
 	
 	public Game(MapScreen display)
 	{
@@ -80,6 +83,8 @@ public class Game {
 		remove_players_timer = new Timer();
 		add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*1000));
 		remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*1000));
+		
+		networkReqLock = false;
 	}
 	
 	/*
@@ -153,7 +158,10 @@ public class Game {
 			if (selectedPlayer.getPlayerState() == PlayerState.BUSY)
 				display.showToast("Player is engaged in battle");
 			else
+			{
+				networkReqLock = true;
 				display.showBattleOutgoingDialog(selectedPlayer.nickname);
+			}
 		}
 		else
 			display.showToast("Player is too far away");
@@ -167,13 +175,50 @@ public class Game {
 		{
 			display.showProgressDialog("Waiting for player response...");
 			// !!!send player request!!!
-			display.switchToBattle();
+			// getBattleInitiationMessage(Action.REQUEST_BATTLE)
 		}
 	}
 	
-	public void acceptBattle()
+	public synchronized void rejectBattle(boolean sendResponse)
 	{
-		
+		networkReqLock = false;
+		if (sendResponse)
+		{
+			// !!!send rejection message (Action.REJECT_BATTLE)!!!
+		}
+	}
+	
+	public synchronized void acceptBattle()
+	{
+		// !!!send player acceptance!!!
+		// getBattleInitiationMessage(Action.ACCEPT_BATTLE)
+		initiateBattle();
+	}
+	
+	public void initiateBattle()
+	{
+		// !!!send busy status update!!!
+		display.switchToBattle();
+		networkReqLock = false;
+	}
+	
+	private NetworkMessage getBattleInitiationMessage(Action action)
+	{
+		// data in request: action, id, nick, gender, base, hp, attack, defense, speed, special, level
+		NetworkMessage init = new NetworkMessage(action.toString());
+		init.addDataInt("action", action.ordinal());
+		init.addDataInt("id", G.player.id);
+		init.addDataString("nick", G.player.nickname);
+		init.addDataInt("gender", G.player.gender.ordinal());
+		Pokemon first = G.player.pokemon.get(0);
+		init.addDataInt("base", first.index);
+		init.addDataInt("hp", first.getHP());
+		init.addDataInt("attack", first.getAttack());
+		init.addDataInt("defense", first.getDefense());
+		init.addDataInt("speed", first.getSpeed());
+		init.addDataInt("special", first.getSpecial());
+		init.addDataInt("level", first.getLevel());
+		return init;
 	}
 	
 	/*
@@ -301,5 +346,21 @@ public class Game {
 			Log.i("Items", numToBeRemoved + " items removed (total: " + items.size() + ")");
 			remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*5000));
 		}
+	}
+	
+	/*
+	 * Location listener methods
+	 */
+	
+	public void onLocationChanged(Location location) 
+	{
+		display.updateLocation(location);
+		// !!!send location update to server!!!
+		Log.i("Location", "New location received");
+	}
+
+	public void onLocationError(int errorCode) 
+	{
+		// do nothing for now
 	}
 }

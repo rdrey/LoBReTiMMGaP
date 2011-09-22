@@ -37,4 +37,5 @@ public class G {
 	public static enum Gender {FEMALE, MALE};
 	public static enum PlayerState{BUSY, AVAILABLE};
 	public static enum Regions {CAVE, FOREST, GRASSLAND, MOUNTAIN, ROUGH_TERRAIN, URBAN, WATER_EDGE, POKEMON_CENTER, POKEMART};
+	public static enum Action {REQUEST_BATTLE, ACCEPT_BATTLE, REJECT_BATTLE, REJECT_ALL};
 }

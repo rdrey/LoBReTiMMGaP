@@ -7,6 +7,7 @@ import android.lokemon.G.TestMode;
 import android.lokemon.Game;
 import android.lokemon.R;
 import android.lokemon.G.Mode;
+import android.lokemon.Util;
 import android.lokemon.game_objects.*;
 import android.lokemon.game_objects.Region;
 import android.lokemon.popups.BagPopup;
@@ -32,7 +33,7 @@ import android.lbg.*;
 import org.mapsforge.android.maps.*;
 import com.example.android.apis.graphics.AnimateDrawable;
 
-public class MapScreen extends MapActivity implements View.OnClickListener, LBGLocationAdapter.LocationListener{
+public class MapScreen extends MapActivity implements View.OnClickListener{
     
 	private MapController mapController; // used to zoom in/out and pan
 	private MapView mapView;
@@ -87,9 +88,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener, LBGL
 					double newLat = start.getLatitude() + (end.getLatitude() - start.getLatitude()) * timeStep;
 					double newLon = start.getLongitude() + (end.getLongitude() - start.getLongitude()) * timeStep;
 					start = new GeoPoint(newLat, newLon);
-					Location loc = new Location("");
-					loc.setLatitude(start.getLatitude());
-					loc.setLongitude(start.getLongitude());
+					Location loc = Util.fromGeoPoint(start);
 					if (loc.distanceTo(end_loc) < 1)
 					{
 						G.player.setLocation (end_loc);
@@ -125,13 +124,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener, LBGL
 						else
 						{			
 							GeoPoint point = mapView.getProjection().fromPixels((int)e.getX(), (int)e.getY());
-							end = point;		
-							end_loc = new Location("");
-							end_loc.setLatitude(end.getLatitude());
-							end_loc.setLongitude(end.getLongitude());
-							lastTime = System.currentTimeMillis();
-							//animHandler.removeCallbacks(animator);
-							//animHandler.postDelayed(animator, 50);
+							G.game.onLocationChanged(Util.fromGeoPoint(point));
 							// if framerate becomes a big problem don't animate
 							/*G.player.setLocation (end_loc);
 							mapController.setCenter(end);*/
@@ -205,13 +198,13 @@ public class MapScreen extends MapActivity implements View.OnClickListener, LBGL
         mapView.getOverlays().add(players);
         mapView.getOverlays().add(items);
         
-        // only use GPS for experimental group
-        if (G.testMode == TestMode.EXPERIMENT)
-        	location_adapter = new LBGLocationAdapter(this,this);
-        
         Log.i("Interface", "Map view created");
         
         new Game(this);
+        
+        // only use GPS for experimental group
+        if (G.testMode == TestMode.EXPERIMENT)
+        	location_adapter = new LBGLocationAdapter(this, LBGLocationAdapter.GPS_LOCATION_ONLY, 0, 2, G.game);
     }
     
     protected void onResume()
@@ -223,6 +216,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener, LBGL
     	if (G.testMode == TestMode.EXPERIMENT)
     		location_adapter.startTracking();
     	
+    	lastTime = System.currentTimeMillis();
     	animHandler.postDelayed(animator, 50);
     }
     
@@ -271,7 +265,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener, LBGL
 			{
 				public void onClick(DialogInterface dialog, int id){G.game.requestBattle();}});
     	battleAlert.setButton2("Don't send", new DialogInterface.OnClickListener() 
-			{public void onClick(DialogInterface dialog, int id){dialog.cancel();}});
+			{public void onClick(DialogInterface dialog, int id){G.game.rejectBattle(false);dialog.cancel();}});
 		battleAlert.show();
     }
     
@@ -283,7 +277,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener, LBGL
 			{
 				public void onClick(DialogInterface dialog, int id){G.game.acceptBattle();}});
 		battleAlert.setButton2("Don't battle", new DialogInterface.OnClickListener() 
-		{public void onClick(DialogInterface dialog, int id){dialog.cancel();}});
+		{public void onClick(DialogInterface dialog, int id){G.game.rejectBattle(true);dialog.cancel();}});
 		battleAlert.show();
     }
     
@@ -381,15 +375,10 @@ public class MapScreen extends MapActivity implements View.OnClickListener, LBGL
         	this.regions.addWay(r.getWay());
     }
 	
-	public void onLocationChanged(Location location) 
+	public void updateLocation(Location location) 
 	{
-		G.player.setLocation(location);
-		mapController.setCenter(new GeoPoint(location.getLatitude(), location.getLongitude()));
+		end = Util.fromLocation(location);
+		end_loc = location;
 		showToast("Location accuracy " + location.getAccuracy() + " metres");
-	}
-
-	public void onLocationError(int errorCode) 
-	{
-		// do nothing for now
 	}
 }
