@@ -38,6 +38,8 @@ public class LokemonDaemonThread extends ServerDaemonThread{
         this.addNetworkListener(RequestReceivedListener.class, rrListen);
         this.addNetworkListener(UpdateReceivedListener.class, urListen);
         this.addNetworkListener(ConnectionLostListener.class, clListen);
+        this.addNetworkListener(GameStateRequestReceivedListener.class, gsrrListen);
+
     }
 
     
