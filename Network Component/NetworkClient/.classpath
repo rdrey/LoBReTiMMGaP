@@ -7,7 +7,7 @@
 	<classpathentry kind="lib" path="lib/protostuff-collectionschema-1.0.1.jar" sourcepath="C:/Users/Lawrence/Documents/University/Honours/Project/Networking/ProtuStuff Serialization/protostuff-1.0.1/protostuff-1.0.1/protostuff-collectionschema/src/main/java"/>
 	<classpathentry kind="lib" path="lib/protostuff-core-1.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/protostuff-runtime-md-1.0.1.jar"/>
-	<classpathentry kind="lib" path="E:/Source Control/LoBReTiMMGaP/Network Component/NetworkClient/lib/xercesImpl-2.4.0.jar"/>
-	<classpathentry kind="lib" path="E:/Source Control/LoBReTiMMGaP/Network Component/NetworkClient/lib/jts-1.11.jar"/>
+	<classpathentry kind="lib" path="lib/jts-1.11.jar"/>
+	<classpathentry kind="lib" path="lib/xercesImpl-2.4.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
