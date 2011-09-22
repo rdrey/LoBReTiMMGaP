@@ -10,13 +10,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernatespatial.criterion.SpatialRestrictions;
 import org.mobiloc.lobgasp.model.SpatialDBEntity;
 import org.mobiloc.lobgasp.model.SpatialObject;
 import org.mobiloc.lobgasp.osm.model.POIEntity;
 import org.mobiloc.lobgasp.osm.model.WayEntity;
-import org.mobiloc.lobgasp.osm.model.Ways.ForestEntity;
 import org.mobiloc.lobgasp.osm.parser.OSMParser;
 import org.mobiloc.lobgasp.osm.parser.model.AbstractNode;
 import org.mobiloc.lobgasp.osm.parser.model.OSM;
@@ -103,9 +104,23 @@ public class SpatialProvider {
         }
     }
 
-    List<SpatialDBEntity> provide(Point p, float radius) {
+    List<SpatialDBEntity> provide(Coordinate p, double radius) {
+        return provide(SpatialDBEntity.class, p, radius);
+    }
 
-        return null;
+    List<SpatialDBEntity> provide(Class<? extends SpatialDBEntity> source, Coordinate p, double radius) {
+
+        Point point = GeometryFactory.createPointFromInternalCoord(p, example);
+        Geometry poly = point.buffer(radius);
+
+        Session s = HibernateUtil.getSessionFactory().getCurrentSession();
+        Transaction tx = s.beginTransaction();
+
+        Criteria query = s.createCriteria(source);
+        query.add(SpatialRestrictions.within("geom", poly));
+
+        tx.commit();
+        return query.list();
     }
 
     void register(Class<? extends SpatialDBEntity> source, Class<? extends SpatialObject> result) {
