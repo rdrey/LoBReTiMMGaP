@@ -65,4 +65,12 @@ public class Util {
 	{
 		return new GeoPoint(loc.getLatitude(),loc.getLongitude());
 	}
+	
+	public static Location fromSerialLocation(networkTransferObjects.UtilityObjects.Location loc)
+	{
+		Location loc2 = new Location("");
+		loc2.setLatitude(loc.getX());
+		loc2.setLongitude(loc.getY());
+		return loc2;
+	}
 }

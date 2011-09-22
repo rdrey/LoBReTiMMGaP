@@ -36,6 +36,7 @@ import org.mapsforge.android.maps.GeoPoint;
 import com.Lobretimgap.NetworkClient.*;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 import networkTransferObjects.*;
+import networkTransferObjects.Lokemon.LokemonPlayer;
 
 public class Game implements LBGLocationAdapter.LocationListener, Handler.Callback{	
 	
@@ -61,6 +62,8 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	private boolean networkReqLock;
 	private boolean networkConnected;
 	private boolean networkBound;
+	private Handler networkUpdater;
+	private Runnable updater;
 	private NetworkComBinder networkBinder;
 	private final Messenger networkEventMessenger;
 	
@@ -89,14 +92,22 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		display.addRegions(regions);
 		
 		// start testing threads 
-		add_players_timer = new Timer();
+		/*add_players_timer = new Timer();
 		remove_players_timer = new Timer();
 		add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*1000));
-		remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*1000));
+		remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*1000));*/
 		
 		// network setup
 		networkReqLock = false;
 		networkEventMessenger = new Messenger(new Handler(this));
+		networkUpdater = new Handler();
+		updater = new Runnable(){
+			public void run() {
+				networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
+				networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
+				networkUpdater.postDelayed(updater, 1000);
+				}
+		};
 	}
 	
 	/*
@@ -119,6 +130,13 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			selectedPlayer = null;
 	}
 	
+	// insert players to keep the list sorted according to id
+	private synchronized void insertPlayer(NetworkPlayer player, int index)
+	{
+		players.add(index, player);
+		display.addPlayer(player);
+	}
+	
 	// adds it to the main item list and adds it to a new item list
 	private synchronized void addItem(WorldPotion item)
 	{
@@ -131,6 +149,13 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	{
 		items.remove(item);
 		display.removeItem(item);
+	}
+	
+	// insert players to keep the list sorted according to id
+	private synchronized void insertItem(WorldPotion item, int index)
+	{
+		items.add(index, item);
+		display.addItem(item);
 	}
 	
 	/*
@@ -422,23 +447,93 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	
 	public boolean handleMessage(Message msg) 
 	{
+		Log.e(NetworkVariables.TAG, NetworkComBinder.EventType.values()[msg.what].toString());
 		switch (NetworkComBinder.EventType.values()[msg.what])
 		{
 			case CONNECTION_ESTABLISHED:
+			{
 				display.showToast("Connected to game server");
 				networkConnected = true;
+				networkUpdater.postDelayed(updater, 1000);
 				break;	
+			}
 			case CONNECTION_LOST:
+			{
 				display.showToast("Connection to game server lost");
 				networkConnected = false;
 				break;
+			}
 			case CONNECTION_FAILED:
+			{
 				display.showToast("Could not connect to game server");
 				networkConnected = false;
 				break;
-			case UPDATE_RECEIVED:
+			}
+			case GAMESTATE_RECEIVED:
+			{
+				NetworkMessageLarge nMsg = (NetworkMessageLarge)((NetworkEvent)msg.obj).getMessage();
+				String tag = nMsg.getMessage();
+				if (tag.equals("Response:GetPlayers"))
+				{
+					ArrayList<LokemonPlayer> plist = (ArrayList<LokemonPlayer>)nMsg.objectDict.get("PlayerList");
+					if (plist != null)
+					{
+						// merging old and new player lists (trying to avoid unnecessary creation of objects)
+						Iterator<NetworkPlayer> i = players.iterator();
+						Iterator<LokemonPlayer> it = plist.iterator();
+						NetworkPlayer np = i.next();
+						LokemonPlayer lp = it.next();
+						int index = 0;
+						while (i.hasNext() && it.hasNext())
+						{
+							int id = lp.getPlayerID();
+							if (np.id == id)
+							{
+								np.updateLocation(Util.fromSerialLocation(lp.getPosition()));
+								np = i.next();
+								lp = it.next();
+								index++;
+							}
+							else if (np.id < id)
+							{
+								display.removePlayer(np);
+								i.remove();
+								np = i.next();
+							}
+							else
+							{
+								networkTransferObjects.UtilityObjects.Location loc = lp.getPosition();
+								insertPlayer(new NetworkPlayer(lp.getPlayerID(), lp.getPlayerName(), Gender.values()[lp.getAvatar()], new GeoPoint(loc.getX(),loc.getY())),index);
+								lp = it.next();
+								index++;
+							}
+						}
+						while(i.hasNext())
+						{
+							display.removePlayer(np);
+							i.remove();
+							np = i.next();
+						}
+						while(it.hasNext())
+						{
+							networkTransferObjects.UtilityObjects.Location loc = lp.getPosition();
+							addPlayer(new NetworkPlayer(lp.getPlayerID(), lp.getPlayerName(), Gender.values()[lp.getAvatar()], new GeoPoint(loc.getX(),loc.getY())));
+							lp = it.next();
+						}
+					}
+				}
+				else if (tag.equals("Response:GetGameObjects"))
+				{
+					
+				}
 				break;
+			}
+			case UPDATE_RECEIVED:
+			{
+				break;
+			}
 			case DIRECT_MESSAGE_RECEIVED:
+			{
 				NetworkMessage nMsg = (NetworkMessage)((NetworkEvent)msg.obj).getMessage();
 				try
 				{
@@ -476,6 +571,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					
 				}
 				break;
+			}
 		}
 		return true;
 	}

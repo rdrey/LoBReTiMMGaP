@@ -38,6 +38,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
         this.addNetworkListener(RequestReceivedListener.class, rrListen);
         this.addNetworkListener(UpdateReceivedListener.class, urListen);
         this.addNetworkListener(ConnectionLostListener.class, clListen);
+        this.addNetworkListener(GameStateRequestReceivedListener.class, gsrrListen);
     }
 
     
@@ -117,7 +118,6 @@ public class LokemonDaemonThread extends ServerDaemonThread{
         public void EventOccured(NetworkEvent e) {
             NetworkMessage msg = (NetworkMessage)e.getMessage();
             String sMsg = msg.getMessage();
-
             if(sMsg.equals("GetPlayers"))
             {
                 LokemonServerLogic.sendPlayersToClient(player);
