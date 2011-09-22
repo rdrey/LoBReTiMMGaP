@@ -53,7 +53,9 @@ public class App {
         
         sp.initFromFile("campus.osm");
 
-        sp.addCustomAreaAroundPoint(ForestEntity.class, new Coordinate(18.461702, -33.95693));
+        sp.addCustomAreaAroundPoint(ForestEntity.class, new Coordinate(18.461702, -33.95692));
+        sp.addCustomAreaAroundPoint(FieldEntity.class, new Coordinate(18.461511, -33.957608));
+        sp.addCustomAreaAroundPoint(FieldEntity.class, new Coordinate(18.461426, -33.958010));
 
         Session s = HibernateUtil.getSessionFactory().getCurrentSession();
         Transaction tx = s.beginTransaction();
