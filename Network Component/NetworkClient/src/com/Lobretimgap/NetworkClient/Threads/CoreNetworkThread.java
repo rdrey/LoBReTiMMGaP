@@ -266,7 +266,7 @@ public abstract class CoreNetworkThread extends Thread
 	    	}else if (message instanceof NetworkMessageMedium)
 	    	{
 	    		((NetworkMessageMedium)message).integers.add(targetPlayerId);
-	    		((NetworkMessageLarge)message).integers.add(playerId);
+	    		((NetworkMessageMedium)message).integers.add(playerId);
 	    	}else
 	    	{
 	    		NetworkMessageMedium msg = new NetworkMessageMedium();

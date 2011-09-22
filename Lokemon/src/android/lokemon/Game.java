@@ -10,6 +10,8 @@ import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 import android.location.Location;
 import android.lokemon.G.Action;
+import android.lokemon.G.Gender;
+import android.lokemon.G.Mode;
 import android.lokemon.G.PlayerState;
 import android.lokemon.G.Potions;
 import android.lokemon.G.Regions;
@@ -162,19 +164,23 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	
 	public synchronized void requestPlayer(int playerIndex)
 	{
+		networkReqLock = true;
 		selectedPlayer = players.get(playerIndex);	
 		if (G.player.getDistanceFrom(selectedPlayer.getAndroidLocation()) < 20)
 		{
 			if (selectedPlayer.getPlayerState() == PlayerState.BUSY)
-				display.showToast("Player is engaged in battle");
-			else
 			{
-				networkReqLock = true;
-				display.showBattleOutgoingDialog(selectedPlayer.nickname);
+				display.showToast("Player is engaged in battle");
+				rejectBattle(false);
 			}
+			else
+				display.showBattleOutgoingDialog(selectedPlayer.nickname);
 		}
 		else
+		{
 			display.showToast("Player is too far away");
+			rejectBattle(false);
+		}
 	}
 	
 	public synchronized void requestBattle()
@@ -183,32 +189,34 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			display.showToast("Player is no longer online");
 		else
 		{
+			// send Action.REQUEST_BATTLE
+			networkBinder.sendDirectCommunication(getBattleInitiationMessage(Action.REQUEST_BATTLE), selectedPlayer.id);
 			display.showProgressDialog("Waiting for player response...");
-			// !!!send player request!!!
-			// getBattleInitiationMessage(Action.REQUEST_BATTLE)
-			
 		}
 	}
 	
 	public synchronized void rejectBattle(boolean sendResponse)
 	{
+		selectedPlayer = null;
 		networkReqLock = false;
 		if (sendResponse)
 		{
-			// !!!send rejection message (Action.REJECT_BATTLE)!!!
+			// send Action.REJECT_BATTLE
+			networkBinder.sendDirectCommunication(new NetworkMessage(Action.REJECT_BATTLE.toString()), selectedPlayer.id);
 		}
 	}
 	
 	public synchronized void acceptBattle()
 	{
-		// !!!send player acceptance!!!
-		// getBattleInitiationMessage(Action.ACCEPT_BATTLE)
+		// send Action.ACCEPT_BATTLE
+		networkBinder.sendDirectCommunication(getBattleInitiationMessage(Action.ACCEPT_BATTLE), selectedPlayer.id);
 		initiateBattle();
 	}
 	
 	public void initiateBattle()
 	{
-		// !!!send busy status update!!!
+		// send busy status update
+		networkBinder.sendGameUpdate(new NetworkMessage("EnteredBattle"));
 		display.switchToBattle();
 		networkReqLock = false;
 	}
@@ -323,7 +331,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			{
 				double lon = Math.random() * -0.005 - 33.955;
 				double lat = Math.random() * 0.0008 + 18.4606;
-				NetworkPlayer p = new NetworkPlayer(-1,"Test",G.Gender.FEMALE,new GeoPoint(lon,lat));
+				NetworkPlayer p = new NetworkPlayer(0,"Test",G.Gender.FEMALE,new GeoPoint(lon,lat));
 				addPlayer(p);
 				Log.i("Players", "Player added (total: " + players.size() + ")");
 			}
@@ -428,7 +436,45 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				display.showToast("Could not connect to game server");
 				networkConnected = false;
 				break;
-			case UPDATE_RECEIVED:		
+			case UPDATE_RECEIVED:
+				break;
+			case DIRECT_MESSAGE_RECEIVED:
+				NetworkMessage nMsg = (NetworkMessage)((NetworkEvent)msg.obj).getMessage();
+				try
+				{
+					Action action = Action.valueOf(nMsg.getMessage());
+					switch(action)
+					{
+					case REJECT_BATTLE:
+						display.cancelProgressDialog();
+						display.showToast(selectedPlayer.nickname + " rejected battle request");
+						rejectBattle(false);
+						break;
+					case ACCEPT_BATTLE:
+						initiateBattle();
+						break;
+					case REQUEST_BATTLE:
+						NetworkMessageMedium req = (NetworkMessageMedium)nMsg;
+						if (G.mode == Mode.MAP && !networkReqLock)
+						{
+							networkReqLock = true;
+							selectedPlayer = new NetworkPlayer(req.integers.get(1), req.strings.get(0), Gender.values()[req.integers.get(2)], null);
+							display.showBattleIncomingDialog(req.strings.get(0));
+						}
+						else
+							networkBinder.sendDirectCommunication(new NetworkMessage(Action.REJECT_ALL.toString()), req.integers.get(1));
+						break;
+					case REJECT_ALL:
+						display.cancelProgressDialog();
+						display.showBattleIncomingDialog(selectedPlayer.nickname + " is currently busy");
+						rejectBattle(false);
+						break;
+					}
+				}
+				catch (IllegalArgumentException e)
+				{
+					
+				}
 				break;
 		}
 		return true;

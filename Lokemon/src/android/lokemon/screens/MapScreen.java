@@ -296,6 +296,8 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     	progressDialog.show();
     }
     
+    public void cancelProgressDialog() {progressDialog.cancel();}
+    
     public void onClick(View v)
     {
     	if (v == bag_button)
