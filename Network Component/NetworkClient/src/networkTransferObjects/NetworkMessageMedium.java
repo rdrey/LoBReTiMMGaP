@@ -26,8 +26,11 @@ public class NetworkMessageMedium extends NetworkMessage{
     }
 
     public NetworkMessageMedium()
-    {
+    {    	
         super();
+        strings = new ArrayList<String>();
+        integers = new ArrayList<Integer>(); 
+        doubles = new ArrayList<Double>();
     }
 
 }
