@@ -70,10 +70,16 @@ public class App {
         System.out.println("Distance: " + distance((Point)lib.getGeom(), (Point)pub.getGeom()));
 
         serializeResults(PubEntity.class, "pub.out", s);
+
 //        serializeResults(Road.class, "roads.out", s);
 //        serializeResults(Building.class, "buildings.out", s);
 
         tx.commit();
+
+
+        List<SpatialDBEntity> provide = sp.provide(new Coordinate(18.461702, -33.95692), 0.001f);
+        Logger.getLogger(App.class.getName()).log(Level.INFO, "Found: {0}", provide.size());
+
     }
     
     public static double distance(Point a, Point b)

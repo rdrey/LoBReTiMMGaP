@@ -118,9 +118,10 @@ public class SpatialProvider {
 
         Criteria query = s.createCriteria(source);
         query.add(SpatialRestrictions.within("geom", poly));
+        List list = query.list();
 
         tx.commit();
-        return query.list();
+        return list;
     }
 
     void register(Class<? extends SpatialDBEntity> source, Class<? extends SpatialObject> result) {
