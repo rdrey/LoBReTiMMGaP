@@ -1,9 +1,7 @@
 package android.lokemon.game_objects;
 
-import android.lokemon.G;
 import android.lokemon.R;
 import android.lokemon.G.Potions;
-import android.lokemon.R.drawable;
 
 public class Potion extends BagItem {
 	
@@ -76,4 +74,6 @@ public class Potion extends BagItem {
 			return -1;
 		}
 	}
+
+	public int getIndex() {return type.ordinal()+1;}
 }

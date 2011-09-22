@@ -62,6 +62,13 @@ public class BasePokemon {
 		catch (Resources.NotFoundException e){ Log.e("Data load", e.getMessage()); }
 	}
 	
+	// for convenience this method is in both Pokemon and BasePokemon
+	public int getExperienceYield()
+	{
+		float baseTotal = attack + speed + special * 2 + defense + hp;
+		return (int)(0.64*baseTotal - 113); // formula based on linear regression
+	}
+	
 	public String getDescription()
 	{
 		String desc = name + " is a " + (type2!=null?"dual ":"") + Util.capitalize(type1.name);

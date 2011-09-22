@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.lokemon.G;
 import android.lokemon.R;
+import android.lokemon.G.Gender;
 import android.lokemon.R.id;
 import android.lokemon.R.layout;
 import android.lokemon.game_objects.Trainer;
@@ -20,6 +21,8 @@ public class IntroScreen extends Activity implements View.OnClickListener, Compo
 	private RadioButton bulbasaur;
 	private RadioButton squirtle;
 	private RadioButton charmander;
+	private RadioButton leaf;
+	private RadioButton red;
 	
 	// first, second and third screen views
 	private View [] first;
@@ -43,6 +46,8 @@ public class IntroScreen extends Activity implements View.OnClickListener, Compo
         charmander.setOnCheckedChangeListener(this);
         squirtle = (RadioButton)findViewById(R.id.squirtle);
         squirtle.setOnCheckedChangeListener(this);
+        red = (RadioButton)findViewById(R.id.red);
+        leaf = (RadioButton)findViewById(R.id.leaf);
         
         first = new View [5];
         first[0] = findViewById(R.id.nick_label);
@@ -78,9 +83,9 @@ public class IntroScreen extends Activity implements View.OnClickListener, Compo
     			
     			enableViews(second, false);
     			// create new player
-    			new Trainer(((EditText)first[1]).getText().toString(), (bulbasaur.isChecked()?0:(charmander.isChecked()?3:6)));
+    			new Trainer(((EditText)first[1]).getText().toString(), (bulbasaur.isChecked()?0:(charmander.isChecked()?3:6)),(leaf.isChecked()?Gender.FEMALE:Gender.MALE));
     			Trainer.saveTrainer(this);
-    			Intent intent = new Intent(v.getContext(), BattleScreen.class);
+    			Intent intent = new Intent(v.getContext(), MapScreen.class);
                 startActivity(intent);
     			
                 //enableViews(third, true);

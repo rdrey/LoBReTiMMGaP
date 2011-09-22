@@ -6,6 +6,7 @@ import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
+import android.lokemon.G.Action;
 import android.lokemon.G.PlayerState;
 import android.lokemon.G.Potions;
 import android.lokemon.G.Regions;
@@ -13,6 +14,7 @@ import android.lokemon.game_objects.*;
 import android.lokemon.screens.MapScreen;
 import android.util.Log;
 import android.app.Activity;
+import android.lbg.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,7 +33,7 @@ import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 
 import networkTransferObjects.NetworkMessage;
 
-public class Game {	
+public class Game implements LBGLocationAdapter.LocationListener{	
 	
 	// player list
 	private List<NetworkPlayer> players;
@@ -46,6 +48,11 @@ public class Game {
 	
 	// a reference to the screen that displays the game world
 	private MapScreen display;
+	
+	// interaction variables
+	private NetworkPlayer selectedPlayer;
+	private WorldPotion selectedItem;
+	private boolean networkReqLock;
 	
 	public Game(MapScreen display)
 	{
@@ -76,6 +83,8 @@ public class Game {
 		remove_players_timer = new Timer();
 		add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*1000));
 		remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*1000));
+		
+		networkReqLock = false;
 	}
 	
 	/*
@@ -94,17 +103,19 @@ public class Game {
 	{
 		players.remove(player);
 		display.removePlayer(player);
+		if (selectedPlayer != null && player.id == selectedPlayer.id)
+			selectedPlayer = null;
 	}
 	
 	// adds it to the main item list and adds it to a new item list
-	private void addItem(WorldPotion item)
+	private synchronized void addItem(WorldPotion item)
 	{
 		items.add(item);
 		display.addItem(item);
 	}
 	
 	// removes it from the main item list and adds it to an old item list
-	private void removeItem(WorldPotion item)
+	private synchronized void removeItem(WorldPotion item)
 	{
 		items.remove(item);
 		display.removeItem(item);
@@ -114,18 +125,100 @@ public class Game {
 	 * Methods related to initiating battles
 	 */
 	
-	public synchronized void requestBattle(int playerIndex)
+	public synchronized void requestItem(int itemIndex)
 	{
-		NetworkPlayer p = players.get(playerIndex);
-		if (G.player.getDistanceFrom(p.getAndroidLocation()) < 20)
+		selectedItem = items.get(itemIndex);
+		if (G.player.getDistanceFrom(selectedItem.getAndroidLocation()) < 20)
 		{
-			if (p.getPlayerState() == PlayerState.BUSY)
+			BagItem item = G.player.items[selectedItem.potionType.ordinal()+1];
+			if (item.atMax())
+				display.showToast("You have the max no. of " + item.getName() + "s");
+			else
+			{
+				// !!!send item request!!!
+				item.increment();
+				display.showToast("You have picked up a " + item.getName());
+				removeItem(selectedItem);
+				selectedItem = null;
+			}
+		}
+		else
+			display.showToast("Item is too far away");
+	}
+	
+	/*
+	 * Methods related to initiating battles
+	 */
+	
+	public synchronized void requestPlayer(int playerIndex)
+	{
+		selectedPlayer = players.get(playerIndex);	
+		if (G.player.getDistanceFrom(selectedPlayer.getAndroidLocation()) < 20)
+		{
+			if (selectedPlayer.getPlayerState() == PlayerState.BUSY)
 				display.showToast("Player is engaged in battle");
 			else
-				display.showBattleOutgoingDialog(p.nickname);
+			{
+				networkReqLock = true;
+				display.showBattleOutgoingDialog(selectedPlayer.nickname);
+			}
 		}
 		else
 			display.showToast("Player is too far away");
+	}
+	
+	public synchronized void requestBattle()
+	{
+		if (selectedPlayer == null)
+			display.showToast("Player is no longer online");
+		else
+		{
+			display.showProgressDialog("Waiting for player response...");
+			// !!!send player request!!!
+			// getBattleInitiationMessage(Action.REQUEST_BATTLE)
+		}
+	}
+	
+	public synchronized void rejectBattle(boolean sendResponse)
+	{
+		networkReqLock = false;
+		if (sendResponse)
+		{
+			// !!!send rejection message (Action.REJECT_BATTLE)!!!
+		}
+	}
+	
+	public synchronized void acceptBattle()
+	{
+		// !!!send player acceptance!!!
+		// getBattleInitiationMessage(Action.ACCEPT_BATTLE)
+		initiateBattle();
+	}
+	
+	public void initiateBattle()
+	{
+		// !!!send busy status update!!!
+		display.switchToBattle();
+		networkReqLock = false;
+	}
+	
+	private NetworkMessage getBattleInitiationMessage(Action action)
+	{
+		// data in request: action, id, nick, gender, base, hp, attack, defense, speed, special, level
+		NetworkMessage init = new NetworkMessage(action.toString());
+		init.addDataInt("action", action.ordinal());
+		init.addDataInt("id", G.player.id);
+		init.addDataString("nick", G.player.nickname);
+		init.addDataInt("gender", G.player.gender.ordinal());
+		Pokemon first = G.player.pokemon.get(0);
+		init.addDataInt("base", first.index);
+		init.addDataInt("hp", first.getHP());
+		init.addDataInt("attack", first.getAttack());
+		init.addDataInt("defense", first.getDefense());
+		init.addDataInt("speed", first.getSpeed());
+		init.addDataInt("special", first.getSpecial());
+		init.addDataInt("level", first.getLevel());
+		return init;
 	}
 	
 	/*
@@ -227,7 +320,7 @@ public class Game {
 				addItem(new WorldPotion(Potions.values()[(int)(Math.random()*5)],new GeoPoint(lon,lat)));
 				Log.i("Items", "Item added (total: " + items.size() + ")");
 			}
-			add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*1000));
+			add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*5000));
 		}
 	}
 	
@@ -251,7 +344,23 @@ public class Game {
 				removeItem(items.get((int)(Math.random()*items.size())));
 			Log.i("Players", numToBeRemoved + " players removed (total: " + players.size() + ")");
 			Log.i("Items", numToBeRemoved + " items removed (total: " + items.size() + ")");
-			remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*1000));
+			remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*5000));
 		}
+	}
+	
+	/*
+	 * Location listener methods
+	 */
+	
+	public void onLocationChanged(Location location) 
+	{
+		display.updateLocation(location);
+		// !!!send location update to server!!!
+		Log.i("Location", "New location received");
+	}
+
+	public void onLocationError(int errorCode) 
+	{
+		// do nothing for now
 	}
 }

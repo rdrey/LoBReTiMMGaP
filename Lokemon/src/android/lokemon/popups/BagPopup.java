@@ -35,7 +35,7 @@ public class BagPopup extends FadePopup{
 	{
 		if (G.mode == Mode.BATTLE)
 		{
-			G.battle.useItem(entries.get(pos));
+			setResult(entries.get(pos).getIndex());
 			finish();
 		}
 	}

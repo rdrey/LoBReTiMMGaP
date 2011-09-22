@@ -5,8 +5,6 @@ import android.content.*;
 import android.lokemon.Battle;
 import android.lokemon.G;
 import android.lokemon.R;
-import android.lokemon.R.id;
-import android.lokemon.R.layout;
 import android.lokemon.game_objects.Pokemon;
 import android.lokemon.popups.BagPopup;
 import android.lokemon.popups.MovesPopup;
@@ -38,6 +36,9 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	
 	private ImageView pokeballs;
 	
+	// dialogs
+	private ProgressDialog progressDialog;
+	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         setContentView(R.layout.battle);
@@ -66,6 +67,10 @@ public class BattleScreen extends Activity implements View.OnClickListener{
         opp_bar = (ProgressBar)findViewById(R.id.opp_health);
         
         pokeballs = (ImageView)findViewById(R.id.pokeballs);
+        
+        // set up dialogs
+        progressDialog = new ProgressDialog(this, ProgressDialog.STYLE_SPINNER);
+        progressDialog.setCancelable(false);
         new Battle(this);
 	}
 	
@@ -74,20 +79,37 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 		if (v == switch_button)
 		{
 			Intent intent = new Intent(v.getContext(), PokemonPopup.class);
-	        startActivityForResult(intent, 0);
+	        startActivityForResult(intent, 1);
 		}
 		else if (v == attack_button)
 		{
 			Intent intent = new Intent(v.getContext(), MovesPopup.class);
-	        startActivityForResult(intent, 0);
+	        startActivityForResult(intent, 2);
 		}
 		else if (v == bag_button)
 		{
 			Intent intent = new Intent(v.getContext(), BagPopup.class);
-	        startActivityForResult(intent, 0);
+	        startActivityForResult(intent, 3);
 		}
 		else if (v == run_button)
 			onBackPressed();
+	}
+	
+	protected void onActivityResult (int requestCode, int resultCode, Intent data)
+	{
+		switch(requestCode)
+		{
+		case 1:
+			G.battle.switchPlayerPoke(resultCode);
+			break;
+		case 2:
+			G.battle.selectMove(resultCode);
+			showProgressDialog("Waiting for opponent...");
+			break;
+		case 3:
+			G.battle.useItem(resultCode);
+			break;
+		}
 	}
 	
 	// players have to leave battle by explicitly running away
@@ -139,6 +161,12 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 		opp_poke.setImageResource(newPoke.getSpriteNormal());
 		setOppPokeDetails(newPoke);
 	}
+	
+	public void showProgressDialog(String message)
+    {
+    	progressDialog.setMessage(message);
+    	progressDialog.show();
+    }
 	
 	// display new player Pokemon stats
 	public void setPlayerPokeDetails(Pokemon poke)

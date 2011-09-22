@@ -3,6 +3,9 @@ package android.lokemon;
 import java.util.Collection;
 import java.util.LinkedList;
 import org.json.*;
+import org.mapsforge.android.maps.GeoPoint;
+
+import android.location.Location;
 
 public class Util {
 
@@ -50,4 +53,16 @@ public class Util {
 		return copy;
 	}
 
+	public static Location fromGeoPoint(GeoPoint point)
+	{
+		Location loc = new Location("");
+		loc.setLatitude(point.getLatitude());
+		loc.setLongitude(point.getLongitude());
+		return loc;
+	}
+	
+	public static GeoPoint fromLocation(Location loc)
+	{
+		return new GeoPoint(loc.getLatitude(),loc.getLongitude());
+	}
 }
