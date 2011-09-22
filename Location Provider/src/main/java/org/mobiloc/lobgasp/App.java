@@ -3,6 +3,8 @@ package org.mobiloc.lobgasp;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.io.WKBReader;
+import com.vividsolutions.jts.io.WKTWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -60,8 +62,13 @@ public class App {
         Session s = HibernateUtil.getSessionFactory().getCurrentSession();
         Transaction tx = s.beginTransaction();
 
-        List so = s.createQuery("from PubEntity where name like 'UCT Club'").list();
+        List so = s.createQuery("from StepsEntity where name like 'JammieSteps'").list();
         PubEntity pub = (PubEntity) so.get(0);
+        
+        WKTWriter wkt = new WKTWriter();
+        System.out.println(wkt.write(pub.getGeom()));
+        
+        
         List cs = s.createQuery("from LibraryEntity where name like 'Rondebosch Public Library'").list();
         LibraryEntity lib = (LibraryEntity) cs.get(0);
 
@@ -75,6 +82,8 @@ public class App {
 //        serializeResults(Building.class, "buildings.out", s);
 
         tx.commit();
+        
+        
 
 
         List<SpatialDBEntity> provide = sp.provide(new Coordinate(18.461702, -33.95692), 0.001f);

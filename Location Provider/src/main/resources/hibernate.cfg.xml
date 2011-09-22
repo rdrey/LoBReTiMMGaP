@@ -3,8 +3,9 @@
 <hibernate-configuration>
     <session-factory>
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
-        <property name="hibernate.connection.url">jdbc:postgresql://localhost/mobiloc</property>
-        <property name="hibernate.connection.username">rainerdreyer</property>
+        <property name="hibernate.connection.url">jdbc:postgresql://localhost/gissy</property>
+        <property name="hibernate.connection.username">postgres</property>
+        <property name="hibernate.connection.password">password</property>
         <property name="hibernate.current_session_context_class">org.hibernate.context.ThreadLocalSessionContext</property>
         
         <property name="hibernate.dialect">org.hibernatespatial.postgis.PostgisDialect</property>

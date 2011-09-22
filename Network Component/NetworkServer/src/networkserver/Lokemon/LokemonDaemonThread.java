@@ -94,6 +94,8 @@ public class LokemonDaemonThread extends ServerDaemonThread{
                 double x = ((NetworkMessageMedium)msg).doubles.get(0);
                 double y = ((NetworkMessageMedium)msg).doubles.get(1);
                 player.setPosition(new Location(x, y));
+                
+                System.out.println("Position update: Latitude = "+x+", Longitude = "+y);
             }
             else if (sMsg.equals("EnteredBattle"))
             {

@@ -31,6 +31,7 @@ public class LokemonServerLogic extends Thread{
     static void sendMapDataToClient(int playerId, Rectangle2D.Double area)
     {
         //Send XML map data in the region to the player.
+        
     }
 
     /**
