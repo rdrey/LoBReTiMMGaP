@@ -5,6 +5,7 @@ import networkTransferObjects.NetworkMessage;
 import android.os.Binder;
 import com.Lobretimgap.NetworkClient.EventListeners.*;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
+import com.Lobretimgap.NetworkClient.Exceptions.NotYetRegisteredException;
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
 import com.Lobretimgap.NetworkClient.Utility.GameClock;
 
@@ -188,6 +189,23 @@ public class NetworkComBinder extends Binder {
 	public GameClock getGameClock()
 	{
 		return networkThread.gameClock;
+	}
+	
+	/***
+	 * Method to get what this players ID is. The player ID is used by the networking component to uniquely 
+	 * identify a client.
+	 * @return
+	 */
+	public int getPlayerId()
+	{
+		if(networkThread.playerId != -1)
+		{
+			return networkThread.playerId;
+		}
+		else
+		{
+			throw new NotYetRegisteredException("PlayerID is not yet available! Need to register with the server first.");
+		}
 	}
 	
 	/***

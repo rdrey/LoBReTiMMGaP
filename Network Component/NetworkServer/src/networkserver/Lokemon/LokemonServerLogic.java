@@ -8,6 +8,8 @@ package networkserver.Lokemon;
 import com.vividsolutions.jts.geom.Coordinate;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import networkTransferObjects.Lokemon.LokemonPlayer;
 import networkTransferObjects.Lokemon.LokemonPotion;
@@ -124,6 +126,13 @@ public class LokemonServerLogic extends Thread{
                 }
             }
 
+            //Riz specifically wants it ordered by playerID and sorted ascendingly.
+            Collections.sort(players, new Comparator<LokemonPlayer>() {
+
+                public int compare(LokemonPlayer o1, LokemonPlayer o2) {
+                    return o1.getPlayerID() - o2.getPlayerID();
+                }
+            });
             msg.objectDict.put("PlayerList", players);
             ServerVariables.playerThreadMap.get(player.getPlayerID()).sendGameStateUpdate(msg);
         }
@@ -153,6 +162,14 @@ public class LokemonServerLogic extends Thread{
                     }
                 }
             }
+            
+            //Sort in ascending order for Riz
+            Collections.sort(pots, new Comparator<LokemonPotion>() {
+
+                public int compare(LokemonPotion o1, LokemonPotion o2) {
+                    return o1.getId() - o2.getId();
+                }
+            });
 
             msg.objectDict.put("ItemList", pots);
             ServerVariables.playerThreadMap.get(player.getPlayerID()).sendGameStateUpdate(msg);

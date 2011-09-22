@@ -55,7 +55,7 @@ public abstract class CoreNetworkThread extends Thread
     ByteBuffer b = ByteBuffer.allocate(4);
     private boolean connected = false;
     private boolean awaitingLatencyResponse = false;
-    private int playerId = -1;
+    public int playerId = -1;
     
     private static Schema<PlayerRegistrationMessage> playerRegSchema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
     private static Schema<NetworkMessageMedium> mediumMsgSchema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
