@@ -1,27 +1,16 @@
-
 package networkTransferObjects;
 
-import java.io.Serializable;
-import java.util.HashMap;
-
-import com.Lobretimgap.NetworkClient.NetworkVariables;
-
-
 /**
- * Used to pass information between the client and the server
+ * Used to pass information between the client and the server.
  * @date 2011/08/02
  * @author Lawrence Webley
  */
-public class NetworkMessage implements Serializable
-{
-    /**
-	 * Used to ensure that the server object and client object are treated as identical objects.
-	 */
-	private static final long serialVersionUID = 4259455514140197693L;
+public class NetworkMessage {
 
-	//Used internally for network message classification.
+    //Used internally for network message classification.
     public enum MessageType //Comments show where the type can be received
     {
+
         UPDATE_MESSAGE, //Client and Server
         REQUEST_MESSAGE,//Client and Server
         INITIAL_GAME_STATE_MESSAGE, //Client only
@@ -32,78 +21,45 @@ public class NetworkMessage implements Serializable
         PEER_LIST_MESSAGE, //Client only
         PEER_LIST_REQUEST_MESSAGE, //Server Only
         LATENCY_REQUEST_MESSAGE, //Server & Client.
-        LATENCY_RESPONSE_MESSAGE //Server & Client
-
+        LATENCY_RESPONSE_MESSAGE, //Server & Client
+        DIRECT_COMMUNICATION_MESSAGE, //client to client (router through server sometimes)
+        TIME_REQUEST, //Sent from client to server, to request server time
+        TIME_RESPONSE //sent from server to client, providing server time.
     }
-
-    private HashMap<String, String> strings;
-    private HashMap<String, Integer> ints;
-    private HashMap<String, Object> objects;
     private MessageType messageType;
-
     private String primeMessage;
+    private long timeStamp;
 
-    public NetworkMessage(String message)
-    {
-        primeMessage = message;
-        strings = new HashMap<String, String>(NetworkVariables.initialNetworkMessageMapSize);
-        ints = new HashMap<String, Integer>(NetworkVariables.initialNetworkMessageMapSize);
-        objects = new HashMap<String, Object>(NetworkVariables.initialNetworkMessageMapSize);
-    }
-   
-    public void addDataString(String key, String value)
-    {
-        strings.put(key, value);
+    public NetworkMessage(String message) {
+        setMessage(message);
     }
 
-    public void addDataInt(String key, int value)
-    {
-        ints.put(key, new Integer(value));
+    public NetworkMessage() {
+        primeMessage = "";
     }
 
-    /*
-     * Adds an object to this network message. The object must implement serializable
-     */
-    public void addDataObject(String key, Object value) throws IllegalArgumentException
-    {
-        if(value instanceof java.io.Serializable)
-        {
-            objects.put(key, value);
-        }
-        else
-        {
-            throw new IllegalArgumentException("Object is not serializable!");
-        }
-    }
-
-    public String getDataString(String key)
-    {
-        return strings.get(key);
-    }
-
-    public int getDataInt(String key)
-    {
-        return ints.get(key).intValue();
-    }
-
-    public Object getDataObject(String key)
-    {
-        return objects.get(key);
-    }
-
-    public String getMessage()
-    {
+    public String getMessage() {
         return primeMessage;
     }
 
+    public void setMessage(String message) {
+        this.primeMessage = message;
+    }
+
     //Used internally for network message classification. Don't use this.
-    public void setMessageType(MessageType mType)
-    {
+    public void setMessageType(MessageType mType) {
         messageType = mType;
     }
 
-    public MessageType getMessageType()
-    {
+    public MessageType getMessageType() {
         return messageType;
+    }
+
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
     }
 }

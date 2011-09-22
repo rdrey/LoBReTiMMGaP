@@ -1,6 +1,7 @@
 package networkserver;
 
-import networkserver.Threads.CustomDaemonThread;
+import networkserver.Lokemon.LokemonDaemonThread;
+import networkserver.Lokemon.LokemonServerLogic;
 import networkserver.Threads.ServerCoreThread;
 
 /**
@@ -19,8 +20,13 @@ public class Main
         //Start the core server thread. In an implementation, the game engine could
         //start this thread, or it could be started by this thread.
 
-       ServerCoreThread sct = new ServerCoreThread(new ServerCustomisation<CustomDaemonThread>(CustomDaemonThread.class));
-       sct.start(); 
+       //Start networking component
+       ServerCoreThread sct = new ServerCoreThread(new ServerCustomisation<LokemonDaemonThread>(LokemonDaemonThread.class));
+       sct.start();
+
+       //Start game logic component
+       LokemonServerLogic lsl = new LokemonServerLogic();
+       lsl.start();
     }
 
 }

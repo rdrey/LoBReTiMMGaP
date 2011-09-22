@@ -4,13 +4,10 @@ package networkserver.Events;
  * @date 2011/08/02
  * @author Lawrence Webley
  */
+@SuppressWarnings("serial")
 public class NetworkEvent extends java.util.EventObject {
-    /**
-     * 
-     */
-    private static final long serialVersionUID = -2044906726180328059L;
 
-    Object message;
+	Object message;
 
     public NetworkEvent(Object source, Object message)
     {

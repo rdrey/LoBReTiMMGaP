@@ -6,6 +6,8 @@ import android.os.Binder;
 import com.Lobretimgap.NetworkClient.EventListeners.*;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
+import com.Lobretimgap.NetworkClient.Utility.GameClock;
+
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -18,6 +20,18 @@ public class NetworkComBinder extends Binder {
 	public NetworkComBinder(CoreNetworkThread thread)
 	{
 		networkThread = thread;
+		
+		addListener(ConnectionEstablishedListener.class, new ConnectionEstablishedListener() {			
+			public void EventOccured(NetworkEvent e) {
+				isConnected = true;							 			
+			}
+		});
+		
+		addListener(ConnectionLostListener.class, new ConnectionLostListener() {			
+			public void EventOccured(NetworkEvent e) {			
+				isConnected = false;									
+			}
+		});
 	}
 	
 	/**
@@ -35,7 +49,10 @@ public class NetworkComBinder extends Binder {
 	 */
 	public void requestLatency()
 	{
-		networkThread.requestNetworkLatency();
+		if(isConnected)
+		{
+			networkThread.requestNetworkLatency();
+		}
 	}
 	
 	/**
@@ -157,6 +174,30 @@ public class NetworkComBinder extends Binder {
 		}
 	}	
 	
+	/***
+	 * Returns a clock that is in sync with the server time, allowing for calculations using the network message
+	 * time stamps. Adjusting the clock delta is not advised, as it will cause the network component to get 
+	 * out of sync with the server. Running forceTimeSync will remedy the problem if it occurs.
+	 * @return
+	 */
+	public GameClock getGameClock()
+	{
+		return networkThread.gameClock;
+	}
+	
+	/***
+	 * Restarts the time synchronisation protocol with the server, in case our clocks have
+	 * gone out of sync. Possible causes of this would be changing from Wifi to EDGE.
+	 * If the protocol is already in progress this call is ignored.
+	 */
+	public void forceTimeSync()
+	{
+		if(isConnected)
+		{
+			networkThread.requestNetworkTimeSync();
+		}
+	}
+	
 	/**
 	 * Use this method to sign up for various events from the network thread. This is the 
 	 * networking component informs the client side game about messages received from the server.
@@ -195,6 +236,7 @@ public class NetworkComBinder extends Binder {
 		CONNECTION_ESTABLISHED,
 		CONNECTION_LOST,
 		CONNECTION_FAILED,
+		DIRECT_MESSAGE_RECEIVED,
 		GAMESTATE_RECEIVED,
 		LATENCY_UPDATE_RECEIVED,
 		PARTIAL_GAMESTATE_RECEIVED,
@@ -242,6 +284,17 @@ public class NetworkComBinder extends Binder {
 				} catch (RemoteException e1) {					
 					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
 				}					
+			}
+		});
+		
+		addListener(DirectMessageListener.class, new DirectMessageListener() {			
+			public void EventOccured(NetworkEvent e) {
+				try {
+					eventMessenger.send(Message.obtain(null, EventType.DIRECT_MESSAGE_RECEIVED.ordinal(), e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}	
+				
 			}
 		});
 		

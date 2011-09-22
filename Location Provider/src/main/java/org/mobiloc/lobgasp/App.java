@@ -1,5 +1,7 @@
 package org.mobiloc.lobgasp;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,11 +15,17 @@ import org.hibernate.Session;
 import org.mobiloc.lobgasp.util.HibernateUtil;
 import org.hibernate.Transaction;
 import org.mobiloc.lobgasp.model.SpatialDBEntity;
-import org.mobiloc.lobgasp.model.EntityToObject;
-import org.mobiloc.lobgasp.osm.model.BuildingEntity;
-import org.mobiloc.lobgasp.osm.model.LibraryEntity;
-import org.mobiloc.lobgasp.osm.model.POIEntity;
-import org.mobiloc.lobgasp.osm.model.PubEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.BuildingEntity;
+import org.mobiloc.lobgasp.osm.model.POIs.LibraryEntity;
+import org.mobiloc.lobgasp.osm.model.POIs.PubEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.FieldEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.ForestEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.NatureReserveEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.ParkingEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.ReservoirEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.RoadEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.StepsEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.TunnelEntity;
 
 /**
  * Hello world!
@@ -32,9 +40,22 @@ public class App {
         //TODO interface for custom objects
         sp.register(PubEntity.class, PubEntity.class);
         sp.register(LibraryEntity.class, LibraryEntity.class);
+
+        sp.register(TunnelEntity.class, TunnelEntity.class);
+        sp.register(StepsEntity.class, StepsEntity.class);
+        sp.register(ParkingEntity.class, ParkingEntity.class);
+        sp.register(ForestEntity.class, ForestEntity.class);
+        sp.register(FieldEntity.class, FieldEntity.class);
+        sp.register(ReservoirEntity.class, ReservoirEntity.class);
+        sp.register(NatureReserveEntity.class, NatureReserveEntity.class);
+        sp.register(RoadEntity.class, RoadEntity.class);
+        sp.register(BuildingEntity.class, BuildingEntity.class);
+        
         sp.initFromFile("campus.osm");
 
-        //
+        sp.addCustomAreaAroundPoint(ForestEntity.class, new Coordinate(18.461702, -33.95692));
+        sp.addCustomAreaAroundPoint(FieldEntity.class, new Coordinate(18.461511, -33.957608));
+        sp.addCustomAreaAroundPoint(FieldEntity.class, new Coordinate(18.461426, -33.958010));
 
         Session s = HibernateUtil.getSessionFactory().getCurrentSession();
         Transaction tx = s.beginTransaction();
@@ -49,10 +70,16 @@ public class App {
         System.out.println("Distance: " + distance((Point)lib.getGeom(), (Point)pub.getGeom()));
 
         serializeResults(PubEntity.class, "pub.out", s);
+
 //        serializeResults(Road.class, "roads.out", s);
 //        serializeResults(Building.class, "buildings.out", s);
 
         tx.commit();
+
+
+        List<SpatialDBEntity> provide = sp.provide(new Coordinate(18.461702, -33.95692), 0.001f);
+        Logger.getLogger(App.class.getName()).log(Level.INFO, "Found: {0}", provide.size());
+
     }
     
     public static double distance(Point a, Point b)

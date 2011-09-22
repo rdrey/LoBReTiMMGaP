@@ -1,87 +1,48 @@
 
 package networkTransferObjects;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import networkserver.ServerCustomisation;
 
-
+import java.util.ArrayList;
 
 /**
  * A once off message sent to the server which should contain any initialisation information
  * required to create an instance of the player in the servers game world. This should at least
- * include a player name and id, but could also include data such as starting locations, experience,
+ * include a player name, but could also include data such as starting locations, experience,
  * initial client states, etc.
+ *
+ * Always add new fields to the TOP of the file. This will facilitate correct backward compatibility with serialisation.
  * @date 2011/08/02
  * @author Lawrence Webley
  */
-public class PlayerRegistrationMessage implements Serializable{
-    /**
-	 * Used to ensure conformity across the network connection.
-	 */
-	private static final long serialVersionUID = 6520835168631802917L;
-	public String playerName;
-        public int playerID;
+public class PlayerRegistrationMessage extends NetworkMessage{
 
-    private HashMap<String, String> strings;
-    private HashMap<String, Integer> ints;
-    private HashMap<String, Object> objects;
+    public ArrayList<Integer> integers;
+    public ArrayList<String> strings;
+    public String playerName;
+    public int playerID;
+
+
 
     public PlayerRegistrationMessage(String playerName)
-    {    	
+    {
+    	super("playerRegistration");
     	this.playerName = playerName;
-
-    	strings = new HashMap<String, String>(ServerCustomisation.initialNetworkMessageMapSize);
-        ints = new HashMap<String, Integer>(ServerCustomisation.initialNetworkMessageMapSize);
-        objects = new HashMap<String, Object>(ServerCustomisation.initialNetworkMessageMapSize);
+        playerID = -1;
+        strings = new ArrayList<String>();
+        integers = new ArrayList<Integer>();
     }
-    
+
     public PlayerRegistrationMessage(int playerId)
     {
+        super("playerRegistration");
         playerID = playerId;
-        strings = new HashMap<String, String>(ServerCustomisation.initialNetworkMessageMapSize);
-        ints = new HashMap<String, Integer>(ServerCustomisation.initialNetworkMessageMapSize);
-        objects = new HashMap<String, Object>(ServerCustomisation.initialNetworkMessageMapSize);
+        playerName = "Player";
+        strings = new ArrayList<String>();
+        integers = new ArrayList<Integer>();
     }
 
-
-    public void addDataString(String key, String value)
+    public PlayerRegistrationMessage()
     {
-        strings.put(key, value);
-    }
-
-    public void addDataInt(String key, int value)
-    {
-        ints.put(key, new Integer(value));
-    }
-
-    /*
-     * Adds an object to this network message. The object must implement serializable
-     */
-    public void addDataObject(String key, Object value) throws IllegalArgumentException
-    {
-        if(value instanceof java.io.Serializable)
-        {
-            objects.put(key, value);
-        }
-        else
-        {
-            throw new IllegalArgumentException("Object is not serializable!");
-        }
-    }
-
-    public String getDataString(String key)
-    {
-        return strings.get(key);
-    }
-
-    public int getDataInt(String key)
-    {
-        return ints.get(key).intValue();
-    }
-
-    public Object getDataObject(String key)
-    {
-        return objects.get(key);
+    	super("playerRegistration");
     }
 }

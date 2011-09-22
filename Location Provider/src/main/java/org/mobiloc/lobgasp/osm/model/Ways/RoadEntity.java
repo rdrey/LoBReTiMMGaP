@@ -1,12 +1,8 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-package org.mobiloc.lobgasp.osm.model;
+package org.mobiloc.lobgasp.osm.model.Ways;
 
 import javax.persistence.*;
 import org.mobiloc.lobgasp.model.SpatialDBEntity;
+import org.mobiloc.lobgasp.osm.model.WayEntity;
 import org.mobiloc.lobgasp.osm.parser.model.AbstractNode;
 import org.mobiloc.lobgasp.osm.parser.model.Way;
 
@@ -16,10 +12,7 @@ import org.mobiloc.lobgasp.osm.parser.model.Way;
  */
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public class RoadEntity extends SpatialDBEntity{
-    private String name;
-
-    private long OSMid;
+public class RoadEntity extends WayEntity {
 
     @Override
     public SpatialDBEntity construct(AbstractNode in)
@@ -38,31 +31,4 @@ public class RoadEntity extends SpatialDBEntity{
         return false;
     }
 
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @param name the name to set
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * @return the OSMid
-     */
-    public long getOSMid() {
-        return OSMid;
-    }
-
-    /**
-     * @param OSMid the OSMid to set
-     */
-    public void setOSMid(long OSMid) {
-        this.OSMid = OSMid;
-    }
 }

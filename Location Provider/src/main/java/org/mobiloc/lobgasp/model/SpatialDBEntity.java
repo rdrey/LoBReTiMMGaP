@@ -24,7 +24,7 @@ import org.mobiloc.lobgasp.osm.parser.model.OSMNode;
  */
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public class SpatialDBEntity implements Serializable, EntityToObject {
+public class SpatialDBEntity extends SpatialObject implements Serializable, EntityToObject {
     int id;
 
     public SpatialDBEntity() {}

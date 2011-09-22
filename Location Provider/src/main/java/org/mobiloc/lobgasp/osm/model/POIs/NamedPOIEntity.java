@@ -3,10 +3,11 @@
  * and open the template in the editor.
  */
 
-package org.mobiloc.lobgasp.osm.model;
+package org.mobiloc.lobgasp.osm.model.POIs;
 
 import javax.persistence.*;
 import org.mobiloc.lobgasp.model.SpatialDBEntity;
+import org.mobiloc.lobgasp.osm.model.POIEntity;
 import org.mobiloc.lobgasp.osm.parser.model.AbstractNode;
 import org.mobiloc.lobgasp.osm.parser.model.OSMNode;
 

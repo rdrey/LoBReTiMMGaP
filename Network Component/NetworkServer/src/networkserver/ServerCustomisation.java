@@ -18,6 +18,9 @@ public class ServerCustomisation <T extends ServerDaemonThread>
     public static final int initialNetworkMessageMapSize = 8;
     public static final int port = 10282;
     
+    //Milliseconds between keep alive network messages
+    public static final int keepAliveTimer = 200;
+    
     //Stores an the type of class, so we can instantiate them
     private Class<T> ServerDaemonThreadType;
 
