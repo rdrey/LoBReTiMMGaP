@@ -104,11 +104,11 @@ public class SpatialProvider {
         }
     }
 
-    List<SpatialDBEntity> provide(Coordinate p, double radius) {
+    public List<SpatialDBEntity> provide(Coordinate p, double radius) {
         return provide(SpatialDBEntity.class, p, radius);
     }
 
-    List<SpatialDBEntity> provide(Class<? extends SpatialDBEntity> source, Coordinate p, double radius) {
+    public List<SpatialDBEntity> provide(Class<? extends SpatialDBEntity> source, Coordinate p, double radius) {
 
         Point point = GeometryFactory.createPointFromInternalCoord(p, example);
         Geometry poly = point.buffer(radius);

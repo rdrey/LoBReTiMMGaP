@@ -5,14 +5,21 @@
 
 package networkserver.Lokemon;
 
+import com.vividsolutions.jts.geom.Coordinate;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.List;
 import networkTransferObjects.Lokemon.LokemonPlayer;
 import networkTransferObjects.Lokemon.LokemonPotion;
+import networkTransferObjects.Lokemon.LokemonSpatialObject;
 import networkTransferObjects.NetworkMessage;
 import networkTransferObjects.NetworkMessageLarge;
 import networkTransferObjects.UtilityObjects.Location;
 import networkserver.ServerVariables;
+import org.mobiloc.lobgasp.App;
+import org.mobiloc.lobgasp.SpatialProvider;
+import org.mobiloc.lobgasp.model.SpatialDBEntity;
+import org.mobiloc.lobgasp.osm.model.Ways.*;
 
 /**
  * @date 2011/09/16
@@ -28,9 +35,61 @@ public class LokemonServerLogic extends Thread{
     private static ArrayList<ItemPickupRequest> requestAccumulationBuffer = new ArrayList<ItemPickupRequest>();
 
     //Send the map data in the specified area to the player
-    static void sendMapDataToClient(int playerId, Rectangle2D.Double area)
+    static void sendMapDataToClient(int playerId, double lat, double lng, double radius)
     {
         //Send XML map data in the region to the player.
+        SpatialProvider sp = new SpatialProvider();
+        List<SpatialDBEntity> entities = sp.provide(new Coordinate(lat, lng),radius);
+        
+        ArrayList<LokemonSpatialObject> gameObjects = new ArrayList<LokemonSpatialObject>();
+        
+        for(SpatialDBEntity ent : entities)
+        {
+            LokemonSpatialObject so = null;
+            if(ent instanceof FieldEntity)
+            {
+                so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.GRASSLAND);
+            }
+            else if(ent instanceof ForestEntity)
+            {
+                so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.FOREST);
+            }
+            else if(ent instanceof NatureReserveEntity)
+            {
+                so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.MOUNTAIN);
+            }
+            else if(ent instanceof ParkingEntity)
+            {
+                so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.URBAN);
+            }
+            else if(ent instanceof ReservoirEntity)
+            {
+                so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.WATER);
+            }
+            else if(ent instanceof StepsEntity)
+            {
+                so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.ROUGH);
+            }
+            else if(ent instanceof TunnelEntity)
+            {
+                so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.CAVE);
+            }  
+            
+            if(so != null)
+            {
+                so.setGeomBytes(ent.getGeom());
+                gameObjects.add(so);
+            }
+        }
+        
+        NetworkMessageLarge msg = new NetworkMessageLarge("MapDataResponse");
+        msg.doubles.add(lat);
+        msg.doubles.add(lng);
+        msg.doubles.add(radius);        
+        msg.objectDict.put("SpatialObjects", gameObjects);
+        
+        System.out.println("Server request for "+ gameObjects.size() + "spatial objects!");
+        ServerVariables.playerThreadMap.get(playerId).sendGameStateUpdate(msg);
         
     }
 
@@ -87,7 +146,8 @@ public class LokemonServerLogic extends Thread{
                 //If the player has a valid location
                 if(pot.getPosition() != null)
                 {
-                    if(pot.getPosition().getDistanceFrom(player.getPosition()) < LokemonServerVariables.areaOfInterest)
+                    if(App.distFrom(pot.getPosition().getX(), pot.getPosition().getY(),
+                            player.getPosition().getX(), player.getPosition().getY()) < LokemonServerVariables.areaOfInterest)
                     {
                         pots.add(pot);
                     }
