@@ -1,10 +1,13 @@
 package android.lokemon;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.res.*;
 import android.graphics.Paint;
 import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
-import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
 import android.lokemon.G.Action;
 import android.lokemon.G.PlayerState;
@@ -15,25 +18,24 @@ import android.lokemon.screens.MapScreen;
 import android.util.Log;
 import android.app.Activity;
 import android.lbg.*;
+import android.os.Handler;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.IBinder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.mapsforge.android.maps.GeoPoint;
 
-//networking components
-import com.Lobretimgap.NetworkClient.NetworkComBinder;
-import com.Lobretimgap.NetworkClient.NetworkComService;
-import com.Lobretimgap.NetworkClient.NetworkVariables;
+import com.Lobretimgap.NetworkClient.*;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
+import networkTransferObjects.*;
 
-import networkTransferObjects.NetworkMessage;
-
-public class Game implements LBGLocationAdapter.LocationListener{	
+public class Game implements LBGLocationAdapter.LocationListener, Handler.Callback{	
 	
 	// player list
 	private List<NetworkPlayer> players;
@@ -52,7 +54,13 @@ public class Game implements LBGLocationAdapter.LocationListener{
 	// interaction variables
 	private NetworkPlayer selectedPlayer;
 	private WorldPotion selectedItem;
+	
+	// network objects
 	private boolean networkReqLock;
+	private boolean networkConnected;
+	private boolean networkBound;
+	private NetworkComBinder networkBinder;
+	private final Messenger networkEventMessenger;
 	
 	public Game(MapScreen display)
 	{
@@ -84,7 +92,9 @@ public class Game implements LBGLocationAdapter.LocationListener{
 		add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*1000));
 		remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*1000));
 		
+		// network setup
 		networkReqLock = false;
+		networkEventMessenger = new Messenger(new Handler(this));
 	}
 	
 	/*
@@ -176,6 +186,7 @@ public class Game implements LBGLocationAdapter.LocationListener{
 			display.showProgressDialog("Waiting for player response...");
 			// !!!send player request!!!
 			// getBattleInitiationMessage(Action.REQUEST_BATTLE)
+			
 		}
 	}
 	
@@ -205,20 +216,23 @@ public class Game implements LBGLocationAdapter.LocationListener{
 	private NetworkMessage getBattleInitiationMessage(Action action)
 	{
 		// data in request: action, id, nick, gender, base, hp, attack, defense, speed, special, level
-		NetworkMessage init = new NetworkMessage(action.toString());
-		init.addDataInt("action", action.ordinal());
-		init.addDataInt("id", G.player.id);
-		init.addDataString("nick", G.player.nickname);
-		init.addDataInt("gender", G.player.gender.ordinal());
+		NetworkMessageMedium msg = new NetworkMessageMedium(action.toString());
 		Pokemon first = G.player.pokemon.get(0);
-		init.addDataInt("base", first.index);
-		init.addDataInt("hp", first.getHP());
-		init.addDataInt("attack", first.getAttack());
-		init.addDataInt("defense", first.getDefense());
-		init.addDataInt("speed", first.getSpeed());
-		init.addDataInt("special", first.getSpecial());
-		init.addDataInt("level", first.getLevel());
-		return init;
+		
+		msg.integers.add(action.ordinal());
+		msg.integers.add(G.player.id);
+		msg.integers.add(G.player.gender.ordinal());
+		msg.integers.add(first.index);
+		msg.integers.add(first.getHP());
+		msg.integers.add(first.getAttack());
+		msg.integers.add(first.getDefense());
+		msg.integers.add(first.getSpeed());
+		msg.integers.add(first.getSpecial());
+		msg.integers.add(first.getLevel());
+		
+		msg.strings.add(G.player.nickname);
+		
+		return msg;
 	}
 	
 	/*
@@ -356,11 +370,67 @@ public class Game implements LBGLocationAdapter.LocationListener{
 	{
 		display.updateLocation(location);
 		// !!!send location update to server!!!
+		NetworkMessageMedium msg = new NetworkMessageMedium("LocationUpdate");
+		msg.doubles.add(location.getLatitude());
+		msg.doubles.add(location.getLongitude());
+		networkBinder.sendGameUpdate(msg);
 		Log.i("Location", "New location received");
 	}
 
 	public void onLocationError(int errorCode) 
 	{
 		// do nothing for now
+	}
+	
+	/*
+	 * Network event handler and connection setup
+	 */
+	
+	public void createConnection(Activity current)
+	{
+		// bind network component
+		Intent intent = new Intent(current, NetworkComService.class);
+		ServiceConnection ser = new ServiceConnection() {
+			
+			public void onServiceDisconnected(ComponentName name) 
+			{
+				networkBound = false;
+				Log.i(NetworkVariables.TAG, "Service disconnected");
+				display.showToast("Disconnected from service");
+			}
+			
+			public void onServiceConnected(ComponentName name, IBinder service) 
+			{
+				// get an instance of the binder for the service
+				networkBinder = (NetworkComBinder)service;
+				networkBinder.registerMessenger(networkEventMessenger);
+				networkBinder.ConnectToServer();
+				networkBound = true;
+				display.showToast("Connected to service");
+			}
+		};
+		current.bindService(intent, ser, Context.BIND_AUTO_CREATE);
+	}
+	
+	public boolean handleMessage(Message msg) 
+	{
+		switch (NetworkComBinder.EventType.values()[msg.what])
+		{
+			case CONNECTION_ESTABLISHED:
+				display.showToast("Connected to game server");
+				networkConnected = true;
+				break;	
+			case CONNECTION_LOST:
+				display.showToast("Connection to game server lost");
+				networkConnected = false;
+				break;
+			case CONNECTION_FAILED:
+				display.showToast("Could not connect to game server");
+				networkConnected = false;
+				break;
+			case UPDATE_RECEIVED:		
+				break;
+		}
+		return true;
 	}
 }

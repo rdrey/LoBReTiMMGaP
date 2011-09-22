@@ -198,13 +198,14 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         mapView.getOverlays().add(players);
         mapView.getOverlays().add(items);
         
-        Log.i("Interface", "Map view created");
-        
         new Game(this);
         
         // only use GPS for experimental group
         if (G.testMode == TestMode.EXPERIMENT)
         	location_adapter = new LBGLocationAdapter(this, LBGLocationAdapter.GPS_LOCATION_ONLY, 0, 2, G.game);
+        
+        G.game.createConnection(this);
+        Log.i("Interface", "Map view created");
     }
     
     protected void onResume()

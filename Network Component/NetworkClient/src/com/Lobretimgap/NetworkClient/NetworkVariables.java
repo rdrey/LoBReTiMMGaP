@@ -1,6 +1,5 @@
 package com.Lobretimgap.NetworkClient;
 
-import com.Lobretimgap.NetworkClient.Implementation.NetworkThreadImplementation;
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
 import com.Lobretimgap.NetworkClient.Lokemon.CoreNetworkThreadLokemon;
 

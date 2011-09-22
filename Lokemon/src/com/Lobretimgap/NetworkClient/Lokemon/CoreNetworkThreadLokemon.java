@@ -11,14 +11,17 @@ import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
 public class CoreNetworkThreadLokemon extends CoreNetworkThread {
 
 	@Override
-	public PlayerRegistrationMessage getPlayerRegistrationInformation() {		
-		return new PlayerRegistrationMessage(G.player.nickname);
+	public PlayerRegistrationMessage getPlayerRegistrationInformation() {
+		PlayerRegistrationMessage msg = new PlayerRegistrationMessage(G.player.nickname);
+		msg.integers.add(G.player.gender.ordinal()); //
+		return msg;
+
 	}
 
 	@Override
 	public void processInitialGameState(NetworkMessage message) {
-		Log.d(NetworkVariables.TAG, "Received initial game state. Message: "+message.getMessage());
-		//if (Integer.parseInt(message.getMessage()) > 1) G.game.initiateBattle(); 
+		// TODO Auto-generated method stub
+
 	}
 
 }
