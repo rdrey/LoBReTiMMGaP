@@ -1,15 +1,23 @@
 package com.Lobretimgap.NetworkClient;
 
+import com.Lobretimgap.NetworkClient.Implementation.NetworkThreadImplementation;
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
 import com.Lobretimgap.NetworkClient.Lokemon.CoreNetworkThreadLokemon;
+
 
 public class NetworkVariables {
 	public static final String TAG = "NetworkClient";
 	public static final int port = 10282;
 	public static final String hostname = "137.158.60.206";//"blue.cs.uct.ac.za";
-
 	public static final int writeThreadBufferSize = 16;
 	public static final int initialNetworkMessageMapSize = 8;
+	
+	/* Uses approximately 1.5MB of additional data per hour in order to make sure that the
+	 * connection to the server is always completely active and available. This can reduce
+	 * the latency of periodic calls to the game server by as much as 140ms. Its also 
+	 * possible this uses more battery power.
+	 */
+	public static final boolean keepAliveEnabled = false;
 	
 	//Replace CoreNetworkThread.class with a concrete implementation of that class.
 	public static final Class<CoreNetworkThreadLokemon> coreNetworkThreadClass = CoreNetworkThreadLokemon.class;

@@ -1,14 +1,21 @@
 package networkserver.Threads;
 
-import java.awt.AWTEvent;
+import com.dyuproject.protostuff.LinkedBuffer;
+import com.dyuproject.protostuff.ProtostuffIOUtil;
+import com.dyuproject.protostuff.Schema;
+import com.dyuproject.protostuff.runtime.RuntimeSchema;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.nio.BufferOverflowException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Vector;
 import javax.swing.event.EventListenerList;
 import networkTransferObjects.NetworkMessage;
+import networkTransferObjects.NetworkMessageLarge;
+import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
 import networkserver.EventListeners.*;
 import networkserver.Events.NetworkEvent;
@@ -23,11 +30,19 @@ public abstract class ServerDaemonThread extends Thread{
 
     private Socket socket;
     private ServerDaemonWriteoutThread out;
-    private ObjectInputStream in;
+    private BufferedInputStream in;
     private boolean stopOperation = false;
+    private boolean keepAliveBreak = false;
+    LinkedBuffer buffer = LinkedBuffer.allocate(2048);
+    ByteBuffer b = ByteBuffer.allocate(4);
 
-    public int playerID;
-    public String playerName;
+    private static Schema<PlayerRegistrationMessage> playerRegSchema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
+    private static Schema<NetworkMessageMedium> mediumMsgSchema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
+    private static Schema<NetworkMessageLarge> largeMsgSchema = RuntimeSchema.getSchema(NetworkMessageLarge.class);
+    private static Schema<NetworkMessage> networkMsgSchema = RuntimeSchema.getSchema(NetworkMessage.class);
+
+    protected int playerID;
+    protected String playerName;
 
     private long latencyStartTime, latencyEndTime;
 
@@ -39,6 +54,9 @@ public abstract class ServerDaemonThread extends Thread{
      */
     public ServerDaemonThread()
     {
+        b.order(ByteOrder.BIG_ENDIAN);
+        //Load in schemas for collections
+        
     }
 
     /*
@@ -48,7 +66,7 @@ public abstract class ServerDaemonThread extends Thread{
     {
         socket = acceptedSocket;
         out = new ServerDaemonWriteoutThread(acceptedSocket);
-        in = new ObjectInputStream(socket.getInputStream());        
+        in = new BufferedInputStream(socket.getInputStream());
         out.start();
     }
 
@@ -56,6 +74,7 @@ public abstract class ServerDaemonThread extends Thread{
      * Called once joining information for the player has been received.
      * First method called after the client has connected. Use
      * this to add player information to the game engine/world.
+     * 
      */
     protected abstract void registerPlayer(PlayerRegistrationMessage initialMessage);
     
@@ -109,7 +128,7 @@ public abstract class ServerDaemonThread extends Thread{
         //Now send these to the client
         NetworkMessage message = new NetworkMessage("Peer list transfer");
         message.setMessageType(NetworkMessage.MessageType.PEER_LIST_MESSAGE);
-        message.addDataObject("peerList", peers);
+        //message.addDataObject("peerList", peers);
         writeOut(message);
 
     }
@@ -158,6 +177,14 @@ public abstract class ServerDaemonThread extends Thread{
         writeOut(message);
     }
 
+     public void forwardDirectCommunication(NetworkMessage msg)
+     {
+         msg.setMessageType(NetworkMessage.MessageType.DIRECT_COMMUNICATION_MESSAGE);
+         writeOut(msg);
+     }
+
+     
+
 
     @Override
     public void run()
@@ -166,15 +193,78 @@ public abstract class ServerDaemonThread extends Thread{
         while(!stopOperation)
         {
             try
-            {
-                Object data = in.readObject();                
-                processNetworkMessage(data);
+            {                
+                NetworkMessage msg = null;
+            	Schema schema = null;
+                
+
+                //Expecting 4 bytes of length info
+                byte [] messageHeader = new byte [5];
+                int success = in.read(messageHeader);
+                if(success == 5)
+                {
+                    //Chop off message type modifier
+                    byte classType = messageHeader[0];
+
+                    //set the message and schema to the correct type
+                    switch(classType)
+                    {
+                        case -1:
+                            //Keep alive message, ignore and wait for a new message
+                            keepAliveBreak = true;
+                            break;
+                        case 1:
+                            msg = new PlayerRegistrationMessage();
+                            schema = playerRegSchema;
+                            break;
+                        case 2:
+                            msg = new NetworkMessageMedium();
+                            schema = mediumMsgSchema;
+                            break;
+                        case 3:
+                            msg = new NetworkMessageLarge();
+                            schema = largeMsgSchema;
+                            break;
+                        default:
+                            msg = new NetworkMessage();
+                            schema = networkMsgSchema;
+                    }
+                    if(!keepAliveBreak)
+                    {
+                        //Determine message length
+                        b.clear();
+                        b.put(messageHeader, 1, 4);
+                        b.rewind();
+                        int mSize = b.getInt();
+
+                        //Read in the object bytes
+                        byte [] object = new byte [mSize];
+                        int bytesRead = 0;
+                        while(bytesRead != mSize)
+                        {
+                            bytesRead += in.read(object, bytesRead, object.length - bytesRead);
+                        }
+
+                        //System.out.println("Mid receive, byte buffer at "+bytesRead);
+                        ProtostuffIOUtil.mergeFrom(object, msg, schema);
+                        processNetworkMessage(msg);
+                    }
+                    
+                }
+                else
+                {//Failed to read in length field properly
+                    if(success == -1)
+                    {//Stream closed
+                        System.err.println("End of stream!");
+                        shutdownThread();
+                    }
+                } 
             }
             catch(InterruptedIOException e)
             {
                 //We expect that something wants the threads attention. This is
                 //used to immediatly end the thread in shutdownThread().
-            }
+            }            
             catch(IOException e)
             {
                 System.err.println("Error occured while reading from thread : "+e);
@@ -182,16 +272,57 @@ public abstract class ServerDaemonThread extends Thread{
                 this.shutdownThread();                
                 break;
             }
-            catch(ClassNotFoundException e)
+            catch(NullPointerException e)
             {
-                System.err.println("Unrecognised class object received from client - ignoring");
-            } 
+                System.err.println("Null Pointer Exception: +"+ e.getMessage());
+                fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
+                stopOperation = true;
+            }
+            catch(RuntimeException e)
+            {
+                System.err.println("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?\n"+e);
+            }
+            finally
+            {
+                keepAliveBreak = false;
+                buffer.clear();
+                b.clear();
+            }
         }
     }
 
-    private void processNetworkMessage(Object message)
+    private void processNetworkMessage(NetworkMessage message)
     {
-        if(message instanceof NetworkMessage)
+        if(message.getTimeStamp() == 0)
+        {
+            System.err.println("Error: Timestamp on message was 0!");
+        }
+        if(message instanceof PlayerRegistrationMessage)
+        {            
+            PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;            
+
+            playerID = ServerVariables.playerNetworkAddressList.size();
+            regMessage.playerID = playerID;
+
+            //Register the players address.
+            ServerVariables.playerNetworkAddressList.add(socket.getInetAddress());
+
+            //Register this thread as representing the players connection.
+            ServerVariables.playerThreads.add(this);
+            ServerVariables.playerThreadMap.put(playerID, this);
+
+            playerName = regMessage.playerName;
+            PlayerRegistrationMessage reply = new PlayerRegistrationMessage(playerID);
+            reply.playerName = playerName;
+            writeOut(reply);
+            registerPlayer(regMessage);
+
+
+            sendInitialState();
+            sendPeerList();
+            fireEvent(new NetworkEvent(this, "Connection successfully established"),  ConnectionEstablishedListener.class);
+        }
+        else
         {
             NetworkMessage msg = (NetworkMessage)message;
             switch(msg.getMessageType())
@@ -237,41 +368,55 @@ public abstract class ServerDaemonThread extends Thread{
                             fireEvent(new NetworkEvent(this, (latencyEndTime - latencyStartTime)),  LatencyUpdateListener.class);
                     }
                     break;
+                case DIRECT_COMMUNICATION_MESSAGE:
+                    //We need to forward this to its destination (another client).
+                    //We know its either a medium or large message.
+                    if(msg instanceof NetworkMessageLarge)
+                    {
+                        int targetPlayerId = ((NetworkMessageLarge)msg).integers.get(((NetworkMessageLarge)msg).integers.size()-2);
+                        if(ServerVariables.playerThreadMap.get(targetPlayerId) != null)
+                        {
+                            ServerVariables.playerThreadMap.get(targetPlayerId).forwardDirectCommunication(msg);
+                        }
+                    }else if (msg instanceof NetworkMessageMedium)
+                    {
+                        int targetPlayerId = ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-2);
+                        if(ServerVariables.playerThreadMap.get(targetPlayerId) != null)
+                        {
+                            ServerVariables.playerThreadMap.get(targetPlayerId).forwardDirectCommunication(msg);
+                        }
+                    }
+                    else //Should never be anything other than NetworkMessage medium or large.
+                    {//If you want to add your own types of direct communication, add special cases here
+                        System.err.println("PlayerID: "+playerID+" attempted direct peer " +
+                                "communication with an unrecognised object type");
+                    }
+                    break;
+                case TIME_REQUEST:
+                    //Reply with a new message. Timestamp will automatically be added in
+                    //write phase, but we also want to add the client sent time, so the client
+                    //can compute time differences.
+                    NetworkMessage newMsg = new NetworkMessage("" + msg.getTimeStamp());
+                    newMsg.setMessageType(NetworkMessage.MessageType.TIME_RESPONSE);
+                    writeOut(newMsg);
+                    break;
                 default:
                     fireEvent(new NetworkEvent(this, msg),  UnknownMessageTypeReceivedListener.class);
                     //throw new UnsupportedOperationException("Message type has not been catered for. Please include handling code for it!");
                     break;
 
             }
-        }
-        else if(message instanceof PlayerRegistrationMessage)
-        {
-            PlayerRegistrationMessage regMessage = (PlayerRegistrationMessage)message;
-            playerID = ServerVariables.playerNetworkAddressList.size();
-            ServerVariables.playerNetworkAddressList.add(socket.getInetAddress());            
-            playerName = regMessage.playerName;
-            PlayerRegistrationMessage reply = new PlayerRegistrationMessage(playerID);
-            writeOut(reply);
-            registerPlayer(regMessage);
-
-            
-            sendInitialState();
-            sendPeerList();
-            fireEvent(new NetworkEvent(this, "Connection successfully established"),  ConnectionEstablishedListener.class);
-        }
-        else
-        {
-            System.err.println("Unrecognised object received from client: "+message.getClass());
-        }
+        } 
     }
 
     /*
      * Writes a given object to the outputstream
      */
-    private void writeOut(Object object) throws BufferOverflowException
+    private void writeOut(NetworkMessage object) throws BufferOverflowException
     {
         //Later perhaps we can more gracefully deal with this. Perhaps add wait
         //a little while and then try again?
+        object.setTimeStamp(System.currentTimeMillis());
         if(!out.writeMessage(object))
         {
             throw new BufferOverflowException();
@@ -291,6 +436,15 @@ public abstract class ServerDaemonThread extends Thread{
         {
             //We dont really care if the socket failed to close correctly.
             System.err.println("Socket failed to close correctly. \n"+e);
+        }
+        finally
+        {
+            //Remove links to this thread in the threads data structures
+            //We cant just remove from the lists, since their numbering corrolates
+            //to the playerIDs, so instead we set their references to null.
+            ServerVariables.playerNetworkAddressList.set(playerID, null);
+            ServerVariables.playerThreads.set(playerID, null);
+            ServerVariables.playerThreadMap.remove(playerID);
         }
         
         

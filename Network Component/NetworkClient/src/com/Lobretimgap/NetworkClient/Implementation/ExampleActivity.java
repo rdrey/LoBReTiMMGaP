@@ -3,7 +3,10 @@ package com.Lobretimgap.NetworkClient.Implementation;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import networkTransferObjects.NetworkMessage;
+import com.Lobretimgap.NetworkClient.NetworkComBinder;
+import com.Lobretimgap.NetworkClient.NetworkComService;
+import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
+
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -14,21 +17,21 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.text.method.ScrollingMovementMethod;
 import android.widget.TextView;
 
-import com.Lobretimgap.NetworkClient.NetworkComBinder;
-import com.Lobretimgap.NetworkClient.NetworkComService;
-import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
-
-public class NetworkTestApp extends Activity {
-	
+public class ExampleActivity extends Activity {
 	private TextView tv;
-	@SuppressWarnings("unused")
 	private boolean networkBound = false;
 	private NetworkComBinder binder;
 	
 	private final Timer timer = new Timer();
-	private final int recurranceDelay = 5; //in seconds
+	private final int recurranceDelay = 1; //in seconds
+	
+	private int pingsPerformed = 0;
+	private int highest=0;
+	private int lowest=1000;
+	private int total=0;
 
 	public void onCreate(Bundle bundle)
 	{
@@ -41,6 +44,7 @@ public class NetworkTestApp extends Activity {
 	{
 		super.onStart();
 		tv.append("Starting networking component tests...\n");
+		tv.setMovementMethod(new ScrollingMovementMethod());
 		
 		//Bind network component
 		Intent intent = new Intent(this, NetworkComService.class);
@@ -61,23 +65,24 @@ public class NetworkTestApp extends Activity {
 			
 			binder.registerMessenger(eventMessenger);
 			
-			if(binder.ConnectToServer())
-			{
-				tv.append("Connection to server successful!\n");
-			}
-			else
-			{
-				tv.append("Failed to connect to server....\n");
-			}	
+			binder.ConnectToServer();			
 			
 			timer.schedule(new TimerTask() {
 				@Override
-				public void run() {				
-					if(networkBound)
-						binder.requestLatency();
+				public void run() {
+					if(pingsPerformed < 20)
+					{
+						if(networkBound)
+							binder.requestLatency();
+							pingsPerformed++;
+						}
+					else
+					{
+						this.cancel();
+					}
 				}
 				
-			}, recurranceDelay * 1000, recurranceDelay * 1000);
+			}, recurranceDelay * 1000, recurranceDelay * 200);
 			
 		}
 	};	
@@ -96,14 +101,29 @@ public class NetworkTestApp extends Activity {
 					break;
 					
 				case CONNECTION_LOST:
-					tv.append("Connect to host lost...\n");
+					tv.append("Connection to host lost...\n");
+					break;
+					
+				case CONNECTION_FAILED:
+					tv.append("Failed to connect to host...\n");
 					break;
 					
 				case LATENCY_UPDATE_RECEIVED:
 					tv.append("Latency reported as: " + ((NetworkEvent)msg.obj).getMessage()+"ms\n");
+					int latency = ((Long)((NetworkEvent)msg.obj).getMessage()).intValue();
+					if(latency > highest)
+						highest = latency;					
+					if(latency < lowest)
+						lowest = latency;
+					total += latency;
+					
+					if(pingsPerformed == 20)
+					{
+						tv.append("Max ="+highest+", min = "+lowest+", average = "+(total/20));
+					}	
 					break;					
 				default:
-					tv.append("Unrecognised event of type "+ NetworkComBinder.EventType.values()[msg.what] + " received.");
+					tv.append("Unrecognised event of type "+ NetworkComBinder.EventType.values()[msg.what] + " received.");					
 			}
 		}
 	}
@@ -120,5 +140,4 @@ public class NetworkTestApp extends Activity {
 	{
 		super.onDestroy();
 	}
-
 }
