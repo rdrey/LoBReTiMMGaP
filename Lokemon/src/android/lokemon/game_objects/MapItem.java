@@ -12,9 +12,11 @@ public class MapItem {
 	protected OverlayItem map_marker;
 	protected OverlayItem map_shadow;
 	protected Location location_android;
+	protected int id;
 	
-	public MapItem(GeoPoint location)
+	public MapItem(GeoPoint location, int id)
 	{
+		this.id = id;
 		this.location = location;
 		map_marker = new OverlayItem(location,"","");
 		map_shadow = new OverlayItem(location,"","");
@@ -34,4 +36,5 @@ public class MapItem {
 	public Location getAndroidLocation() {return location_android;}
 	public OverlayItem getMarker() {return map_marker;}
 	public OverlayItem getShadow() {return map_shadow;}
+	public int getID() {return id;}
 }

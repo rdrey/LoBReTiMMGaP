@@ -11,9 +11,11 @@ public class Region {
 	protected GeoPoint [] vertices;
 	protected OverlayWay regionWay;
 	protected Regions region;
+	protected int id;
 	
-	public Region(GeoPoint[] vertices, Regions region)
+	public Region(GeoPoint[] vertices, Regions region, int id)
 	{
+		this.id = id;
 		this.vertices = vertices;
 		this.region = region;
 		regionWay = new OverlayWay(new GeoPoint[][]{vertices}, G.region_fill[region.ordinal()], G.region_outline[region.ordinal()]);
@@ -22,4 +24,5 @@ public class Region {
 	public GeoPoint[] getVertices() {return vertices;}
 	public OverlayWay getWay() {return regionWay;}
 	public Regions getRegion() {return region;}
+	public int getID() {return id;}
 }

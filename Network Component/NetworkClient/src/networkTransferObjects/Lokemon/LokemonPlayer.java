@@ -21,7 +21,7 @@ public class LokemonPlayer {
     
     public Location getPosition() {
         return position;
-    }
+    }    
 
     public void setBusy(boolean busy) {
         this.busy = busy;

@@ -8,9 +8,9 @@ public class WorldPotion extends MapItem{
 	// public attributes
 	public Potions potionType;
 	
-	public WorldPotion(Potions potionType, GeoPoint location)
+	public WorldPotion(Potions potionType, GeoPoint location, int id)
 	{
-		super(location);
+		super(location, id);
 		this.potionType = potionType;
 	}
 }

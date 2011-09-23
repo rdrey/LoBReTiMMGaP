@@ -19,7 +19,7 @@ public class NetworkPlayer extends MapItem{
 	
 	public NetworkPlayer(int id, String nick, Gender gender, GeoPoint location)
 	{
-		super(location);
+		super(location, id);
 		this.id = id;
 		this.nickname = nick;
 		this.gender = gender;
