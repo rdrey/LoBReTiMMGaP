@@ -456,6 +456,11 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		current.bindService(intent, ser, Context.BIND_AUTO_CREATE);
 	}
 	
+	public void endGame()
+	{
+		networkBinder.sendTerminationRequest(new NetworkMessage(""));
+	}
+	
 	public boolean handleMessage(Message msg) 
 	{
 		Log.e(NetworkVariables.TAG, NetworkComBinder.EventType.values()[msg.what].toString());
@@ -484,6 +489,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			{
 				NetworkMessageLarge nMsg = (NetworkMessageLarge)((NetworkEvent)msg.obj).getMessage();
 				String tag = nMsg.getMessage();
+				Log.i(NetworkVariables.TAG, tag);
 				if (tag.equals("Response:GetGameObjects"))
 				{
 					ArrayList<LokemonPotion> ilist = (ArrayList<LokemonPotion>)nMsg.objectDict.get("ItemList");
@@ -587,6 +593,11 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 							}
 						}
 					}
+				}
+				else
+				{
+					// some error state
+					Log.i("Players", nMsg.getMessage());
 				}
 				break;
 			}
