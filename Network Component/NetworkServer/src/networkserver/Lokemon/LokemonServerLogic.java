@@ -109,7 +109,7 @@ public class LokemonServerLogic extends Thread{
             for(LokemonPlayer pl : LokemonServerVariables.playerList)
             {
                 //We dont want to compare to ourselves
-                if(pl.getPlayerID() != player.getPlayerID())
+                //if(pl.getPlayerID() != player.getPlayerID())
                 {
                     //If this player is a valid, registered player in the networking component (just a consistency check)
                     if(ServerVariables.playerThreadMap.containsKey(pl.getPlayerID()))
@@ -118,7 +118,7 @@ public class LokemonServerLogic extends Thread{
                         if(pl.getPosition() != null)
                         {
                             if(pl.getPosition().getDistanceFrom(player.getPosition()) < LokemonServerVariables.areaOfInterest)
-                            {
+                            {                                
                                 players.add(pl);
                             }
                         }
@@ -126,7 +126,7 @@ public class LokemonServerLogic extends Thread{
                 }
             }
 
-            //Riz specifically wants it ordered by playerID and sorted ascendingly.
+            //Riz specifically wants it ordered by playerID and sorted ascendingly.            
             Collections.sort(players, new Comparator<LokemonPlayer>() {
 
                 public int compare(LokemonPlayer o1, LokemonPlayer o2) {
@@ -134,6 +134,7 @@ public class LokemonServerLogic extends Thread{
                 }
             });
             msg.objectDict.put("PlayerList", players);
+            //System.out.println("Sent player list of length: "+ players.size());
             ServerVariables.playerThreadMap.get(player.getPlayerID()).sendGameStateUpdate(msg);
         }
         else
@@ -170,6 +171,10 @@ public class LokemonServerLogic extends Thread{
                     return o1.getId() - o2.getId();
                 }
             });
+
+            LokemonPotion debug = new LokemonPotion(LokemonPotion.PotionType.SPEED, 36);
+            debug.setPosition(player.getPosition());
+            pots.add(debug);
 
             msg.objectDict.put("ItemList", pots);
             ServerVariables.playerThreadMap.get(player.getPlayerID()).sendGameStateUpdate(msg);
@@ -318,8 +323,9 @@ public class LokemonServerLogic extends Thread{
 
                                 //Now determine a point randomDist away from center, at angle randomAngle.
                                 //Formula (x?,y?)=(x+dcosα,y+dsinα)
-                                double x = center.getX() + randomDist*Math.cos(randomAngle);
-                                double y = center.getY() + randomDist*Math.sin(randomAngle);
+                                //Obviously we convert from meters to units of latitude at the same time
+                                double x = center.getX() + (randomDist*Math.cos(randomAngle) / LokemonDaemonThread.DEGREE_METER_HACK);
+                                double y = center.getY() + (randomDist*Math.sin(randomAngle) / LokemonDaemonThread.DEGREE_METER_HACK);
 
                                 LokemonPotion pot = new LokemonPotion(
                                         LokemonPotion.PotionType.values()[((int)Math.random()*LokemonPotion.PotionType.values().length)],

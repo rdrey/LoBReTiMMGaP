@@ -326,7 +326,7 @@ public abstract class CoreNetworkThread extends Thread
 	            	NetworkMessage msg = null;
 	            	Schema schema = null;
 
-	                //Expecting 6 bytes of length info
+	                //Expecting 4 bytes of length info + 1 byte of type info
 	                byte [] messageHeader = new byte [5];
 	                int success = in.read(messageHeader);
 	                if(success == 5)
@@ -393,7 +393,7 @@ public abstract class CoreNetworkThread extends Thread
 	            }
 	            catch(IOException e)
 	            {
-	                System.err.println("Error occured while reading from thread : "+e);
+	            	Log.e(NetworkVariables.TAG,"Error occured while reading from thread : "+e);
 	                fireEvent(new NetworkEvent(this, "Connection to Server lost!\n" + e),  ConnectionLostListener.class);
 	                this.shutdownThread();                
 	                break;
@@ -404,7 +404,7 @@ public abstract class CoreNetworkThread extends Thread
 	            }
 	            catch(RuntimeException e)
 	            {
-	                System.err.println("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?");
+	            	Log.e(NetworkVariables.TAG, "Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?");
 	            }
 				finally
 	            {

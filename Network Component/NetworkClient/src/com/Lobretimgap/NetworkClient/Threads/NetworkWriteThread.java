@@ -160,7 +160,7 @@ public class NetworkWriteThread extends Thread
 	                System.arraycopy(lengthField, 0, message, 1, lengthField.length);
 	                System.arraycopy(serializedObject, 0, message, lengthField.length + 1, serializedObject.length);
 	                
-	                Log.d(NetworkVariables.TAG, "Serialised Size: "+serializedObject.length);
+	                //Log.d(NetworkVariables.TAG, "Serialised Size: "+serializedObject.length);
 	                //And then send it off.
 	                os.write(message);
             	}
