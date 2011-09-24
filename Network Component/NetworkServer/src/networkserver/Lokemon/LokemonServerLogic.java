@@ -117,7 +117,8 @@ public class LokemonServerLogic extends Thread{
                         //If the player has a valid location
                         if(pl.getPosition() != null)
                         {
-                            if(pl.getPosition().getDistanceFrom(player.getPosition()) < LokemonServerVariables.areaOfInterest)
+                            if(App.distFrom(pl.getPosition().getX(), pl.getPosition().getY(),
+                            player.getPosition().getX(), player.getPosition().getY()) < LokemonServerVariables.areaOfInterest)
                             {                                
                                 players.add(pl);
                             }
