@@ -107,7 +107,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		networkUpdater = new Handler();
 		updater = new Runnable(){
 			public void run() {
-				networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
+				//networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
 				networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
 				networkUpdater.postDelayed(updater, 1000);
 				}
@@ -560,6 +560,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								int id = lp.getPlayerID();
 								if (np.id == id)
 								{
+									Log.i("Players", "Updating id=" + id);
 									np.updateLocation(Util.fromSerialLocation(lp.getPosition()));
 									np = i.next();
 									lp = it.next();
@@ -567,12 +568,14 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								}
 								else if (np.id < id)
 								{
+									Log.i("Players", "Removing id=" + np.getID());
 									display.removePlayer(np);
 									i.remove();
 									np = i.next();
 								}
 								else
 								{
+									Log.i("Players", "Inserting id=" + id);
 									networkTransferObjects.UtilityObjects.Location loc = lp.getPosition();
 									insertPlayer(new NetworkPlayer(lp.getPlayerID(), lp.getPlayerName(), Gender.values()[lp.getAvatar()], new GeoPoint(loc.getX(),loc.getY())),index);
 									lp = it.next();
@@ -587,6 +590,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 							}
 							while(it.hasNext())
 							{
+								Log.i("Players", "Adding id=" + lp.getPlayerID());
 								networkTransferObjects.UtilityObjects.Location loc = lp.getPosition();
 								addPlayer(new NetworkPlayer(lp.getPlayerID(), lp.getPlayerName(), Gender.values()[lp.getAvatar()], new GeoPoint(loc.getX(),loc.getY())));
 								lp = it.next();

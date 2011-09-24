@@ -1,12 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/1"/>
-    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/1">
-        <file>file:/C:/Users/Riz/Desktop/Project/Android%20Workspace/LoBReTiMMGaP/Network%20Component/NetworkServer/src/networkserver/Lokemon/LokemonServerLogic.java</file>
-        <file>file:/C:/Users/Riz/Desktop/Project/Android%20Workspace/LoBReTiMMGaP/Network%20Component/NetworkServer/src/networkserver/Lokemon/LokemonDaemonThread.java</file>
-        <file>file:/C:/Users/Riz/Desktop/Project/Android%20Workspace/LoBReTiMMGaP/Network%20Component/NetworkServer/src/networkserver/Threads/ServerDaemonThread.java</file>
-        <file>file:/C:/Users/Riz/Desktop/Project/Android%20Workspace/LoBReTiMMGaP/Network%20Component/NetworkServer/src/networkTransferObjects/NetworkMessage.java</file>
-        <file>file:/C:/Users/Riz/Desktop/Project/Android%20Workspace/LoBReTiMMGaP/Network%20Component/NetworkServer/src/networkTransferObjects/Lokemon/LokemonPlayer.java</file>
-        <file>file:/C:/Users/Riz/Desktop/Project/Android%20Workspace/LoBReTiMMGaP/Network%20Component/NetworkServer/src/networkTransferObjects/Lokemon/LokemonPotion.java</file>
-    </open-files>
 </project-private>
