@@ -24,6 +24,7 @@ public class LokemonPotion
     
     private PotionType type;
     private Location position;
+    private int id;
 
     public Location getPosition() {
         return position;
@@ -31,6 +32,7 @@ public class LokemonPotion
 
     public void setPosition(Location position) {
         this.position = position;
+        
     }
 
     public PotionType getType() {
@@ -41,8 +43,19 @@ public class LokemonPotion
         this.type = type;
     }
 
-    public LokemonPotion(PotionType type)
+    public LokemonPotion(PotionType type, int id)
     {
         this.type = type;
+        this.id = id;
+    }
+
+    public LokemonPotion()
+    {
+        //default constructor for serialization
+    }
+
+    public int getId()
+    {
+        return id;
     }
 }
