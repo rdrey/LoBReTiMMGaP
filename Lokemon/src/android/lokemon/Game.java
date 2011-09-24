@@ -20,15 +20,14 @@ import android.lokemon.screens.MapScreen;
 import android.util.Log;
 import android.app.Activity;
 import android.lbg.*;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.IBinder;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.*;
 
 import org.mapsforge.android.maps.GeoPoint;
@@ -294,12 +293,22 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		try
 		{
 			AssetManager assetManager = current.getAssets();
-			ElemType.loadTypes(Game.readFile(assetManager.open("types.json")));
+			ElemType.loadTypes(Util.readFile(assetManager.open("types.json")));
 			Log.i("Data load", "Types loaded");
-			Move.loadMoves(Game.readFile(assetManager.open("moves.json")));
+			Move.loadMoves(Util.readFile(assetManager.open("moves.json")));
 			Log.i("Data load", "Moves loaded");
-			BasePokemon.loadPokemon(Game.readFile(assetManager.open("base_pokemon.json")), current);
+			BasePokemon.loadPokemon(Util.readFile(assetManager.open("base_pokemon.json")), current);
 			Log.i("Data load", "Pokemon loaded");
+			
+			// save map on external storage if necessary/possible
+			if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
+			{
+				Log.i("Data load", "Checking map data");
+				File file = new File(G.mapDir);
+				file.mkdirs();
+				if (!(new File(G.mapDir + G.mapFile)).exists())
+					Util.copyFile(assetManager.open(G.mapFile), new FileOutputStream(G.mapDir + G.mapFile));
+			}
 			//assetManager.close(); // started causing a RuntimeException for no apparent reason
 			
 			Resources res = current.getResources();
@@ -344,22 +353,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		}
 		catch (Exception e) {Log.e("Data load", e.toString());}
 	}
-	
-	// read all from a file
-	public static String readFile(InputStream file) throws IOException
-	{
-		BufferedReader input = new BufferedReader(new InputStreamReader(file));
-		String str = "";
-		String in = input.readLine();
-		while (in != null)
-		{
-			str += in;
-			in = input.readLine();
-		}
-		input.close();
-		return str;
-	}
-	
+		
 	/*
 	 * TimerTask classes to generate/remove players (only used for testing)
 	 */

@@ -6,6 +6,7 @@ import android.lokemon.game_objects.BasePokemon;
 import android.lokemon.game_objects.ElemType;
 import android.lokemon.game_objects.Move;
 import android.lokemon.game_objects.Trainer;
+import android.os.Environment;
 
 /*
  * This class contains all variables & enums that need to be accessible throughout the game.
@@ -28,6 +29,10 @@ public class G {
 	// paint objects used to draw regions
 	public static Paint [] region_outline;
 	public static Paint [] region_fill;
+	// path to map data
+	public static String mapDir = Environment.getExternalStorageDirectory().getPath() + 
+			"/Android/data/android.lokemon/files/";
+	public static String mapFile = "campus.map";
 	
 	// enums
 	public static enum Types {bug, electric, fire, flying, grass, ground, normal, poison, psychic, rock, steel, water};

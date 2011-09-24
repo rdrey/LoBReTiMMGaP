@@ -76,7 +76,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         mapView.setZoomMax((byte)19);
         mapView.setZoomMin((byte)19);
         mapView.setClickable(true);
-        mapView.setMapFile("/sdcard/Lokemon/campus.map");
+        mapView.setMapFile(G.mapDir + G.mapFile);
         
         // animation runnable
         animator = new Runnable(){
