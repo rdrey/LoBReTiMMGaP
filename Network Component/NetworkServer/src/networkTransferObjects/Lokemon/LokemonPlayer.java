@@ -52,7 +52,12 @@ public class LokemonPlayer {
     {
         this.playerID = playerID;
         this.playerName = playerName;
-    }    
+    }
+
+    public LokemonPlayer()
+    {
+        //default constructor for serialization
+    }
     
 
     public void setPosition(Location loc)

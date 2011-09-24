@@ -49,6 +49,11 @@ public class LokemonPotion
         this.id = id;
     }
 
+    public LokemonPotion()
+    {
+        //default constructor for serialization
+    }
+
     public int getId()
     {
         return id;
