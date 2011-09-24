@@ -13,7 +13,7 @@ import networkTransferObjects.UtilityObjects.Location;
  */
 public class LokemonPotion
 {
-    public enum PotionType
+    public static enum PotionType
     {
         HEALTH,
         ATTACK,
@@ -21,9 +21,9 @@ public class LokemonPotion
         SPECIAL,
         SPEED;
     }
-    
-    private PotionType type;
+
     private Location position;
+    private PotionType type;    
     private int id;
 
     public Location getPosition() {

@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package networkTransferObjects.Lokemon;
 
 import networkTransferObjects.UtilityObjects.Location;
@@ -12,23 +11,35 @@ import networkTransferObjects.UtilityObjects.Location;
  * @author Lawrence Webley
  */
 public class LokemonPlayer {
-    private int playerID;
-    private String playerName;
-    private int avatar;
 
     private Location position;
-    private boolean busy = false;
+    private String playerName;
+    private int playerID;    
+    private int avatar;    
+    private boolean busy;
     
-    public Location getPosition() {
-        return position;
-    }    
+    public LokemonPlayer(int playerID, String playerName) {
+        this.playerID = playerID;
+        this.playerName = playerName;
+        busy = false;
+        avatar = 0;
+        position = new Location();
+
+    }
+
+    public LokemonPlayer() {
+        //default constructor for serialization
+        playerID = -1;
+        playerName = "";
+        busy = false;
+        avatar = 0;
+        position = new Location();
+    }
 
     public void setBusy(boolean busy) {
         this.busy = busy;
     }
-
-    public boolean isBusy()
-    {
+    public boolean getBusy() {
         return busy;
     }
 
@@ -38,7 +49,7 @@ public class LokemonPlayer {
 
     public String getPlayerName() {
         return playerName;
-    }    
+    }
 
     public int getAvatar() {
         return avatar;
@@ -46,23 +57,13 @@ public class LokemonPlayer {
 
     public void setAvatar(int avatar) {
         this.avatar = avatar;
-    }    
-
-    public LokemonPlayer(int playerID, String playerName)
-    {
-        this.playerID = playerID;
-        this.playerName = playerName;
     }
 
-    public LokemonPlayer()
-    {
-        //default constructor for serialization
-    }
-    
-
-    public void setPosition(Location loc)
-    {
+    public void setPosition(Location loc) {
         position = loc;
     }
 
+       public Location getPosition() {
+        return position;
+    }    
 }

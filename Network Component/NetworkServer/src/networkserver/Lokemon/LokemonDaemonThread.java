@@ -28,7 +28,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
 
     LokemonPlayer player;
     
-    private final double DEGREE_METER_HACK = 111111;
+    public static final double DEGREE_METER_HACK = 111111;
 
     public LokemonDaemonThread()
     {

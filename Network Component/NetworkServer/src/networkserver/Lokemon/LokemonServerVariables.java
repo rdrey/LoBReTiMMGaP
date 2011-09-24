@@ -17,9 +17,11 @@ import networkTransferObjects.Lokemon.LokemonPotion;
 public class LokemonServerVariables {
 
     public static ArrayList<LokemonPlayer> playerList = new ArrayList<LokemonPlayer>();
-    public static HashMap<Integer, LokemonPotion> itemMap = new HashMap<Integer, LokemonPotion>();    
+    public static HashMap<Integer, LokemonPotion> itemMap = new HashMap<Integer, LokemonPotion>();
+    //Meters
     public static final double areaOfInterest = 60.0;
 
+    //Meters
     public static final double itemSpawnRangeMin = 50.0;
     public static final double itemSpawnRangeMax = 150.0;
     //Time in miliseconds before new items are spawned. Set at 30seconds by default
