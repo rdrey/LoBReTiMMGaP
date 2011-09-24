@@ -109,7 +109,7 @@ public class LokemonServerLogic extends Thread{
             for(LokemonPlayer pl : LokemonServerVariables.playerList)
             {
                 //We dont want to compare to ourselves
-                //if(pl.getPlayerID() != player.getPlayerID())
+                if(pl.getPlayerID() != player.getPlayerID())
                 {
                     //If this player is a valid, registered player in the networking component (just a consistency check)
                     if(ServerVariables.playerThreadMap.containsKey(pl.getPlayerID()))
@@ -117,7 +117,8 @@ public class LokemonServerLogic extends Thread{
                         //If the player has a valid location
                         if(pl.getPosition() != null)
                         {
-                            if(pl.getPosition().getDistanceFrom(player.getPosition()) < LokemonServerVariables.areaOfInterest)
+                            if(App.distFrom(pl.getPosition().getX(), pl.getPosition().getY(),
+                            player.getPosition().getX(), player.getPosition().getY()) < LokemonServerVariables.areaOfInterest)
                             {                                
                                 players.add(pl);
                             }
@@ -170,11 +171,7 @@ public class LokemonServerLogic extends Thread{
                 public int compare(LokemonPotion o1, LokemonPotion o2) {
                     return o1.getId() - o2.getId();
                 }
-            });
-
-            LokemonPotion debug = new LokemonPotion(LokemonPotion.PotionType.SPEED, 36);
-            debug.setPosition(player.getPosition());
-            pots.add(debug);
+            });            
 
             msg.objectDict.put("ItemList", pots);
             ServerVariables.playerThreadMap.get(player.getPlayerID()).sendGameStateUpdate(msg);

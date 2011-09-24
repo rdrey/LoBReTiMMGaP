@@ -406,6 +406,10 @@ public abstract class CoreNetworkThread extends Thread
 	            {
 	            	Log.e(NetworkVariables.TAG, "Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?");
 	            }
+	            catch(NoSuchMethodError e)
+	            {
+	            	Log.e(NetworkVariables.TAG, "Network component failed to deserialize the message! Call Lawrence for help!");
+	            }
 				finally
 	            {
 	            	buffer.clear();
