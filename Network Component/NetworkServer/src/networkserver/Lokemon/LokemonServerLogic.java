@@ -109,7 +109,7 @@ public class LokemonServerLogic extends Thread{
             for(LokemonPlayer pl : LokemonServerVariables.playerList)
             {
                 //We dont want to compare to ourselves
-                //if(pl.getPlayerID() != player.getPlayerID())
+                if(pl.getPlayerID() != player.getPlayerID())
                 {
                     //If this player is a valid, registered player in the networking component (just a consistency check)
                     if(ServerVariables.playerThreadMap.containsKey(pl.getPlayerID()))
