@@ -13,18 +13,34 @@ import networkTransferObjects.UtilityObjects.Location;
  */
 public class LokemonPotion
 {
+	private Integer id;
     public static enum PotionType
     {
         HEALTH,
         ATTACK,
         DEFENSE,
         SPECIAL,
-        SPEED;
+        SPEED
+    }
+    
+    private Location position;
+    private PotionType type;
+    
+
+
+    public LokemonPotion(PotionType potType, int ident)
+    {
+        id = ident;
+        type = potType;
+        position = new Location();
     }
 
-    private Location position;
-    private PotionType type;    
-    private int id;
+    public LokemonPotion()
+    {
+        //default constructor for serialization
+//        identifier = -1;
+        position = new Location();
+    }
 
     public Location getPosition() {
         return position;
@@ -32,26 +48,15 @@ public class LokemonPotion
 
     public void setPosition(Location position) {
         this.position = position;
-        
+
     }
 
     public PotionType getType() {
         return type;
     }
 
-    public void setType(PotionType type) {
-        this.type = type;
-    }
-
-    public LokemonPotion(PotionType type, int id)
-    {
-        this.type = type;
-        this.id = id;
-    }
-
-    public LokemonPotion()
-    {
-        //default constructor for serialization
+    public void setType(PotionType potType) {
+        type = potType;
     }
 
     public int getId()

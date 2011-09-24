@@ -170,11 +170,7 @@ public class LokemonServerLogic extends Thread{
                 public int compare(LokemonPotion o1, LokemonPotion o2) {
                     return o1.getId() - o2.getId();
                 }
-            });
-
-            LokemonPotion debug = new LokemonPotion(LokemonPotion.PotionType.SPEED, 36);
-            debug.setPosition(player.getPosition());
-            pots.add(debug);
+            });            
 
             msg.objectDict.put("ItemList", pots);
             ServerVariables.playerThreadMap.get(player.getPlayerID()).sendGameStateUpdate(msg);
