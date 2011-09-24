@@ -244,12 +244,6 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     	}
     }
     
-    protected void onStop()
-    {
-    	super.onStop();
-    	G.game.endGame();
-    }
-    
     protected void onDestroy()
     {
     	super.onDestroy();

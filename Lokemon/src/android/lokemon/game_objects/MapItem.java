@@ -5,7 +5,7 @@ import org.mapsforge.android.maps.OverlayItem;
 
 import android.location.Location;
 
-public class MapItem {
+public class MapItem implements Comparable{
 
 	// protected attributes
 	protected GeoPoint location;
@@ -20,9 +20,12 @@ public class MapItem {
 		this.location = location;
 		map_marker = new OverlayItem(location,"","");
 		map_shadow = new OverlayItem(location,"","");
-		location_android = new Location("");
-		location_android.setLatitude(location.getLatitude());
-		location_android.setLongitude(location.getLongitude());
+		if (location != null)
+		{
+			location_android = new Location("");
+			location_android.setLatitude(location.getLatitude());
+			location_android.setLongitude(location.getLongitude());
+		}
 	}
 	
 	public void updateLocation(Location location)
@@ -37,4 +40,9 @@ public class MapItem {
 	public OverlayItem getMarker() {return map_marker;}
 	public OverlayItem getShadow() {return map_shadow;}
 	public int getID() {return id;}
+
+	public int compareTo(Object obj) {
+		MapItem item = (MapItem)obj;
+		return this.id - item.id;
+	}
 }

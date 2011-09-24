@@ -107,7 +107,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		networkUpdater = new Handler();
 		updater = new Runnable(){
 			public void run() {
-				//networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
+				networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
 				networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
 				networkUpdater.postDelayed(updater, 1000);
 				}
@@ -527,17 +527,25 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 									index++;
 								}
 							}
-							while(i.hasNext())
+							if (ni != null)
 							{
-								display.removeItem(ni);
-								i.remove();
-								ni = i.next();
+								for(;;){
+									display.removeItem(ni);
+									i.remove();
+									if (i.hasNext())
+										ni = i.next();
+									else break;
+								}
 							}
-							while(it.hasNext())
+							if (li != null)
 							{
-								networkTransferObjects.UtilityObjects.Location loc = li.getPosition();
-								addItem(new WorldPotion(Potions.values()[li.getType().ordinal()],new GeoPoint(loc.getX(),loc.getY()),li.getId()));
-								li = it.next();
+								for(;;){
+									networkTransferObjects.UtilityObjects.Location loc = li.getPosition();
+									addItem(new WorldPotion(Potions.values()[li.getType().ordinal()],new GeoPoint(loc.getX(),loc.getY()),li.getId()));
+									if (it.hasNext())
+										li = it.next();
+									else break;
+								}
 							}
 						}
 					}
@@ -549,6 +557,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					{
 						synchronized (players)
 						{
+							Log.i("Players", plist.size() + " players in area of interest");
 							// merging old and new player lists (trying to avoid unnecessary creation of objects)
 							Iterator<NetworkPlayer> i = players.iterator();
 							Iterator<LokemonPlayer> it = plist.iterator();
@@ -582,18 +591,26 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 									index++;
 								}
 							}
-							while(i.hasNext())
+							if (np != null)
 							{
-								display.removePlayer(np);
-								i.remove();
-								np = i.next();
+								for (;;) {
+									display.removePlayer(np);
+									i.remove();
+									if (i.hasNext())
+										np = i.next();
+									else break;
+								}
 							}
-							while(it.hasNext())
+							if (lp != null)
 							{
-								Log.i("Players", "Adding id=" + lp.getPlayerID());
-								networkTransferObjects.UtilityObjects.Location loc = lp.getPosition();
-								addPlayer(new NetworkPlayer(lp.getPlayerID(), lp.getPlayerName(), Gender.values()[lp.getAvatar()], new GeoPoint(loc.getX(),loc.getY())));
-								lp = it.next();
+								for (;;) {
+									Log.i("Players", "Adding id=" + lp.getPlayerID());
+									networkTransferObjects.UtilityObjects.Location loc = lp.getPosition();
+									addPlayer(new NetworkPlayer(lp.getPlayerID(), lp.getPlayerName(), Gender.values()[lp.getAvatar()], new GeoPoint(loc.getX(),loc.getY())));
+									if (it.hasNext())
+										lp = it.next();
+									else break;
+								}
 							}
 						}
 					}
