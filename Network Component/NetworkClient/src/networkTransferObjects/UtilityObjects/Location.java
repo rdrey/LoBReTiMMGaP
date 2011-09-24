@@ -16,6 +16,12 @@ public class Location{
     {
         setLocation(x, y);
     }
+    
+    public Location()
+    {
+    	x = 0;
+    	y = 0;
+    }
 
     public double getX() {
         return x;
