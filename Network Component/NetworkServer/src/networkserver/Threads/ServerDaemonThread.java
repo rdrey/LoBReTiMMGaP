@@ -256,6 +256,7 @@ public abstract class ServerDaemonThread extends Thread{
                     if(success == -1)
                     {//Stream closed
                         System.err.println("End of stream!");
+                        fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
                         shutdownThread();
                     }
                 } 
