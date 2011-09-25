@@ -14,10 +14,11 @@ public class LokemonPlayer {
 
     private Location position;
     private String playerName;
-    private int playerID;    
-    private int avatar;    
+    private int playerID;
     private boolean busy;
-    
+    private int avatar;
+
+
     public LokemonPlayer(int playerID, String playerName) {
         this.playerID = playerID;
         this.playerName = playerName;
@@ -65,5 +66,5 @@ public class LokemonPlayer {
 
        public Location getPosition() {
         return position;
-    }    
+    }
 }

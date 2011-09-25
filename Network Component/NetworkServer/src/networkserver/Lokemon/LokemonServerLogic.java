@@ -6,7 +6,6 @@
 package networkserver.Lokemon;
 
 import com.vividsolutions.jts.geom.Coordinate;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -119,7 +118,11 @@ public class LokemonServerLogic extends Thread{
                         {
                             if(App.distFrom(pl.getPosition().getX(), pl.getPosition().getY(),
                             player.getPosition().getX(), player.getPosition().getY()) < LokemonServerVariables.areaOfInterest)
-                            {                                
+                            {
+                                if(pl.getBusy())
+                                {
+                                    System.out.println("Player "+ pl.getPlayerID()+" is busy!");
+                                }
                                 players.add(pl);
                             }
                         }
@@ -301,35 +304,40 @@ public class LokemonServerLogic extends Thread{
                 if(System.currentTimeMillis() - itemSpawnTime > LokemonServerVariables.itemSpawnTimer)
                 {
                     itemSpawnTime = System.currentTimeMillis();
-                    //If we actually have some players ingame
-                    if(LokemonServerVariables.playerList.size() >= 1)
+
+                    //First check that we havnt exceeded our maximum item limit
+                    if(LokemonServerVariables.itemMap.values().size() < LokemonServerVariables.maxItemsIngame)
                     {
-                        //Now we would like to spawn a random item around each one of the players.
-                        for(LokemonPlayer pl : LokemonServerVariables.playerList)
+                        //If we actually have some players ingame
+                        if(LokemonServerVariables.playerList.size() >= 1)
                         {
-                            //Make sure the player has a set location
-                            if(pl.getPosition() != null)
+                            //Now we would like to spawn a random item around each one of the players.
+                            for(LokemonPlayer pl : LokemonServerVariables.playerList)
                             {
-                                Location center = pl.getPosition();
-                                //Creates a random distance between itemSpawnRangeMin and itemSpawnRangeMax
-                                double randomDist = (Math.random()
-                                        * (LokemonServerVariables.itemSpawnRangeMax - LokemonServerVariables.itemSpawnRangeMin))
-                                        + LokemonServerVariables.itemSpawnRangeMin;
-                                //Create a random angle away from the play at which distance the point of the item will be.
-                                double randomAngle = Math.random() * 360;
+                                //Make sure the player has a set location
+                                if(pl.getPosition() != null)
+                                {
+                                    Location center = pl.getPosition();
+                                    //Creates a random distance between itemSpawnRangeMin and itemSpawnRangeMax
+                                    double randomDist = (Math.random()
+                                            * (LokemonServerVariables.itemSpawnRangeMax - LokemonServerVariables.itemSpawnRangeMin))
+                                            + LokemonServerVariables.itemSpawnRangeMin;
+                                    //Create a random angle away from the play at which distance the point of the item will be.
+                                    double randomAngle = Math.random() * 360;
 
-                                //Now determine a point randomDist away from center, at angle randomAngle.
-                                //Formula (x?,y?)=(x+dcosα,y+dsinα)
-                                //Obviously we convert from meters to units of latitude at the same time
-                                double x = center.getX() + (randomDist*Math.cos(randomAngle) / LokemonDaemonThread.DEGREE_METER_HACK);
-                                double y = center.getY() + (randomDist*Math.sin(randomAngle) / LokemonDaemonThread.DEGREE_METER_HACK);
+                                    //Now determine a point randomDist away from center, at angle randomAngle.
+                                    //Formula (x?,y?)=(x+dcosα,y+dsinα)
+                                    //Obviously we convert from meters to units of latitude at the same time
+                                    double x = center.getX() + (randomDist*Math.cos(randomAngle) / LokemonDaemonThread.DEGREE_METER_HACK);
+                                    double y = center.getY() + (randomDist*Math.sin(randomAngle) / LokemonDaemonThread.DEGREE_METER_HACK);
 
-                                LokemonPotion pot = new LokemonPotion(
-                                        LokemonPotion.PotionType.values()[((int)Math.random()*LokemonPotion.PotionType.values().length)],
-                                        itemIDCounter);
-                                pot.setPosition(new Location(x, y));
-                                itemIDCounter++;
-                                LokemonServerVariables.itemMap.put(pot.getId(), pot);
+                                    LokemonPotion pot = new LokemonPotion(
+                                            LokemonPotion.PotionType.values()[((int)Math.random()*LokemonPotion.PotionType.values().length)],
+                                            itemIDCounter);
+                                    pot.setPosition(new Location(x, y));
+                                    itemIDCounter++;
+                                    LokemonServerVariables.itemMap.put(pot.getId(), pot);
+                                }
                             }
                         }
                     }
