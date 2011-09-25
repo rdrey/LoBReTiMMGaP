@@ -2,7 +2,6 @@ package android.lokemon.popups;
 
 import java.util.ArrayList;
 import android.content.Context;
-import android.content.Intent;
 import android.lokemon.G;
 import android.lokemon.R;
 import android.lokemon.Util;
@@ -40,6 +39,12 @@ public class MovesPopup extends FadePopup{
 			setResult(entries.get(pos)[0]);
 			finish();
 		}
+	}
+	
+	public void onBackPressed()
+	{
+		setResult(1);
+		super.onBackPressed();
 	}
 	
 	private class EntryAdapter extends ArrayAdapter<int[]>{

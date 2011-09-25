@@ -45,10 +45,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	private List<WorldPotion> items;
 	// region list
 	private List<Region> regions;
-
-	// testing threads for generating and removing players
-	private Timer add_players_timer;
-	private Timer remove_players_timer;
 	
 	// a reference to the screen that displays the game world
 	private MapScreen display;
@@ -61,11 +57,14 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	private boolean networkReqLock; // when true all battle requests from players are ignored
 	private boolean waitingForAccept; // when true all messages other than battle acceptance are ignored
 	private boolean networkConnected;
+	private boolean busyConnecting;
 	private boolean networkBound;
+	private boolean busyBinding;
 	
 	// periodically requests game state updates from server
 	private Handler networkUpdater;
 	private Runnable updater;
+	private int numUpdates;
 	
 	private NetworkComBinder networkBinder;
 	private final Messenger networkEventMessenger;
@@ -94,23 +93,41 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		
 		display.addRegions(regions);
 		
-		// start testing threads 
-		/*add_players_timer = new Timer();
-		remove_players_timer = new Timer();
-		add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*1000));
-		remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*1000));*/
-		
 		// network setup
 		networkReqLock = false;
 		waitingForAccept = false;
+		numUpdates = 0;
+		busyBinding = false;
+		busyConnecting = false;
 		networkEventMessenger = new Messenger(new Handler(this));
 		networkUpdater = new Handler();
 		updater = new Runnable(){
 			public void run() {
-				networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
-				networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
-				networkUpdater.postDelayed(updater, 1000);
+				if (networkBound)
+				{
+					if (networkConnected)
+					{
+						if (numUpdates == 3)
+						{
+							networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
+							numUpdates = 0;
+						}
+						networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
+						numUpdates++;
+						networkUpdater.postDelayed(updater, 1000);
+					}
+					else if (!busyConnecting)
+					{
+						Log.i(NetworkVariables.TAG, "Trying to connect to game server...");
+						networkBinder.ConnectToServer();
+					}
 				}
+				else if (!busyBinding)
+				{
+					Log.i(NetworkVariables.TAG, "Trying to rebind network service");
+					createConnection();
+				}
+			}
 		};
 	}
 	
@@ -130,7 +147,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	{
 		players.remove(player);
 		display.removePlayer(player);
-		if (selectedPlayer != null && player.id == selectedPlayer.id)
+		if (selectedPlayer != null && player.getID() == selectedPlayer.getID())
 			selectedPlayer = null;
 	}
 	
@@ -166,27 +183,33 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	 * Methods related to initiating battles
 	 */
 	
-	public void requestItem(int itemIndex)
+	public void requestItem(int itemID)
 	{
 		synchronized (items)
 		{
-			selectedItem = items.get(itemIndex);
-			if (G.player.getDistanceFrom(selectedItem.getAndroidLocation()) < 20)
+			if (selectedItem == null)
 			{
-				BagItem item = G.player.items[selectedItem.potionType.ordinal()+1];
-				if (item.atMax())
-					display.showToast("You have the max no. of " + item.getName() + "s");
-				else
+				selectedItem = items.get(Collections.binarySearch(items, new MapItem(null,itemID)));
+				if (G.player.getDistanceFrom(selectedItem.getAndroidLocation()) < 20)
 				{
-					// !!!send item request!!!
-					item.increment();
-					display.showToast("You have picked up a " + item.getName());
-					removeItem(selectedItem);
-					selectedItem = null;
+					BagItem item = G.player.items[selectedItem.potionType.ordinal()+1];
+					if (item.atMax())
+						display.showToast("You have the max no. of " + item.getName() + "s");
+					else
+					{
+						// send item request
+						NetworkMessageMedium msg = new NetworkMessageMedium("ItemPickupRequest");
+						msg.integers.add(itemID);
+						networkBinder.sendRequest(msg);
+						removeItem(selectedItem);
+						display.showToast("Trying to pick up item");
+					}
 				}
+				else
+					display.showToast("Item is too far away");
 			}
 			else
-				display.showToast("Item is too far away");
+				display.showToast("Try again in a second");
 		}
 	}
 	
@@ -194,12 +217,12 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	 * Methods related to initiating battles
 	 */
 	
-	public void requestPlayer(int playerIndex)
+	public void requestPlayer(int playerID)
 	{
 		synchronized (players)
 		{
 			networkReqLock = true;
-			selectedPlayer = players.get(playerIndex);	
+			selectedPlayer = players.get(Collections.binarySearch(players, new MapItem(null,playerID)));
 			if (G.player.getDistanceFrom(selectedPlayer.getAndroidLocation()) < 20)
 			{
 				if (selectedPlayer.getPlayerState() == PlayerState.BUSY)
@@ -227,7 +250,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			else
 			{
 				// send Action.REQUEST_BATTLE
-				networkBinder.sendDirectCommunication(getBattleInitiationMessage(Action.REQUEST_BATTLE), selectedPlayer.id);
+				networkBinder.sendDirectCommunication(getBattleInitiationMessage(Action.REQUEST_BATTLE), selectedPlayer.getID());
 				display.showProgressDialog("Waiting for player response...");
 				waitingForAccept = true;
 			}
@@ -236,20 +259,20 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	
 	public void rejectBattle(boolean sendResponse)
 	{
-		selectedPlayer = null;
-		waitingForAccept = false;
-		networkReqLock = false;
 		if (sendResponse)
 		{
 			// send Action.REJECT_BATTLE
-			networkBinder.sendDirectCommunication(new NetworkMessage(Action.REJECT_BATTLE.toString()), selectedPlayer.id);
+			networkBinder.sendDirectCommunication(new NetworkMessage(Action.REJECT_BATTLE.toString()), selectedPlayer.getID());
 		}
+		selectedPlayer = null;
+		waitingForAccept = false;
+		networkReqLock = false;
 	}
 	
 	public void acceptBattle()
 	{
 		// send Action.ACCEPT_BATTLE
-		networkBinder.sendDirectCommunication(getBattleInitiationMessage(Action.ACCEPT_BATTLE), selectedPlayer.id);
+		networkBinder.sendDirectCommunication(getBattleInitiationMessage(Action.ACCEPT_BATTLE), selectedPlayer.getID());
 		initiateBattle();
 	}
 	
@@ -353,58 +376,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		}
 		catch (Exception e) {Log.e("Data load", e.toString());}
 	}
-		
-	/*
-	 * TimerTask classes to generate/remove players (only used for testing)
-	 */
-	
-	// adds a player & item to the game with a 50% chance
-	private class PlayerGeneration extends TimerTask
-	{
-		public void run()
-		{
-			if (Math.random() < 0.5)
-			{
-				double lon = Math.random() * -0.005 - 33.955;
-				double lat = Math.random() * 0.0008 + 18.4606;
-				NetworkPlayer p = new NetworkPlayer(-1,"Test",G.Gender.FEMALE,new GeoPoint(lon,lat));
-				addPlayer(p);
-				Log.i("Players", "Player added (total: " + players.size() + ")");
-			}
-			if (Math.random() < 0.5)
-			{
-				double lon = Math.random() * -0.005 - 33.955;
-				double lat = Math.random() * 0.0008 + 18.4606;
-				addItem(new WorldPotion(Potions.values()[(int)(Math.random()*5)],new GeoPoint(lon,lat),-1));
-				Log.i("Items", "Item added (total: " + items.size() + ")");
-			}
-			add_players_timer.schedule(new PlayerGeneration(), (int)(Math.random()*5000));
-		}
-	}
-	
-	// removes a random number of players & items from the game
-	private class PlayerRemoval extends TimerTask
-	{
-		public void run()
-		{
-			int numToBeRemoved = (int)(players.size() * Math.random());
-			for (int i = 0; i < numToBeRemoved; i++)
-			{
-				if (Math.random() < 0.5)
-					removePlayer(players.get((int)(Math.random()*players.size())));
-				else
-				{
-					players.get((int)(Math.random()*players.size())).setPlayerState(PlayerState.BUSY);
-				}
-			}
-			numToBeRemoved = (int)(items.size() * Math.random());
-			for (int i = 0; i < numToBeRemoved; i++)
-				removeItem(items.get((int)(Math.random()*items.size())));
-			Log.i("Players", numToBeRemoved + " players removed (total: " + players.size() + ")");
-			Log.i("Items", numToBeRemoved + " items removed (total: " + items.size() + ")");
-			remove_players_timer.schedule(new PlayerRemoval(), (int)(Math.random()*5000));
-		}
-	}
 	
 	/*
 	 * Location listener methods
@@ -430,10 +401,11 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	 * Network event handler and connection setup
 	 */
 	
-	public void createConnection(Activity current)
+	public void createConnection()
 	{
 		// bind network component
-		Intent intent = new Intent(current, NetworkComService.class);
+		busyBinding = true;
+		Intent intent = new Intent(display, NetworkComService.class);
 		ServiceConnection ser = new ServiceConnection() {
 			
 			public void onServiceDisconnected(ComponentName name) 
@@ -449,11 +421,13 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				networkBinder = (NetworkComBinder)service;
 				networkBinder.registerMessenger(networkEventMessenger);
 				networkBinder.ConnectToServer();
+				busyConnecting = true;
 				networkBound = true;
+				busyBinding = false;
 				display.showToast("Connected to service");
 			}
 		};
-		current.bindService(intent, ser, Context.BIND_AUTO_CREATE);
+		display.bindService(intent, ser, Context.BIND_AUTO_CREATE);
 	}
 	
 	public void endGame()
@@ -470,6 +444,13 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			{
 				display.showToast("Connected to game server");
 				networkConnected = true;
+				busyConnecting = false;
+				
+				// get player id and tell the server where the player is
+				G.player.id = networkBinder.getPlayerId();
+				onLocationChanged(G.player.getLocation());
+				
+				// start requesting updates from server
 				networkUpdater.postDelayed(updater, 1000);
 				break;	
 			}
@@ -482,6 +463,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			case CONNECTION_FAILED:
 			{
 				display.showToast("Could not connect to game server");
+				busyConnecting = false;
 				networkConnected = false;
 				break;
 			}
@@ -500,53 +482,82 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 							// merging old and new player lists (trying to avoid unnecessary creation of objects)
 							Iterator<WorldPotion> i = items.iterator();
 							Iterator<LokemonPotion> it = ilist.iterator();
+							List<Integer> newIndices = new LinkedList<Integer>();
+							List<WorldPotion> newItems = new LinkedList<WorldPotion>();
 							WorldPotion ni = i.hasNext()?i.next():null;
 							LokemonPotion li = it.hasNext()?it.next():null;
 							int index = 0;
-							while (i.hasNext() && it.hasNext())
+							while (ni != null && li != null)
 							{
 								int id = li.getId();
-								if (ni.getID() == id)
+								if (ni.getID() < id)
 								{
-									ni.updateLocation(Util.fromSerialLocation(li.getPosition()));
-									ni = i.next();
-									li = it.next();
-									index++;
-								}
-								else if (ni.getID() < id)
-								{
-									display.removeItem(ni);
-									i.remove();
-									ni = i.next();
-								}
-								else
-								{
-									networkTransferObjects.UtilityObjects.Location loc = li.getPosition();
-									insertItem(new WorldPotion(Potions.values()[li.getType().ordinal()],new GeoPoint(loc.getX(),loc.getY()),li.getId()),index);
-									li = it.next();
-									index++;
-								}
-							}
-							if (ni != null)
-							{
-								for(;;){
+									Log.i("Items", "Removing id=" + ni.getID());
 									display.removeItem(ni);
 									i.remove();
 									if (i.hasNext())
 										ni = i.next();
-									else break;
+									else ni = null;
 								}
-							}
-							if (li != null)
-							{
-								for(;;){
+								else if (ni.getID() > id)
+								{
+									Log.i("Items", "Inserting id=" + id);
 									networkTransferObjects.UtilityObjects.Location loc = li.getPosition();
-									addItem(new WorldPotion(Potions.values()[li.getType().ordinal()],new GeoPoint(loc.getX(),loc.getY()),li.getId()));
+									newIndices.add(index);
+									newItems.add(new WorldPotion(Potions.values()[li.getType().ordinal()],new GeoPoint(loc.getX(),loc.getY()),li.getId()));
 									if (it.hasNext())
+									{
 										li = it.next();
-									else break;
+										index++;
+									}
+									else li = null;
+								}
+								else
+								{
+									if (it.hasNext())
+									{
+										li = it.next();
+										index++;
+									}
+									else li = null;
+									if (i.hasNext())
+										ni = i.next();
+									else ni = null;
 								}
 							}
+							
+							// remove or add tail of list
+							if (ni != null)
+							{	
+								Log.i("Items", "Removing id=" + ni.getID());
+								display.removeItem(ni);
+								i.remove();
+								while (i.hasNext())
+								{
+									ni = i.next();
+									Log.i("Items", "Removing id=" + ni.getID());
+									display.removeItem(ni);
+									i.remove();
+								}
+							}
+							else if (li != null)
+							{
+								Log.i("Items", "Adding id=" + li.getId());
+								networkTransferObjects.UtilityObjects.Location loc = li.getPosition();
+								addItem(new WorldPotion(Potions.values()[li.getType().ordinal()],new GeoPoint(loc.getX(),loc.getY()),li.getId()));
+								while (it.hasNext())
+								{
+									li = it.next();
+									Log.i("Items", "Adding id=" + li.getId());
+									loc = li.getPosition();
+									addItem(new WorldPotion(Potions.values()[li.getType().ordinal()],new GeoPoint(loc.getX(),loc.getY()),li.getId()));
+								}
+							}
+							
+							// insert new objects
+							Iterator<Integer> count = newIndices.iterator();
+							for (WorldPotion p:newItems)
+								insertItem(p,count.next());
 						}
 					}
 				}
@@ -557,61 +568,88 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					{
 						synchronized (players)
 						{
-							Log.i("Players", plist.size() + " players in area of interest");
 							// merging old and new player lists (trying to avoid unnecessary creation of objects)
 							Iterator<NetworkPlayer> i = players.iterator();
 							Iterator<LokemonPlayer> it = plist.iterator();
+							List<Integer> newIndices = new LinkedList<Integer>();
+							List<NetworkPlayer> newPlayers = new LinkedList<NetworkPlayer>();
 							NetworkPlayer np = i.hasNext()?i.next():null;
 							LokemonPlayer lp = it.hasNext()?it.next():null;
 							int index = 0;
-							while (i.hasNext() && it.hasNext())
+							while (np != null && lp != null)
 							{
 								int id = lp.getPlayerID();
-								if (np.id == id)
+								if (np.getID() == id)
 								{
-									Log.i("Players", "Updating id=" + id);
+									Log.i("Players", "Updating id=" + id + " with location " + lp.getPosition().getX() + " "+ lp.getPosition().getY());
 									np.updateLocation(Util.fromSerialLocation(lp.getPosition()));
-									np = i.next();
-									lp = it.next();
-									index++;
+									np.setPlayerState(lp.getBusy()?PlayerState.BUSY:PlayerState.AVAILABLE);
+									if (i.hasNext())
+										np = i.next();
+									else np = null;
+									if (it.hasNext())
+									{
+										lp = it.next();
+										index++;
+									}
+									else lp = null;
 								}
-								else if (np.id < id)
+								else if (np.getID() < id)
 								{
 									Log.i("Players", "Removing id=" + np.getID());
 									display.removePlayer(np);
 									i.remove();
-									np = i.next();
+									if (i.hasNext())
+										np = i.next();
+									else np = null;
 								}
 								else
 								{
 									Log.i("Players", "Inserting id=" + id);
 									networkTransferObjects.UtilityObjects.Location loc = lp.getPosition();
-									insertPlayer(new NetworkPlayer(lp.getPlayerID(), lp.getPlayerName(), Gender.values()[lp.getAvatar()], new GeoPoint(loc.getX(),loc.getY())),index);
-									lp = it.next();
-									index++;
+									newIndices.add(index);
+									newPlayers.add(new NetworkPlayer(lp.getPlayerID(), lp.getPlayerName(), Gender.values()[lp.getAvatar()], new GeoPoint(loc.getX(),loc.getY())));
+									if (it.hasNext())
+									{
+										lp = it.next();
+										index++;
+									}
+									else lp = null;
 								}
 							}
+							
+							// remove or add tail of list
 							if (np != null)
 							{
-								for (;;) {
+								Log.i("Players", "Removing id=" + np.getID());
+								display.removePlayer(np);
+								i.remove();
+								while (i.hasNext())
+								{
+									np = i.next();
+									Log.i("Players", "Removing id=" + np.getID());
 									display.removePlayer(np);
 									i.remove();
-									if (i.hasNext())
-										np = i.next();
-									else break;
 								}
 							}
-							if (lp != null)
+							else if (lp != null)
 							{
-								for (;;) {
+								Log.i("Players", "Adding id=" + lp.getPlayerID());
+								networkTransferObjects.UtilityObjects.Location loc = lp.getPosition();
+								addPlayer(new NetworkPlayer(lp.getPlayerID(), lp.getPlayerName(), Gender.values()[lp.getAvatar()], new GeoPoint(loc.getX(),loc.getY())));
+								while (it.hasNext()) 
+								{
+									lp = it.next();
 									Log.i("Players", "Adding id=" + lp.getPlayerID());
-									networkTransferObjects.UtilityObjects.Location loc = lp.getPosition();
+									loc = lp.getPosition();
 									addPlayer(new NetworkPlayer(lp.getPlayerID(), lp.getPlayerName(), Gender.values()[lp.getAvatar()], new GeoPoint(loc.getX(),loc.getY())));
-									if (it.hasNext())
-										lp = it.next();
-									else break;
 								}
 							}
+							
+							// insert new objects
+							Iterator<Integer> count = newIndices.iterator();
+							for (NetworkPlayer p:newPlayers)
+								insertPlayer(p,count.next());
 						}
 					}
 				}
@@ -619,6 +657,24 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				{
 					// some error state
 					Log.i("Players", nMsg.getMessage());
+				}
+				break;
+			}
+			case REQUEST_RECEIVED:
+			{
+				NetworkMessage nMsg = (NetworkMessage)((NetworkEvent)msg.obj).getMessage();
+				String tag = nMsg.getMessage();
+				if (tag.equals("Accept") && selectedItem != null)
+				{
+					BagItem item = G.player.items[selectedItem.potionType.ordinal()+1];
+					item.increment();
+					display.showToast("You have picked up a " + item.getName());
+					selectedItem = null;
+				}
+				else
+				{
+					display.showToast("Someone picked it up before you");
+					selectedItem = null;
 				}
 				break;
 			}

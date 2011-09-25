@@ -93,7 +93,6 @@ public class LokemonDaemonThread extends ServerDaemonThread{
         public void EventOccured(NetworkEvent e) {
             NetworkMessage msg = (NetworkMessage)e.getMessage();
             String sMsg = msg.getMessage();
-
             if(sMsg.equals("LocationUpdate"))
             {
                 double x = ((NetworkMessageMedium)msg).doubles.get(0);

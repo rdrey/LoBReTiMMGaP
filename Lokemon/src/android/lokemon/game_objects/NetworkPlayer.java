@@ -5,14 +5,12 @@ import org.mapsforge.android.maps.*;
 import android.lokemon.G;
 import android.lokemon.G.Gender;
 import android.lokemon.G.PlayerState;
-import android.location.Location;
 
 public class NetworkPlayer extends MapItem{
 	
 	// public attributes
 	public Gender gender;
 	public String nickname;
-	public int id;
 	
 	// state changes the map icon so cannot be set publicly
 	private PlayerState playerState;
@@ -20,7 +18,6 @@ public class NetworkPlayer extends MapItem{
 	public NetworkPlayer(int id, String nick, Gender gender, GeoPoint location)
 	{
 		super(location, id);
-		this.id = id;
 		this.nickname = nick;
 		this.gender = gender;
 		map_marker.setTitle(nick);

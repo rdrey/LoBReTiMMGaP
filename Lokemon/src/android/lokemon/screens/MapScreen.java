@@ -1,5 +1,6 @@
 package android.lokemon.screens;
 
+import java.util.ArrayList;
 import java.util.List;
 import android.location.Location;
 import android.lokemon.G;
@@ -57,6 +58,10 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 	private ArrayItemizedOverlay players;
 	private ArrayItemizedOverlay items;
 	
+	// corresponding lists for ids (fuck fuck fuck)
+	private ArrayList<Integer> playerIDs;
+	private ArrayList<Integer> itemIDs;
+	
 	// map animation variables
 	private GeoPoint start;
 	private GeoPoint end;
@@ -64,6 +69,8 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 	private long lastTime;
 	private Runnable animator;
 	private Handler animHandler;
+	private Runnable redraw;
+	private Handler redrawHandler;
 	
 	// GPS variables
 	LBGLocationAdapter location_adapter;
@@ -78,7 +85,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         mapView.setClickable(true);
         mapView.setMapFile(G.mapDir + G.mapFile);
         
-        // animation runnable
+        // animation & redraw runnables
         animator = new Runnable(){
 			public void run() {
 				double timeStep = (System.currentTimeMillis() - lastTime) * 0.003;
@@ -108,7 +115,16 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 				animHandler.postDelayed(animator, 50);
 			}        	
         };
+        
+        redraw = new Runnable(){
+        	public void run(){
+        		players.requestRedraw();
+        		shadows_player.requestRedraw();
+        		redrawHandler.postDelayed(redraw, 1000);
+        	}
+        };
         animHandler = new Handler();
+        redrawHandler = new Handler();
         
         // we want to disable panning and zooming using gestures (this is the only way with SDK version 2.2)
         mapView.setOnTouchListener(new View.OnTouchListener() {
@@ -165,10 +181,13 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         progressDialog = new ProgressDialog(this, ProgressDialog.STYLE_SPINNER);
     	progressDialog.setCancelable(false);
         
+    	playerIDs = new ArrayList<Integer>();
+    	itemIDs = new ArrayList<Integer>();
+    	
         players = new ArrayItemizedOverlay(G.player_marker_available,this) {
         	public boolean onTap(int index) 
         	{
-        		G.game.requestPlayer(index);
+        		G.game.requestPlayer(playerIDs.get(index));
         		return true;
         	}
         };
@@ -178,7 +197,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         items = new ArrayItemizedOverlay(getResources().getDrawable(R.drawable.marker_item),this) {
         	public boolean onTap(int index) 
         	{
-        		G.game.requestItem(index);
+        		G.game.requestItem(itemIDs.get(index));
         		return true;
         	}
         };
@@ -204,7 +223,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         if (G.testMode == TestMode.EXPERIMENT)
         	location_adapter = new LBGLocationAdapter(this, LBGLocationAdapter.GPS_LOCATION_ONLY, 0, 2, G.game);
         
-        G.game.createConnection(this);
+        G.game.createConnection();
         Log.i("Interface", "Map view created");
     }
     
@@ -219,6 +238,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     	
     	lastTime = System.currentTimeMillis();
     	animHandler.postDelayed(animator, 50);
+    	redrawHandler.postDelayed(redraw, 1000);
     }
     
     protected void onPause()
@@ -230,6 +250,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     		location_adapter.stopTracking();
     	
     	animHandler.removeCallbacks(animator);
+    	redrawHandler.removeCallbacks(redraw);
     }
     
     protected void onActivityResult (int requestCode, int resultCode, Intent data)
@@ -253,7 +274,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     public void switchToBattle()
     {
     	if (progressDialog.isShowing())
-    		progressDialog.cancel();
+    		progressDialog.dismiss();
     	Intent intent = new Intent(this, BattleScreen.class);
     	startActivityForResult(intent, 1);  	
     }
@@ -351,23 +372,27 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     
     public void addPlayer(NetworkPlayer p)
     {
+    	playerIDs.add(p.getID());
     	players.addItem(p.getMarker());
 		shadows_player.addItem(p.getShadow());
     }
     
     public void removePlayer(NetworkPlayer p)
     {
+    	playerIDs.remove(p.getID());
     	players.removeItem(p.getMarker());
 		shadows_player.removeItem(p.getShadow());
     }
     
     public void addItem(WorldPotion p)
     {
+    	itemIDs.add(p.getID());
     	items.addItem(p.getMarker());
     }
     
     public void removeItem(WorldPotion p)
     {
+    	itemIDs.remove(p.getID());
     	items.removeItem(p.getMarker());
     }
     

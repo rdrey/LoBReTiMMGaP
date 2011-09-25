@@ -104,7 +104,8 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 			break;
 		case 2:
 			G.battle.selectMove(resultCode);
-			showProgressDialog("Waiting for opponent...");
+			if (resultCode > -1)
+				showProgressDialog("Waiting for opponent...");
 			break;
 		case 3:
 			G.battle.useItem(resultCode);

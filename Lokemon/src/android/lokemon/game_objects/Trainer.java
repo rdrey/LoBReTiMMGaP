@@ -12,7 +12,6 @@ import android.lokemon.G.Gender;
 import android.lokemon.G.Potions;
 import android.util.Log;
 import android.app.Activity;
-import android.app.AlertDialog;
 
 // class encapsulates player attributes - follows singleton pattern
 public class Trainer {
