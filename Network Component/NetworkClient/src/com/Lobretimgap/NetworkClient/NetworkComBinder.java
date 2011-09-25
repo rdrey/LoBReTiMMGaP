@@ -94,9 +94,16 @@ public class NetworkComBinder extends Binder {
 					}
 					else
 					{
+						try
+						{
 						for(Messenger m : linkedMessengers)
 						{
 							registerMessenger(m);
+						}
+						}
+						catch(Exception e)
+						{
+							Log.w(NetworkVariables.TAG, "Failed to re-register old messengers with new network thread!");
 						}
 					}
 				}
