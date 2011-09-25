@@ -51,6 +51,7 @@ public abstract class CoreNetworkThread extends Thread
     private boolean stopOperation = false;
     private boolean keepAliveBreak = false;
     public boolean isRunning = false;
+    public boolean hasCompletedOperation = false;
     LinkedBuffer buffer = LinkedBuffer.allocate(512);
     ByteBuffer b = ByteBuffer.allocate(4);
     private boolean connected = false;
@@ -82,10 +83,12 @@ public abstract class CoreNetworkThread extends Thread
 	/**
 	 * Asynchronously connects to the server
 	 */
-	public void connect()
+	public void connectToServerAsync()
 	{
 		if(!connected)
+		{			
 			this.start();
+		}
 	}
 	
 	private void connectToServer()
@@ -627,6 +630,7 @@ public abstract class CoreNetworkThread extends Thread
     {
         try
         {
+        	Log.d(NetworkVariables.TAG, "Shutting down communications thread!");
         	isRunning = false;
         	if(out != null)
         		out.shutdownThread();
@@ -637,10 +641,13 @@ public abstract class CoreNetworkThread extends Thread
             connected = false;
         }
         catch(IOException e)
-        {
-            //We don't really care if the socket failed to close correctly.
-            System.err.println("Socket failed to close correctly. \n"+e);
+        {            
+           Log.w(NetworkVariables.TAG, "Socket failed to close correctly. \n"+e);
         }  
+        finally
+        {
+        	hasCompletedOperation = true;
+        }
     }
     
     /************************************************* Event Handling *********************************************************/

@@ -56,8 +56,7 @@ public class GameClock implements TimeSource {
 	{
 		
 		//Transform to an array so we can sort.
-		Object [] workList = accumulationList.toArray();
-		Log.i(NetworkVariables.TAG, "Got here!");
+		Object [] workList = accumulationList.toArray();		
 		//Sort based on latency (see the comparable interface in TimeSyncPacket)
 		Arrays.sort(workList);
 		

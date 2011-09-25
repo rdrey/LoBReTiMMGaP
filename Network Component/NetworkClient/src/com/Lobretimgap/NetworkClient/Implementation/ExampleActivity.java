@@ -109,6 +109,13 @@ public class ExampleActivity extends Activity {
 					
 				case CONNECTION_LOST:
 					tv.append("Connection to host lost...\n");
+					timer.schedule(new TimerTask() {
+						
+						@Override
+						public void run() {							
+							binder.ConnectToServer();
+						}
+					}, 3000);
 					break;
 					
 				case CONNECTION_FAILED:

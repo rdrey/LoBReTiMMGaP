@@ -1,6 +1,9 @@
 package com.Lobretimgap.NetworkClient;
 
 import java.nio.BufferOverflowException;
+import java.nio.channels.AlreadyConnectedException;
+import java.util.ArrayList;
+
 import networkTransferObjects.NetworkMessage;
 import android.os.Binder;
 import com.Lobretimgap.NetworkClient.EventListeners.*;
@@ -17,10 +20,11 @@ public class NetworkComBinder extends Binder {
 	
 	private CoreNetworkThread networkThread;
 	private boolean isConnected = false;
+	private ArrayList<Messenger> linkedMessengers = new ArrayList<Messenger>();
 	
-	public NetworkComBinder(CoreNetworkThread thread)
+	public NetworkComBinder() throws IllegalAccessException, InstantiationException
 	{
-		networkThread = thread;
+		networkThread = NetworkVariables.getInstance();
 		
 		addListener(ConnectionEstablishedListener.class, new ConnectionEstablishedListener() {			
 			public void EventOccured(NetworkEvent e) {
@@ -35,13 +39,77 @@ public class NetworkComBinder extends Binder {
 		});
 	}
 	
+	public boolean isConnectedToServer()
+	{
+		return isConnected;
+	}
+	
 	/**
 	 * Uses the connection information in NetworkVariables to try 
 	 * and establish a connection with the server.	
 	 */
 	public void ConnectToServer()
 	{
-		networkThread.connect();
+		if(!isConnected)
+		{
+			if(networkThread.hasCompletedOperation)
+			{
+				boolean success = true;
+				try {
+					networkThread = NetworkVariables.getInstance();
+					
+					addListener(ConnectionEstablishedListener.class, new ConnectionEstablishedListener() {			
+						public void EventOccured(NetworkEvent e) {
+							isConnected = true;							 			
+						}
+					});
+					
+					addListener(ConnectionLostListener.class, new ConnectionLostListener() {			
+						public void EventOccured(NetworkEvent e) {			
+							isConnected = false;									
+						}
+					});
+					
+					networkThread.connectToServerAsync();
+				} catch (IllegalAccessException e) {					
+					Log.e(NetworkVariables.TAG, "Failed to recreate network thread!\n"+e);
+					success = false;
+				} catch (InstantiationException e) {
+					Log.e(NetworkVariables.TAG, "Failed to recreate network thread!\n"+e);
+					success = false;
+				}				
+				finally
+				{
+					if(!success)
+					{
+						for(Messenger m : linkedMessengers)
+						{
+							try {
+								m.send(Message.obtain(null, EventType.CONNECTION_FAILED.ordinal(), 
+										new NetworkEvent(this, "Failed to recreate network thread!")));
+							} catch (RemoteException e1) {					
+								Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+							}	
+						}
+					}
+					else
+					{
+						for(Messenger m : linkedMessengers)
+						{
+							registerMessenger(m);
+						}
+					}
+				}
+			}
+			else
+			{	
+				networkThread.connectToServerAsync();
+			}
+		}
+		else
+		{
+			throw new AlreadyConnectedException();
+		}
 	}
 	
 	/**
@@ -278,6 +346,9 @@ public class NetworkComBinder extends Binder {
 	 */
 	public void registerMessenger(final Messenger eventMessenger)
 	{
+		//Keep track of who's listening, in case we need to restart the network thread.
+		linkedMessengers.add(eventMessenger);
+		
 		addListener(ConnectionEstablishedListener.class, new ConnectionEstablishedListener() {			
 			public void EventOccured(NetworkEvent e) {					
 				try {

@@ -1,5 +1,7 @@
 package com.Lobretimgap.NetworkClient;
 
+import networkTransferObjects.NetworkMessage;
+
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
 
 import android.app.Service;
@@ -9,14 +11,13 @@ import android.util.Log;
 
 public class NetworkComService <T extends CoreNetworkThread> extends Service{	
 
-	private CoreNetworkThread networkThread;
+	
 	private IBinder binder;
 	
 	public void onCreate()
 	{	
-		try {
-			networkThread = NetworkVariables.getInstance();
-			binder = new NetworkComBinder(networkThread);
+		try {			
+			binder = new NetworkComBinder();
 		} catch (IllegalAccessException e) {
 			Log.e(NetworkVariables.TAG, "Error thrown in Network thread instantiation: " + e.getMessage(), e);			
 		} catch (InstantiationException e) {
@@ -38,9 +39,13 @@ public class NetworkComService <T extends CoreNetworkThread> extends Service{
 	
 	public void onDestroy()
 	{
-		if(networkThread.isRunning)
+		if(binder.isBinderAlive())
 		{
-			networkThread.shutdownThread();
+			if(((NetworkComBinder)binder).isConnectedToServer())
+			{
+				((NetworkComBinder)binder).sendTerminationRequest(new NetworkMessage("Automatic Termination"));
+			}
+			
 		}
 		super.onDestroy();
 	}
