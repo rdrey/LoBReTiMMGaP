@@ -61,7 +61,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	// network objects
 	private boolean networkReqLock; // when true all battle requests from players are ignored
 	private boolean waitingForAccept; // when true all messages other than battle acceptance are ignored
-	private boolean networkConnected;
 	private boolean busyConnecting;
 	private boolean networkBound;
 	private boolean busyBinding;
@@ -95,9 +94,9 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				new GeoPoint(-33.958005, 18.461639),
 				new GeoPoint(-33.957511, 18.461701),
 				new GeoPoint(-33.957411, 18.460988)};
-		regions.add(new Region(points,Regions.GRASSLAND,0));
+		//regions.add(new Region(points,Regions.GRASSLAND,0));
 		
-		display.addRegion(regions.get(0));
+		//display.addRegion(regions.get(0));
 		
 		// network setup
 		networkReqLock = false;
@@ -111,7 +110,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			public void run() {
 				if (networkBound)
 				{
-					if (networkConnected)
+					if (networkBinder.isConnectedToServer())
 					{
 						if (G.player.playerState == PlayerState.AVAILABLE)
 						{
@@ -534,34 +533,36 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	
 	public boolean handleMessage(Message msg) 
 	{
-		Log.e(NetworkVariables.TAG, NetworkComBinder.EventType.values()[msg.what].toString());
+		Log.i(NetworkVariables.TAG, NetworkComBinder.EventType.values()[msg.what].toString());
 		switch (NetworkComBinder.EventType.values()[msg.what])
 		{
 			case CONNECTION_ESTABLISHED:
 			{
 				display.showToast("Connected to game server");
-				networkConnected = true;
 				busyConnecting = false;
 				
-				// get player id and tell the server where the player is
-				G.player.id = networkBinder.getPlayerId();
+				// tell the server where the player is
 				onLocationChanged(G.player.getLocation());
 				
 				// start requesting updates from server
 				networkUpdater.postDelayed(updater, 1000);
 				break;	
 			}
+			case PLAYER_REGISTERED:
+			{
+				// get player id
+				G.player.id = networkBinder.getPlayerId();
+				break;
+			}
 			case CONNECTION_LOST:
 			{
 				display.showToast("Connection to game server lost");
-				networkConnected = false;
 				break;
 			}
 			case CONNECTION_FAILED:
 			{
 				display.showToast("Could not connect to game server");
 				busyConnecting = false;
-				networkConnected = false;
 				break;
 			}
 			case GAMESTATE_RECEIVED:
