@@ -1,14 +1,14 @@
 package com.Lobretimgap.NetworkClient;
 
-import com.Lobretimgap.NetworkClient.Lokemon.CoreNetworkThreadLokemon;
+import com.Lobretimgap.NetworkClient.Implementation.NetworkThreadImplementation;
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
 
 
 public class NetworkVariables {
 	public static final String TAG = "NetworkClient";
 	public static final int port = 10282;
-	public static final String hostname = "192.168.1.4";//"blue.cs.uct.ac.za";
-	//public static final String hostname = "192.168.42.101";//"137.158.60.206";//"blue.cs.uct.ac.za";
+	//public static final String hostname = "192.168.1.4";//"blue.cs.uct.ac.za";
+	public static final String hostname = "137.158.60.206";//"blue.cs.uct.ac.za";
 	public static final int writeThreadBufferSize = 16;
 	public static final int initialNetworkMessageMapSize = 8;
 	
@@ -20,7 +20,7 @@ public class NetworkVariables {
 	public static final boolean keepAliveEnabled = false;
 	
 	//Replace CoreNetworkThread.class with a concrete implementation of that class.
-	public static final Class<CoreNetworkThreadLokemon> coreNetworkThreadClass = CoreNetworkThreadLokemon.class;
+	public static final Class<NetworkThreadImplementation> coreNetworkThreadClass = NetworkThreadImplementation.class;
 	
 	/**
 	 * Uses the class type above to create a concrete instance of the CoreNetworkThread 

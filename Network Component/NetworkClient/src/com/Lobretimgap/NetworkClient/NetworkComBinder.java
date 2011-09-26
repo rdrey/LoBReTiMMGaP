@@ -340,7 +340,8 @@ public class NetworkComBinder extends Binder {
 		PARTIAL_GAMESTATE_RECEIVED,
 		REQUEST_RECEIVED,
 		UNKNOWN_MESSAGE_TYPE_RECEIVED,
-		UPDATE_RECEIVED
+		UPDATE_RECEIVED,
+		PLAYER_REGISTERED
 		
 	}
 	
@@ -458,7 +459,17 @@ public class NetworkComBinder extends Binder {
 					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
 				}					
 			}
-		});		
+		});	
+		
+		addListener(PlayerRegisteredListener.class, new PlayerRegisteredListener() {			
+			public void EventOccured(NetworkEvent e) {
+				try {
+					eventMessenger.send(Message.obtain(null, EventType.PLAYER_REGISTERED.ordinal(), e));
+				} catch (RemoteException e1) {					
+					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
+				}					
+			}
+		});
 		
 	}
 	

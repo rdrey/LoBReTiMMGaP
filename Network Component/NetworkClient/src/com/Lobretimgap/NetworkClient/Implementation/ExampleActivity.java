@@ -71,8 +71,8 @@ public class ExampleActivity extends Activity {
 			tv.append("Service connected! Starting connection...\n");
 			
 			binder.registerMessenger(eventMessenger);
-			
-			binder.ConnectToServer();			
+			if(!binder.isConnectedToServer())
+				binder.ConnectToServer();			
 			
 			timer.schedule(new TimerTask() {
 				@Override
@@ -142,7 +142,7 @@ public class ExampleActivity extends Activity {
 						medMessage.doubles.add(32.5);
 						binder.sendGameUpdate(medMessage);
 						NetworkMessage busyMessage = new NetworkMessage("EnteredBattle");
-						//binder.sendGameUpdate(busyMessage);
+						binder.sendGameUpdate(busyMessage);
 						
 					}
 					else if (pingsPerformed == 5)
@@ -213,6 +213,9 @@ public class ExampleActivity extends Activity {
 					{
 						tv.append("Received this from server: "+mMsg.getMessage()+"\n");
 					}
+					break;
+				case PLAYER_REGISTERED:
+					tv.append("Player registered with server! \n");
 					break;
 				default:
 					tv.append("Unrecognised event of type "+ NetworkComBinder.EventType.values()[msg.what] + " received.\n");					
