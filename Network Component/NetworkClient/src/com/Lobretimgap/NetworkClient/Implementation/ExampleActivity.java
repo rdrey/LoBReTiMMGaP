@@ -9,9 +9,11 @@ import networkTransferObjects.NetworkMessageLarge;
 import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.Lokemon.LokemonPlayer;
 import networkTransferObjects.Lokemon.LokemonPotion;
+import networkTransferObjects.Lokemon.LokemonSpatialObject;
 
 import com.Lobretimgap.NetworkClient.NetworkComBinder;
 import com.Lobretimgap.NetworkClient.NetworkComService;
+import com.Lobretimgap.NetworkClient.NetworkVariables;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 
 import android.app.Activity;
@@ -25,6 +27,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.widget.TextView;
 
 public class ExampleActivity extends Activity {
@@ -36,6 +39,7 @@ public class ExampleActivity extends Activity {
 	private final int recurranceDelay = 1; //in seconds
 	
 	private int pingsPerformed = 0;
+	private int pingsReceived = 0;
 	private int highest=0;
 	private int lowest=100000;
 	private int total=0;
@@ -77,7 +81,7 @@ public class ExampleActivity extends Activity {
 			timer.schedule(new TimerTask() {
 				@Override
 				public void run() {
-					if(pingsPerformed < 20)
+					if(pingsPerformed < 60)
 					{
 						if(networkBound)
 							binder.requestLatency();
@@ -124,6 +128,7 @@ public class ExampleActivity extends Activity {
 					
 				case LATENCY_UPDATE_RECEIVED:
 					tv.append("Latency reported as: " + ((NetworkEvent)msg.obj).getMessage()+"ms\n");
+					Log.d("LAT", "" + ((NetworkEvent)msg.obj).getMessage());
 					int latency = ((Long)((NetworkEvent)msg.obj).getMessage()).intValue();
 					if(latency > highest)
 						highest = latency;					
@@ -131,9 +136,11 @@ public class ExampleActivity extends Activity {
 						lowest = latency;
 					total += latency;
 					
-					if(pingsPerformed == 20)
+					pingsReceived++;
+					
+					if(pingsPerformed == 60)
 					{
-						tv.append("Max ="+highest+", min = "+lowest+", average = "+(total/20)+"\n");
+						tv.append("Max ="+highest+", min = "+lowest+", average = "+(total/pingsReceived)+"\n");
 					}
 					else if(pingsPerformed == 2)
 					{
@@ -142,22 +149,35 @@ public class ExampleActivity extends Activity {
 						medMessage.doubles.add(32.5);
 						binder.sendGameUpdate(medMessage);
 						NetworkMessage busyMessage = new NetworkMessage("EnteredBattle");
-						binder.sendGameUpdate(busyMessage);
+						//binder.sendGameUpdate(busyMessage);
 						tv.append("Sent Location update!");
 						
 					}
 					else if (pingsPerformed == 5)
 					{
 						//DEBUG
-						binder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
-						tv.append("Sent player request...\n");
+						//binder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
+						//tv.append("Sent player request...\n");
 						
 					}
 					else if(pingsPerformed == 15)
 					{
-						binder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
-						tv.append("Sent item request...\n");
+						//binder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
+						//tv.append("Sent item request...\n");
+					}					
+					else if (pingsPerformed == 3)
+					{
+						tv.append("Sending spatial request!\n");
+						NetworkMessageMedium mMed = new NetworkMessageMedium("MapDataRequest");
+						mMed.doubles.add(-33.957657);
+						mMed.doubles.add(18.46125);
+						mMed.doubles.add(100.0);
+						
+						binder.sendRequest(mMed);
+						
 					}
+					
+					
 					break;		
 					
 				case GAMESTATE_RECEIVED:
@@ -216,7 +236,29 @@ public class ExampleActivity extends Activity {
 						}
 						else
 						{
-							tv.append("Item list not in object dict!\n");
+							tv.append("Item list not in object dict!\n");							
+						}
+						
+					}
+					else if(mMsg.getMessage().equals("MapDataResponse"))
+					{
+						Log.d(NetworkVariables.TAG, "Received spatial object response!");
+						if(((NetworkMessageLarge)mMsg).objectDict.containsKey("SpatialObjects"))
+						{
+							Object pl = ((NetworkMessageLarge)mMsg).objectDict.get("SpatialObjects");
+							if(pl instanceof ArrayList<?>)
+							{
+								ArrayList<LokemonSpatialObject> players = (ArrayList<LokemonSpatialObject>)pl;
+								tv.append("Player list successfully extracted! Size : "+players.size()+"\n");
+								if(players.size() > 0)
+								{
+									tv.append("Number of objects: "+players.size()+"\n");										
+								}
+							}
+							else
+							{
+								tv.append("Player list is in object dict, but is not an array list!\n");
+							}
 						}
 						
 					}
