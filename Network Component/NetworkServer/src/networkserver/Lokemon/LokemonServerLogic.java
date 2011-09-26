@@ -331,12 +331,13 @@ public class LokemonServerLogic extends Thread{
                                     double x = center.getX() + (randomDist*Math.cos(randomAngle) / LokemonDaemonThread.DEGREE_METER_HACK);
                                     double y = center.getY() + (randomDist*Math.sin(randomAngle) / LokemonDaemonThread.DEGREE_METER_HACK);
 
+                                    int type = (int)(Math.random()*LokemonPotion.PotionType.values().length);
                                     LokemonPotion pot = new LokemonPotion(
-                                            LokemonPotion.PotionType.values()[((int)Math.random()*LokemonPotion.PotionType.values().length)],
+                                            LokemonPotion.PotionType.values()[type],
                                             itemIDCounter);
                                     pot.setPosition(new Location(x, y));
                                     itemIDCounter++;
-                                    LokemonServerVariables.itemMap.put(pot.getId(), pot);
+                                    LokemonServerVariables.itemMap.put(pot.getId(), pot);                                    
                                 }
                             }
                         }

@@ -37,7 +37,7 @@ public class ExampleActivity extends Activity {
 	
 	private int pingsPerformed = 0;
 	private int highest=0;
-	private int lowest=1000;
+	private int lowest=100000;
 	private int total=0;
 
 	public void onCreate(Bundle bundle)
@@ -71,8 +71,8 @@ public class ExampleActivity extends Activity {
 			tv.append("Service connected! Starting connection...\n");
 			
 			binder.registerMessenger(eventMessenger);
-			
-			binder.ConnectToServer();			
+			if(!binder.isConnectedToServer())
+				binder.ConnectToServer();			
 			
 			timer.schedule(new TimerTask() {
 				@Override
@@ -89,7 +89,7 @@ public class ExampleActivity extends Activity {
 					}
 				}
 				
-			}, recurranceDelay * 1000, recurranceDelay * 200);
+			}, recurranceDelay * 1000, recurranceDelay * 1000);
 			
 		}
 	};	
@@ -142,7 +142,8 @@ public class ExampleActivity extends Activity {
 						medMessage.doubles.add(32.5);
 						binder.sendGameUpdate(medMessage);
 						NetworkMessage busyMessage = new NetworkMessage("EnteredBattle");
-						//binder.sendGameUpdate(busyMessage);
+						binder.sendGameUpdate(busyMessage);
+						tv.append("Sent Location update!");
 						
 					}
 					else if (pingsPerformed == 5)
@@ -151,6 +152,11 @@ public class ExampleActivity extends Activity {
 						binder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
 						tv.append("Sent player request...\n");
 						
+					}
+					else if(pingsPerformed == 15)
+					{
+						binder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
+						tv.append("Sent item request...\n");
 					}
 					break;		
 					
@@ -166,7 +172,12 @@ public class ExampleActivity extends Activity {
 							{
 								ArrayList<LokemonPotion> players = (ArrayList<LokemonPotion>)pl;
 								tv.append("Item list successfully extracted! Size : "+players.size()+"\n");
-								//tv.append("First Item: "+players.get(0).getId()+"\n");
+								tv.append("Items received");
+								for(LokemonPotion pot : players)
+								{
+									tv.append(", "+pot.getType());
+								}
+								tv.append("\n");
 							}
 							else
 							{
@@ -213,6 +224,9 @@ public class ExampleActivity extends Activity {
 					{
 						tv.append("Received this from server: "+mMsg.getMessage()+"\n");
 					}
+					break;
+				case PLAYER_REGISTERED:
+					tv.append("Player registered with server! \n");
 					break;
 				default:
 					tv.append("Unrecognised event of type "+ NetworkComBinder.EventType.values()[msg.what] + " received.\n");					

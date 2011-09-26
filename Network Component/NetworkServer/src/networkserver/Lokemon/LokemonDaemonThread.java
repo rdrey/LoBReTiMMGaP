@@ -6,7 +6,6 @@
 package networkserver.Lokemon;
 
 import networkTransferObjects.Lokemon.LokemonPlayer;
-import java.awt.geom.Rectangle2D;
 import java.util.Vector;
 import networkTransferObjects.NetworkMessage;
 import networkTransferObjects.NetworkMessageMedium;
@@ -19,6 +18,7 @@ import networkserver.EventListeners.TerminationRequestReceivedListener;
 import networkserver.EventListeners.UpdateReceivedListener;
 import networkserver.Events.NetworkEvent;
 import networkserver.Peer2Peer.ClientPeer;
+import networkserver.ServerVariables;
 import networkserver.Threads.ServerDaemonThread;
 
 /**
@@ -142,6 +142,8 @@ public class LokemonDaemonThread extends ServerDaemonThread{
 
         public void EventOccured(NetworkEvent e) {
             System.out.println("Termination requested: "+ ((NetworkMessage)e.getMessage()).getMessage());
+            ServerVariables.playerThreadMap.get(player.getPlayerID()).shutdownThread();
+            LokemonServerVariables.playerList.remove(player);            
         }
     };
 

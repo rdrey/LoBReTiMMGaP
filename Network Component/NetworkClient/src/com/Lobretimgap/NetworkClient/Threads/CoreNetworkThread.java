@@ -29,6 +29,7 @@ import com.Lobretimgap.NetworkClient.EventListeners.GamestateReceivedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.LatencyUpdateListener;
 import com.Lobretimgap.NetworkClient.EventListeners.NetworkEventListener;
 import com.Lobretimgap.NetworkClient.EventListeners.PartialGamestateReceivedListener;
+import com.Lobretimgap.NetworkClient.EventListeners.PlayerRegisteredListener;
 import com.Lobretimgap.NetworkClient.EventListeners.RequestReceivedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.UnknownMessageTypeReceivedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.UpdateReceivedListener;
@@ -456,6 +457,8 @@ public abstract class CoreNetworkThread extends Thread
         {
         	playerId = ((PlayerRegistrationMessage)message).playerID;
         	Log.i(NetworkVariables.TAG, "Received player ID of "+playerId+" from the server.");
+        	
+        	fireEvent(new NetworkEvent(this, "Player registered with id of :"+playerId), PlayerRegisteredListener.class);
         	//Start the time sync
         	
         	requestNetworkTimeSync();
