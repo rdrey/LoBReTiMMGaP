@@ -214,5 +214,141 @@
 	{
 		"index":29,
 		"name":"Psybeam"
+	},
+	{
+		"index":30,
+		"name":"Poison Sting"
+	},
+	{
+		"index":31,
+		"name":"Fury Attack"
+	},
+	{
+		"index":32,
+		"name":"Focus Energy"
+	},
+	{
+		"index":33,
+		"name":"Twineedle"
+	},
+	{
+		"index":34,
+		"name":"Pin Missile"
+	},
+	{
+		"index":35,
+		"name":"Agility"
+	},
+	{
+		"index":36,
+		"name":"Gust"
+	},
+	{
+		"index":37,
+		"name":"Sand Attack"
+	},
+	{
+		"index":38,
+		"name":"Quick Attack"
+	},
+	{
+		"index":39,
+		"name":"Wing Attack"
+	},
+	{
+		"index":40,
+		"name":"Mirror Move"
+	},
+	{
+		"index":41,
+		"name":"Screech"
+	},
+	{
+		"index":42,
+		"name":"Bind"
+	},
+	{
+		"index":43,
+		"name":"Rock Throw"
+	},
+	{
+		"index":44,
+		"name":"Slam"
+	},
+	{
+		"index":45,
+		"name":"Sandstorm"
+	},
+	{
+		"index":46,
+		"name":"Crunch"
+	},
+	{
+		"index":47,
+		"name":"Teleport"
+	},
+	{
+		"index":48,
+		"name":"Disable"
+	},
+	{
+		"index":49,
+		"name":"Recover"
+	},
+	{
+		"index":50,
+		"name":"Psychic"
+	},
+	{
+		"index":51,
+		"name":"Reflect"
+	},
+	{
+		"index":52,
+		"name":"Wrap"
+	},
+	{
+		"index":53,
+		"name":"Glare"
+	},
+	{
+		"index":54,
+		"name":"Acid"
+	},
+	{
+		"index":55,
+		"name":"Thunder Shock"
+	},
+	{
+		"index":56,
+		"name":"Charm"
+	},
+	{
+		"index":57,
+		"name":"Thunder Wave"
+	},
+	{
+		"index":58,
+		"name":"Sweet Kiss"
+	},
+	{
+		"index":59,
+		"name":"Swift"
+	},
+	{
+		"index":60,
+		"name":"Thunder"
+	},
+	{
+		"index":61,
+		"name":"Fury Swipes"
+	},
+	{
+		"index":62,
+		"name":"Double Kick"
+	},
+	{
+		"index":63,
+		"name":"Body Slam"
 	}
 ]

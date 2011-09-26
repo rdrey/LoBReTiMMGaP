@@ -24,8 +24,10 @@ public class LokemonServerVariables {
     //Meters
     public static final double itemSpawnRangeMin = 50.0;
     public static final double itemSpawnRangeMax = 150.0;
+
     //Time in miliseconds before new items are spawned. Set at 30seconds by default
     public static final int itemSpawnTimer = 30000;
+    public static final int maxItemsIngame = 500;
 
     //Miliseconds to wait for additional item pickup requests before sending an ack to the player.
     public static final long pickupLatency = 200;

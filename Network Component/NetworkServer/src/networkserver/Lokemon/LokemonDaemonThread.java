@@ -15,6 +15,7 @@ import networkTransferObjects.UtilityObjects.Location;
 import networkserver.EventListeners.ConnectionLostListener;
 import networkserver.EventListeners.GameStateRequestReceivedListener;
 import networkserver.EventListeners.RequestReceivedListener;
+import networkserver.EventListeners.TerminationRequestReceivedListener;
 import networkserver.EventListeners.UpdateReceivedListener;
 import networkserver.Events.NetworkEvent;
 import networkserver.Peer2Peer.ClientPeer;
@@ -39,6 +40,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
         this.addNetworkListener(UpdateReceivedListener.class, urListen);
         this.addNetworkListener(ConnectionLostListener.class, clListen);
         this.addNetworkListener(GameStateRequestReceivedListener.class, gsrrListen);
+        this.addNetworkListener(TerminationRequestReceivedListener.class, trrListen);
     }
 
     
@@ -133,6 +135,13 @@ public class LokemonDaemonThread extends ServerDaemonThread{
         public void EventOccured(NetworkEvent e) {
             //Lost connection to client, so remove them from our game states
             LokemonServerVariables.playerList.remove(player);
+        }
+    };
+
+    TerminationRequestReceivedListener trrListen = new TerminationRequestReceivedListener() {
+
+        public void EventOccured(NetworkEvent e) {
+            System.out.println("Termination requested: "+ ((NetworkMessage)e.getMessage()).getMessage());
         }
     };
 

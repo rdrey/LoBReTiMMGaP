@@ -109,6 +109,13 @@ public class ExampleActivity extends Activity {
 					
 				case CONNECTION_LOST:
 					tv.append("Connection to host lost...\n");
+					timer.schedule(new TimerTask() {
+						
+						@Override
+						public void run() {							
+							binder.ConnectToServer();
+						}
+					}, 3000);
 					break;
 					
 				case CONNECTION_FAILED:
@@ -134,11 +141,14 @@ public class ExampleActivity extends Activity {
 						medMessage.doubles.add(18.5);
 						medMessage.doubles.add(32.5);
 						binder.sendGameUpdate(medMessage);
+						NetworkMessage busyMessage = new NetworkMessage("EnteredBattle");
+						//binder.sendGameUpdate(busyMessage);
+						
 					}
 					else if (pingsPerformed == 5)
 					{
 						//DEBUG
-						binder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
+						binder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
 						tv.append("Sent player request...\n");
 						
 					}
@@ -161,6 +171,35 @@ public class ExampleActivity extends Activity {
 							else
 							{
 								tv.append("Item list is in object dict, but is not an array list!\n");
+							}
+							
+						}
+						else
+						{
+							tv.append("Item list not in object dict!\n");
+						}
+						
+					}
+					else if(mMsg.getMessage().equals("Response:GetPlayers"))
+					{
+						tv.append("Received player list from server!\n");
+						if(((NetworkMessageLarge)mMsg).objectDict.containsKey("PlayerList"))
+						{
+							Object pl = ((NetworkMessageLarge)mMsg).objectDict.get("PlayerList");
+							if(pl instanceof ArrayList<?>)
+							{
+								ArrayList<LokemonPlayer> players = (ArrayList<LokemonPlayer>)pl;
+								tv.append("Player list successfully extracted! Size : "+players.size()+"\n");
+								if(players.size() > 0)
+								{
+									tv.append("First Item: "+players.get(0).getPlayerID()+"\n");
+									tv.append("Player busy? : "+players.get(0).getBusy()+"\n");
+									tv.append("Avatar: "+ players.get(0).getAvatar()+", Name: "+players.get(0).getPlayerName()+"\n");
+								}
+							}
+							else
+							{
+								tv.append("Player list is in object dict, but is not an array list!\n");
 							}
 							
 						}

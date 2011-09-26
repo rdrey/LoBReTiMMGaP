@@ -9,6 +9,7 @@ import android.content.*;
 import android.location.Location;
 import android.lokemon.G;
 import android.lokemon.G.Gender;
+import android.lokemon.G.PlayerState;
 import android.lokemon.G.Potions;
 import android.util.Log;
 import android.app.Activity;
@@ -24,6 +25,7 @@ public class Trainer {
 	public int coins;
 	public int id;
 	public Gender gender;
+	public PlayerState playerState;
 	
 	private Location location;
 	
@@ -51,6 +53,7 @@ public class Trainer {
 		this.aura = new OverlayItem();
 		this.circle = new OverlayCircle();
 		this.setDefaultLocation();
+		this.playerState = PlayerState.AVAILABLE;
 		
 		G.player = this;
 	}
@@ -72,6 +75,7 @@ public class Trainer {
 		this.aura = new OverlayItem();
 		this.circle = new OverlayCircle();
 		this.setDefaultLocation();
+		this.playerState = PlayerState.AVAILABLE;
 		
 		G.player = this;
 	}

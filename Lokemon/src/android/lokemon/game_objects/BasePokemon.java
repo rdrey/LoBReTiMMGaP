@@ -1,10 +1,13 @@
 package android.lokemon.game_objects;
 
+import java.util.ArrayList;
+
 import org.json.*;
 
 import android.app.Activity;
 import android.content.res.Resources;
 import android.lokemon.G;
+import android.lokemon.G.Regions;
 import android.lokemon.Util;
 import android.lokemon.G.Types;
 import android.util.Log;
@@ -26,12 +29,16 @@ public class BasePokemon {
 	public int [] moves;
 	public int spriteID;
 	public int spriteID_attack;
+	public Regions habitat;
+	public int baseLevel;
 	
 	private BasePokemon(JSONObject object, Activity current) throws JSONException
 	{
 		index = object.getInt("index");
 		name = object.getString("name");
 		catchrate = (float)object.getDouble("catchrate");
+		habitat = Regions.valueOf(object.getString("habitat").toUpperCase());
+		baseLevel = object.getInt("start");
 		JSONArray array = object.getJSONArray("type");
 		//type = new String[array.length()];
 		//for (int i = 0; i < type.length; i++) type[i] = array.getString(i);
@@ -103,6 +110,9 @@ public class BasePokemon {
 			JSONObject object = (JSONObject)array.get(i);
 			BasePokemon poke = new BasePokemon(object, current); 
 			G.base_pokemon[poke.index] = poke;
+			if (G.pokemon_by_region[poke.habitat.ordinal()] == null)
+				G.pokemon_by_region[poke.habitat.ordinal()] = new ArrayList<BasePokemon>();
+			G.pokemon_by_region[poke.habitat.ordinal()].add(poke);
 		}
 	}
 }

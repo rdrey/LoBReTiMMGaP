@@ -84,7 +84,6 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         mapView.setZoomMin((byte)19);
         mapView.setClickable(true);
         mapView.setMapFile(G.mapDir + G.mapFile);
-        
         // animation & redraw runnables
         animator = new Runnable(){
 			public void run() {
@@ -260,6 +259,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     		switch (resultCode)
     		{
     		default:
+    			G.game.finalizeBattle();
     			break;
     		}
     	}
@@ -268,6 +268,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     protected void onDestroy()
     {
     	super.onDestroy();
+    	G.game.endGame();
     	Log.i("Interface", "Map view destroyed");
     }
     
@@ -396,17 +397,19 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     	items.removeItem(p.getMarker());
     }
     
-    // add region ways
-    public void addRegions(List<Region> regions)
+    public void addRegion(Region region)
     {
-        for (Region r:regions)
-        	this.regions.addWay(r.getWay());
+    	regions.addWay(region.getWay());
+    }
+    
+    public void removeRegion(Region region)
+    {
+    	regions.removeWay(region.getWay());
     }
 	
 	public void updateLocation(Location location) 
 	{
 		end = Util.fromLocation(location);
 		end_loc = location;
-		showToast("Location accuracy " + location.getAccuracy() + " metres");
 	}
 }

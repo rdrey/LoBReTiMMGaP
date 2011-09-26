@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.json.*;
 
 import android.lokemon.G;
+import android.lokemon.G.Regions;
 import android.lokemon.Util;
 import android.util.Log;
 
@@ -32,7 +33,7 @@ public class Pokemon {
 	private int xp_to_level;
 	private int [] pp;
 	
-	// creates new Pokemon at level 1
+	// creates new Pokemon at specified level
 	public Pokemon(int pokeIndex, int level)
 	{
 		index = pokeIndex;
@@ -82,7 +83,7 @@ public class Pokemon {
 	
 	private void levelUp()
 	{
-		if (level + 1 >= base.evolution[1]) evolve();
+		if (base.evolution != null && level + 1 >= base.evolution[1]) evolve();
 		else
 		{
 			level++;
@@ -139,6 +140,8 @@ public class Pokemon {
 	public int getSpriteNormal() {return base.spriteID;}
 	
 	public int getSpriteAttack() {return base.spriteID_attack;}
+	
+	public Regions getHabitat() {return base.habitat;}
 	
 	public int getExperienceYield()
 	{

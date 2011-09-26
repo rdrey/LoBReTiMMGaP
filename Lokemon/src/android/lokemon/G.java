@@ -1,5 +1,7 @@
 package android.lokemon;
 
+import java.util.ArrayList;
+
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.lokemon.game_objects.BasePokemon;
@@ -14,6 +16,7 @@ import android.os.Environment;
 public class G {
 	// game variables
 	public static BasePokemon [] base_pokemon;
+	public static ArrayList<BasePokemon> [] pokemon_by_region = new ArrayList[7];
 	public static Move [] moves;
 	public static Trainer player;
 	public static Game game;
@@ -41,6 +44,6 @@ public class G {
 	public static enum Potions {HP, ATTACK, DEFENSE, SPECIAL, SPEED}
 	public static enum Gender {FEMALE, MALE};
 	public static enum PlayerState{BUSY, AVAILABLE};
-	public static enum Regions {CAVE, FOREST, GRASSLAND, MOUNTAIN, ROUGH_TERRAIN, URBAN, WATER_EDGE, POKEMON_CENTER, POKEMART};
+	public static enum Regions {CAVE, FOREST, GRASSLAND, MOUNTAIN, ROUGH_TERRAIN, URBAN, WATER_EDGE, POKEMON_CENTER, POKEMART, NONE};
 	public static enum Action {REQUEST_BATTLE, ACCEPT_BATTLE, REJECT_BATTLE, REJECT_ALL};
 }

@@ -15,19 +15,20 @@
 
     <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         <activity android:name=".screens.LaunchScreen"
-                  android:label="@string/app_name">
+                  android:label="@string/app_name"
+                  android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-		<activity android:name=".screens.IntroScreen"></activity>
-		<activity android:name=".screens.GameScreen"></activity>
-		<activity android:name=".screens.BattleScreen"></activity>
-		<activity android:name=".screens.MapScreen"></activity>
-		<activity android:name=".popups.PokemonPopup" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
-		<activity android:name=".popups.MovesPopup" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
-		<activity android:name=".popups.BagPopup" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></activity>
+		<activity android:name=".screens.IntroScreen" android:screenOrientation="portrait"></activity>
+		<activity android:name=".screens.GameScreen" android:screenOrientation="portrait"></activity>
+		<activity android:name=".screens.BattleScreen" android:screenOrientation="portrait"></activity>
+		<activity android:name=".screens.MapScreen" android:screenOrientation="portrait"></activity>
+		<activity android:name=".popups.PokemonPopup" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" android:screenOrientation="portrait"></activity>
+		<activity android:name=".popups.MovesPopup" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" android:screenOrientation="portrait"></activity>
+		<activity android:name=".popups.BagPopup" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" android:screenOrientation="portrait"></activity>
 		<service android:name="com.Lobretimgap.NetworkClient.NetworkComService" />
     </application>
 </manifest>

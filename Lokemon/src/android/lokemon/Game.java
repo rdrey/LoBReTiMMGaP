@@ -32,6 +32,9 @@ import java.util.*;
 
 import org.mapsforge.android.maps.GeoPoint;
 
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Coordinate;
+
 import com.Lobretimgap.NetworkClient.*;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 import networkTransferObjects.*;
@@ -45,6 +48,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	private List<WorldPotion> items;
 	// region list
 	private List<Region> regions;
+	private Regions currentRegion;
 	
 	// a reference to the screen that displays the game world
 	private MapScreen display;
@@ -52,6 +56,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	// interaction variables
 	private NetworkPlayer selectedPlayer;
 	private WorldPotion selectedItem;
+	private boolean foundPokeInRegion;
 	
 	// network objects
 	private boolean networkReqLock; // when true all battle requests from players are ignored
@@ -64,6 +69,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	// periodically requests game state updates from server
 	private Handler networkUpdater;
 	private Runnable updater;
+	private Location lastUpdateLocation;
 	private int numUpdates;
 	
 	private NetworkComBinder networkBinder;
@@ -89,9 +95,9 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				new GeoPoint(-33.958005, 18.461639),
 				new GeoPoint(-33.957511, 18.461701),
 				new GeoPoint(-33.957411, 18.460988)};
-		regions.add(new Region(points,Regions.ROUGH_TERRAIN,0));
+		regions.add(new Region(points,Regions.GRASSLAND,0));
 		
-		display.addRegions(regions);
+		display.addRegion(regions.get(0));
 		
 		// network setup
 		networkReqLock = false;
@@ -107,14 +113,41 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				{
 					if (networkConnected)
 					{
-						if (numUpdates == 3)
+						if (G.player.playerState == PlayerState.AVAILABLE)
 						{
-							networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
-							numUpdates = 0;
+							if (numUpdates == 3)
+							{
+								networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
+								numUpdates = 0;
+							}
+							
+							networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
+							numUpdates++;
+							
+							// generate a Pokemon with probability based on catch rate if the player is in a special region
+							if (!waitingForAccept && currentRegion.ordinal() < 7 && !foundPokeInRegion)
+							{
+								double prob = Math.random();
+								double total = 0;
+								ArrayList<BasePokemon> pokes_in_region = G.pokemon_by_region[currentRegion.ordinal()];
+								Pokemon newPoke = null;
+								for (int i = 0; i < pokes_in_region.size(); i++)
+								{
+									BasePokemon base = pokes_in_region.get(i);
+									total += base.catchrate;
+									if (prob < total)
+									{					
+										networkReqLock = true;
+										newPoke = new Pokemon(base.index, base.baseLevel+(int)(Math.random() * 4 + 1));
+										foundPokeInRegion = true;
+										initiateBattle();
+										break;
+									}
+								}
+							}
+							
+							networkUpdater.postDelayed(updater, 1000);
 						}
-						networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
-						numUpdates++;
-						networkUpdater.postDelayed(updater, 1000);
 					}
 					else if (!busyConnecting)
 					{
@@ -132,7 +165,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	}
 	
 	/*
-	 * Methods related to adding, removing and updating network players and items
+	 * Methods related to adding, removing and updating network players, items and regions
 	 */
 	
 	// addition method for players
@@ -179,6 +212,27 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		display.addItem(item);
 	}
 	
+	// addition method for regions
+	private void addRegion(Region region)
+	{
+		regions.add(region);
+		display.addRegion(region);
+	}
+	
+	// removal method for regions
+	private void removeRegion(Region region)
+	{
+		regions.remove(region);
+		display.removeRegion(region);
+	}
+	
+	// insert regions to keep the list sorted according to id
+	private void insertRegion(Region region, int index)
+	{
+		regions.add(index, region);
+		display.addRegion(region);
+	}
+	
 	/*
 	 * Methods related to initiating battles
 	 */
@@ -214,7 +268,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	}
 	
 	/*
-	 * Methods related to initiating battles
+	 * Methods related to battles
 	 */
 	
 	public void requestPlayer(int playerID)
@@ -283,6 +337,13 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		display.switchToBattle();
 		networkReqLock = false;
 		waitingForAccept = false;
+	}
+	
+	public void finalizeBattle(/*arguments describing result of battle*/)
+	{
+		// send available status update
+		selectedPlayer = null;
+		networkBinder.sendGameUpdate(new NetworkMessage("ExitedBattle"));
 	}
 	
 	private NetworkMessage getBattleInitiationMessage(Action action)
@@ -384,17 +445,53 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	public void onLocationChanged(Location location) 
 	{
 		display.updateLocation(location);
-		// !!!send location update to server!!!
+		
+		// gets regions in a 100m radius if player has moved more than 50m
+		if (lastUpdateLocation == null || location.distanceTo(lastUpdateLocation) > 50)
+		{
+			// request regions
+			NetworkMessageMedium msg = new NetworkMessageMedium("MapDataRequest");
+			msg.doubles.add(location.getLatitude());
+			msg.doubles.add(location.getLongitude());
+			msg.doubles.add(100.0);
+			networkBinder.sendRequest(msg);
+			lastUpdateLocation = location;
+		}
+		
+		// send location update to server
 		NetworkMessageMedium msg = new NetworkMessageMedium("LocationUpdate");
 		msg.doubles.add(location.getLatitude());
 		msg.doubles.add(location.getLongitude());
 		networkBinder.sendGameUpdate(msg);
-		Log.i("Location", "New location received");
+		
+		// check which region type the player is in
+		currentRegion = checkRegion(location);
+		// can only find one Pokemon in a region at a time
+		if (currentRegion == Regions.NONE)
+			foundPokeInRegion = false;
 	}
 
 	public void onLocationError(int errorCode) 
 	{
 		// do nothing for now
+	}
+	
+	private Regions checkRegion(Location location)
+	{
+		Regions current = Regions.NONE;
+		Point point = Region.geomFactory.createPoint(new Coordinate(location.getLatitude(), location.getLongitude()));
+		synchronized (regions)
+		{
+			for (Region region:regions)
+			{
+				if(region.contains(point))
+				{
+					current = region.getRegion();
+					break;
+				}
+			}
+			return current;
+		}
 	}
 	
 	/*
@@ -492,7 +589,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								int id = li.getId();
 								if (ni.getID() < id)
 								{
-									Log.i("Items", "Removing id=" + ni.getID());
 									display.removeItem(ni);
 									i.remove();
 									if (i.hasNext())
@@ -501,7 +597,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								}
 								else if (ni.getID() > id)
 								{
-									Log.i("Items", "Inserting id=" + id);
 									networkTransferObjects.UtilityObjects.Location loc = li.getPosition();
 									newIndices.add(index);
 									newItems.add(new WorldPotion(Potions.values()[li.getType().ordinal()],new GeoPoint(loc.getX(),loc.getY()),li.getId()));
@@ -529,26 +624,22 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 							// remove or add tail of list
 							if (ni != null)
 							{	
-								Log.i("Items", "Removing id=" + ni.getID());
 								display.removeItem(ni);
 								i.remove();
 								while (i.hasNext())
 								{
 									ni = i.next();
-									Log.i("Items", "Removing id=" + ni.getID());
 									display.removeItem(ni);
 									i.remove();
 								}
 							}
 							else if (li != null)
 							{
-								Log.i("Items", "Adding id=" + li.getId());
 								networkTransferObjects.UtilityObjects.Location loc = li.getPosition();
 								addItem(new WorldPotion(Potions.values()[li.getType().ordinal()],new GeoPoint(loc.getX(),loc.getY()),li.getId()));
 								while (it.hasNext())
 								{
 									li = it.next();
-									Log.i("Items", "Adding id=" + li.getId());
 									loc = li.getPosition();
 									addItem(new WorldPotion(Potions.values()[li.getType().ordinal()],new GeoPoint(loc.getX(),loc.getY()),li.getId()));
 								}
@@ -581,7 +672,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								int id = lp.getPlayerID();
 								if (np.getID() == id)
 								{
-									Log.i("Players", "Updating id=" + id + " with location " + lp.getPosition().getX() + " "+ lp.getPosition().getY());
 									np.updateLocation(Util.fromSerialLocation(lp.getPosition()));
 									np.setPlayerState(lp.getBusy()?PlayerState.BUSY:PlayerState.AVAILABLE);
 									if (i.hasNext())
@@ -596,7 +686,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								}
 								else if (np.getID() < id)
 								{
-									Log.i("Players", "Removing id=" + np.getID());
 									display.removePlayer(np);
 									i.remove();
 									if (i.hasNext())
@@ -605,7 +694,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								}
 								else
 								{
-									Log.i("Players", "Inserting id=" + id);
 									networkTransferObjects.UtilityObjects.Location loc = lp.getPosition();
 									newIndices.add(index);
 									newPlayers.add(new NetworkPlayer(lp.getPlayerID(), lp.getPlayerName(), Gender.values()[lp.getAvatar()], new GeoPoint(loc.getX(),loc.getY())));
@@ -621,26 +709,22 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 							// remove or add tail of list
 							if (np != null)
 							{
-								Log.i("Players", "Removing id=" + np.getID());
 								display.removePlayer(np);
 								i.remove();
 								while (i.hasNext())
 								{
 									np = i.next();
-									Log.i("Players", "Removing id=" + np.getID());
 									display.removePlayer(np);
 									i.remove();
 								}
 							}
 							else if (lp != null)
 							{
-								Log.i("Players", "Adding id=" + lp.getPlayerID());
 								networkTransferObjects.UtilityObjects.Location loc = lp.getPosition();
 								addPlayer(new NetworkPlayer(lp.getPlayerID(), lp.getPlayerName(), Gender.values()[lp.getAvatar()], new GeoPoint(loc.getX(),loc.getY())));
 								while (it.hasNext()) 
 								{
 									lp = it.next();
-									Log.i("Players", "Adding id=" + lp.getPlayerID());
 									loc = lp.getPosition();
 									addPlayer(new NetworkPlayer(lp.getPlayerID(), lp.getPlayerName(), Gender.values()[lp.getAvatar()], new GeoPoint(loc.getX(),loc.getY())));
 								}
@@ -650,6 +734,92 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 							Iterator<Integer> count = newIndices.iterator();
 							for (NetworkPlayer p:newPlayers)
 								insertPlayer(p,count.next());
+						}
+					}
+				}
+				else if (tag.equals("MapDataResponse"))
+				{
+					ArrayList<LokemonSpatialObject> rlist = (ArrayList<LokemonSpatialObject>)nMsg.objectDict.get("SpatialObjects");
+					if (rlist != null)
+					{
+						synchronized (regions)
+						{
+							// merging old and new region lists (trying to avoid unnecessary creation of objects)
+							Iterator<Region> i = regions.iterator();
+							Iterator<LokemonSpatialObject> it = rlist.iterator();
+							List<Integer> newIndices = new LinkedList<Integer>();
+							List<Region> newRegions = new LinkedList<Region>();
+							Region nr = i.hasNext()?i.next():null;
+							LokemonSpatialObject lr = it.hasNext()?it.next():null;
+							int index = 0;
+							while (nr != null && lr != null)
+							{
+								int id = lr.getObjectId();
+								if (nr.getID() == id)
+								{
+									if (i.hasNext())
+										nr = i.next();
+									else nr = null;
+									if (it.hasNext())
+									{
+										lr = it.next();
+										index++;
+									}
+									else lr = null;
+								}
+								else if (nr.getID() < id)
+								{
+									Log.i("Regions", "Removing id=" + nr.getID());
+									display.removeRegion(nr);
+									i.remove();
+									if (i.hasNext())
+										nr = i.next();
+									else nr = null;
+								}
+								else
+								{
+									Log.i("Regions", "Inserting id=" + id);
+									newIndices.add(index);
+									newRegions.add(new Region(lr.getGeom(), Regions.values()[lr.getType().ordinal()], lr.getObjectId()));
+									if (it.hasNext())
+									{
+										lr = it.next();
+										index++;
+									}
+									else lr = null;
+								}
+							}
+							
+							// remove or add tail of list
+							if (nr != null)
+							{
+								Log.i("Regions", "Removing id=" + nr.getID());
+								display.removeRegion(nr);
+								i.remove();
+								while (i.hasNext())
+								{
+									nr = i.next();
+									Log.i("Regions", "Removing id=" + nr.getID());
+									display.removeRegion(nr);
+									i.remove();
+								}
+							}
+							else if (lr != null)
+							{
+								Log.i("Regions", "Adding id=" + lr.getObjectId());
+								addRegion(new Region(lr.getGeom(), Regions.values()[lr.getType().ordinal()], lr.getObjectId()));
+								while (it.hasNext()) 
+								{
+									lr = it.next();
+									Log.i("Regions", "Adding id=" + lr.getObjectId());
+									addRegion(new Region(lr.getGeom(), Regions.values()[lr.getType().ordinal()], lr.getObjectId()));
+								}
+							}
+							
+							// insert new objects
+							Iterator<Integer> count = newIndices.iterator();
+							for (Region p:newRegions)
+								insertRegion(p,count.next());
 						}
 					}
 				}

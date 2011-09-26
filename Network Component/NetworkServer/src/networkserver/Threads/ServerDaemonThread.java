@@ -200,8 +200,8 @@ public abstract class ServerDaemonThread extends Thread{
 
                 //Expecting 4 bytes of length info
                 byte [] messageHeader = new byte [5];
-                int success = in.read(messageHeader);
-                if(success == 5)
+                int headerBytesRead = in.read(messageHeader);
+                if(headerBytesRead == 5)
                 {
                     //Chop off message type modifier
                     byte classType = messageHeader[0];
@@ -253,7 +253,7 @@ public abstract class ServerDaemonThread extends Thread{
                 }
                 else
                 {//Failed to read in length field properly
-                    if(success == -1)
+                    if(headerBytesRead == -1)
                     {//Stream closed
                         System.err.println("End of stream!");
                         fireEvent(new NetworkEvent(this, "Connection to client lost!\n"),  ConnectionLostListener.class);
