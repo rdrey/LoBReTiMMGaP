@@ -17,6 +17,8 @@ import java.util.logging.Logger;
  */
 public class LokemonSpatialObject {
     
+    private SpatialObjectType Objtype;
+    
     public enum SpatialObjectType
     {
         CAVE,
@@ -30,14 +32,14 @@ public class LokemonSpatialObject {
         SHOP
     };
     
-    byte [] wellKnownBytes;
-    int objectId;
-    SpatialObjectType type;
+    private byte [] wellKnownBytes;
+    private int objectId;   
+       
     
-    public LokemonSpatialObject(int id, SpatialObjectType type)
+    public LokemonSpatialObject(int id, SpatialObjectType objectType)
     {
         objectId = id;
-        this.type = type;
+        Objtype = objectType;
     }
     
     public LokemonSpatialObject()
@@ -55,19 +57,21 @@ public class LokemonSpatialObject {
         return objectId;
     }
 
+    
     public SpatialObjectType getType() {
-        return type;
+        return Objtype;
     }
     
     public Geometry getGeom()
     {
+    	
         WKBReader reader = new WKBReader();
         try {
             return reader.read(wellKnownBytes);
         } catch (ParseException ex) {
             Logger.getLogger(LokemonSpatialObject.class.getName()).log(Level.SEVERE, null, ex);
             return null;
-        }
+        }    	
     }
     
     
