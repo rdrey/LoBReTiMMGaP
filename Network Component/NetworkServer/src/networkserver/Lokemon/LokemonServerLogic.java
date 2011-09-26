@@ -38,11 +38,10 @@ public class LokemonServerLogic extends Thread{
     //Send the map data in the specified area to the player
     static void sendMapDataToClient(int playerId, double lat, double lng, double radius)
     {
-        //Send XML map data in the region to the player.
+        //Send XML map data in the region to the player.        
         SpatialProvider sp = new SpatialProvider();
-        List<SpatialDBEntity> entities = sp.provide(new Coordinate(lat, lng),radius);
-        
-        ArrayList<LokemonSpatialObject> gameObjects = new ArrayList<LokemonSpatialObject>();
+        List<SpatialDBEntity> entities = sp.provide(new Coordinate(lng, lat),radius);        
+        ArrayList<LokemonSpatialObject> gameObjects = new ArrayList<LokemonSpatialObject>();               
         
         for(SpatialDBEntity ent : entities)
         {
@@ -89,7 +88,7 @@ public class LokemonServerLogic extends Thread{
         msg.doubles.add(radius);        
         msg.objectDict.put("SpatialObjects", gameObjects);
         
-        System.out.println("Server request for "+ gameObjects.size() + "spatial objects!");
+        System.out.println("Server served request for "+ gameObjects.size() + " spatial objects!");
         ServerVariables.playerThreadMap.get(playerId).sendGameStateUpdate(msg);
         
     }
