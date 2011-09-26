@@ -37,7 +37,7 @@ public class ExampleActivity extends Activity {
 	
 	private int pingsPerformed = 0;
 	private int highest=0;
-	private int lowest=1000;
+	private int lowest=100000;
 	private int total=0;
 
 	public void onCreate(Bundle bundle)
@@ -89,7 +89,7 @@ public class ExampleActivity extends Activity {
 					}
 				}
 				
-			}, recurranceDelay * 1000, recurranceDelay * 200);
+			}, recurranceDelay * 1000, recurranceDelay * 1000);
 			
 		}
 	};	
@@ -143,6 +143,7 @@ public class ExampleActivity extends Activity {
 						binder.sendGameUpdate(medMessage);
 						NetworkMessage busyMessage = new NetworkMessage("EnteredBattle");
 						binder.sendGameUpdate(busyMessage);
+						tv.append("Sent Location update!");
 						
 					}
 					else if (pingsPerformed == 5)
@@ -151,6 +152,11 @@ public class ExampleActivity extends Activity {
 						binder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
 						tv.append("Sent player request...\n");
 						
+					}
+					else if(pingsPerformed == 15)
+					{
+						binder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
+						tv.append("Sent item request...\n");
 					}
 					break;		
 					
@@ -166,7 +172,12 @@ public class ExampleActivity extends Activity {
 							{
 								ArrayList<LokemonPotion> players = (ArrayList<LokemonPotion>)pl;
 								tv.append("Item list successfully extracted! Size : "+players.size()+"\n");
-								//tv.append("First Item: "+players.get(0).getId()+"\n");
+								tv.append("Items received");
+								for(LokemonPotion pot : players)
+								{
+									tv.append(", "+pot.getType());
+								}
+								tv.append("\n");
 							}
 							else
 							{
