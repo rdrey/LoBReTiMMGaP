@@ -145,14 +145,13 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 									}
 								}
 							}
-							
-							networkUpdater.postDelayed(updater, 1000);
 						}
 					}
 					else if (!busyConnecting)
 					{
 						Log.i(NetworkVariables.TAG, "Trying to connect to game server...");
 						networkBinder.ConnectToServer();
+						busyConnecting = true;
 					}
 				}
 				else if (!busyBinding)
@@ -160,6 +159,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					Log.i(NetworkVariables.TAG, "Trying to rebind network service");
 					createConnection();
 				}
+				networkUpdater.postDelayed(updater, 1000);
 			}
 		};
 	}
