@@ -368,12 +368,14 @@ public abstract class CoreNetworkThread extends Thread
 	                        b.rewind();
 	                        int mSize = b.getInt();
 
+	                        Log.i("Bandwidth", "Expected: "+mSize);
 	                        //Read in the object bytes
 	                        byte [] object = new byte [mSize];
 	                        int bytesRead = 0;
 	                        while(bytesRead != mSize)
 	                        {
 	                            bytesRead += in.read(object, bytesRead, object.length - bytesRead);
+	                            Log.d("Bandwidth", "Read: "+bytesRead+"/"+mSize);
 	                        }
 
 	                        //System.out.println("Mid receive, byte buffer at "+bytesRead);

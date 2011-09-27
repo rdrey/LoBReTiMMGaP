@@ -104,6 +104,7 @@ public class ServerDaemonWriteoutThread extends Thread
                 //Log.d(NetworkVariables.TAG, "Serialized Size: "+serializedObject.length);
                 //And then send it off.
                 os.write(message);
+                os.flush();
             }
             catch(IOException e)
             {
