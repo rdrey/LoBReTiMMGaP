@@ -103,7 +103,32 @@ public class ServerDaemonWriteoutThread extends Thread
 
                 //Log.d(NetworkVariables.TAG, "Serialized Size: "+serializedObject.length);
                 //And then send it off.
-                os.write(message);
+                
+                //If message is too big, split it into multiple pieces
+                if(message.length > 8000)
+                {
+                    System.out.println("Need to send "+message.length+" bytes");
+                    int bytesWriten = 0;
+                    while(bytesWriten != message.length)
+                    {
+                        if(message.length - bytesWriten > 4096)
+                        {
+                            os.write(message, bytesWriten, 4096);
+                            bytesWriten += 4096;
+                            System.out.println("Sent "+bytesWriten+"/"+message.length+" bytes");
+                        }
+                        else
+                        {
+                            os.write(message, bytesWriten, message.length - bytesWriten);
+                            bytesWriten += message.length - bytesWriten;
+                            System.out.println("Sent "+bytesWriten+"/"+message.length+" bytes");
+                        }
+                    }
+                }
+                else
+                {
+                    os.write(message);                    
+                }
                 os.flush();
             }
             catch(IOException e)
