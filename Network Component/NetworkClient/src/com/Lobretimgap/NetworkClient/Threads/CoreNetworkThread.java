@@ -367,6 +367,8 @@ public abstract class CoreNetworkThread extends Thread
 	                        b.put(messageHeader, 1, 4);
 	                        b.rewind();
 	                        int mSize = b.getInt();
+	                        
+	                        Log.i("NetworkTraffic", "Expected "+mSize+" bytes of input");
 
 	                        //Read in the object bytes
 	                        byte [] object = new byte [mSize];
@@ -374,6 +376,7 @@ public abstract class CoreNetworkThread extends Thread
 	                        while(bytesRead != mSize)
 	                        {
 	                            bytesRead += in.read(object, bytesRead, object.length - bytesRead);
+	                            Log.d("NetworkTraffic", "Read "+bytesRead+"/"+mSize+" bytes of input");
 	                        }
 
 	                        //System.out.println("Mid receive, byte buffer at "+bytesRead);
@@ -385,7 +388,7 @@ public abstract class CoreNetworkThread extends Thread
 	                {//Failed to read in length field properly
 	                    if(success == -1)
 	                    {//Stream closed
-	                        System.err.println("End of stream!");
+	                        Log.e(NetworkVariables.TAG,"End of stream!");
 	                        shutdownThread();
 	                    }
 	                } 

@@ -4,6 +4,8 @@ import org.mapsforge.android.maps.*;
 
 import android.lokemon.G;
 import android.lokemon.G.*;
+import android.util.Log;
+
 import com.vividsolutions.jts.geom.*;
 
 public class Region {
@@ -31,7 +33,7 @@ public class Region {
 		for (int i = 0; i < vertices.length;i++)
 		{
 			GeoPoint p = vertices[i];
-			coords[i] = new Coordinate(p.getLatitude(), p.getLongitude());
+			coords[i] = new Coordinate(p.getLongitude(),p.getLatitude());
 		}
 		LinearRing ring = new LinearRing(coordFactory.create(coords), geomFactory);
 		polygon = geomFactory.createPolygon(ring, null);
@@ -48,7 +50,7 @@ public class Region {
 		int index = 0;
 		for (Coordinate c:geom.getCoordinates())
 		{
-			this.vertices[index] = new GeoPoint(c.x,c.y);
+			this.vertices[index] = new GeoPoint(c.y,c.x);
 			index++;
 		}
 		regionWay = new OverlayWay(new GeoPoint[][]{vertices}, G.region_fill[region.ordinal()], G.region_outline[region.ordinal()]);

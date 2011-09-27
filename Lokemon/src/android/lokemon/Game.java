@@ -65,6 +65,11 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	private boolean networkBound;
 	private boolean busyBinding;
 	
+	// we don't want to overwhelm the client with responses if there is a backlog
+	private boolean waitingForRegions;
+	private boolean waitingForPlayers;
+	private boolean waitingForItems;
+	
 	// periodically requests game state updates from server
 	private Handler networkUpdater;
 	private Runnable updater;
@@ -94,9 +99,8 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				new GeoPoint(-33.958005, 18.461639),
 				new GeoPoint(-33.957511, 18.461701),
 				new GeoPoint(-33.957411, 18.460988)};
-		//regions.add(new Region(points,Regions.GRASSLAND,0));
 		
-		//display.addRegion(regions.get(0));
+		addRegion(new Region(points,Regions.GRASSLAND,0));
 		
 		// network setup
 		networkReqLock = false;
@@ -114,13 +118,18 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					{
 						if (G.player.playerState == PlayerState.AVAILABLE)
 						{
-							if (numUpdates == 3)
+							if (numUpdates == 3 && !waitingForItems)
 							{
 								networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
 								numUpdates = 0;
+								waitingForItems = true;
 							}
 							
-							networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
+							if (!waitingForPlayers)
+							{
+								networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
+								waitingForPlayers = true;
+							}
 							numUpdates++;
 							
 							// generate a Pokemon with probability based on catch rate if the player is in a special region
@@ -446,13 +455,14 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		display.updateLocation(location);
 		
 		// gets regions in a 100m radius if player has moved more than 50m
-		if (lastUpdateLocation == null || location.distanceTo(lastUpdateLocation) > 50)
+		if (!waitingForRegions && (lastUpdateLocation == null || location.distanceTo(lastUpdateLocation) > 5000))
 		{
 			// request regions
+			waitingForRegions = true;
 			NetworkMessageMedium msg = new NetworkMessageMedium("MapDataRequest");
 			msg.doubles.add(location.getLatitude());
 			msg.doubles.add(location.getLongitude());
-			msg.doubles.add(100.0);
+			msg.doubles.add(10000.0);
 			networkBinder.sendRequest(msg);
 			lastUpdateLocation = location;
 		}
@@ -464,10 +474,11 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		networkBinder.sendGameUpdate(msg);
 		
 		// check which region type the player is in
-		currentRegion = checkRegion(location);
+		Regions newRegion = checkRegion(location);
 		// can only find one Pokemon in a region at a time
-		if (currentRegion == Regions.NONE)
+		if (currentRegion != newRegion)
 			foundPokeInRegion = false;
+		currentRegion = newRegion;
 	}
 
 	public void onLocationError(int errorCode) 
@@ -478,7 +489,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	private Regions checkRegion(Location location)
 	{
 		Regions current = Regions.NONE;
-		Point point = Region.geomFactory.createPoint(new Coordinate(location.getLatitude(), location.getLongitude()));
+		Point point = Region.geomFactory.createPoint(new Coordinate(location.getLongitude(), location.getLatitude()));
 		synchronized (regions)
 		{
 			for (Region region:regions)
@@ -540,18 +551,16 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			{
 				display.showToast("Connected to game server");
 				busyConnecting = false;
-				
-				// tell the server where the player is
-				onLocationChanged(G.player.getLocation());
-				
-				// start requesting updates from server
-				networkUpdater.postDelayed(updater, 1000);
 				break;	
 			}
 			case PLAYER_REGISTERED:
 			{
 				// get player id
 				G.player.id = networkBinder.getPlayerId();
+				// tell the server where the player is
+				onLocationChanged(G.player.getLocation());			
+				// start requesting updates from server
+				networkUpdater.postDelayed(updater, 1000);
 				break;
 			}
 			case CONNECTION_LOST:
@@ -572,6 +581,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				Log.i(NetworkVariables.TAG, tag);
 				if (tag.equals("Response:GetGameObjects"))
 				{
+					waitingForItems = false;
 					ArrayList<LokemonPotion> ilist = (ArrayList<LokemonPotion>)nMsg.objectDict.get("ItemList");
 					if (ilist != null)
 					{
@@ -655,6 +665,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				}
 				else if (tag.equals("Response:GetPlayers"))
 				{
+					waitingForPlayers = false;
 					ArrayList<LokemonPlayer> plist = (ArrayList<LokemonPlayer>)nMsg.objectDict.get("PlayerList");
 					if (plist != null)
 					{
@@ -740,6 +751,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				}
 				else if (tag.equals("MapDataResponse"))
 				{
+					waitingForRegions = false;
 					ArrayList<LokemonSpatialObject> rlist = (ArrayList<LokemonSpatialObject>)nMsg.objectDict.get("SpatialObjects");
 					if (rlist != null)
 					{
