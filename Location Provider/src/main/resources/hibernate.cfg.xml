@@ -12,8 +12,8 @@
 
 <!--        <property name="show_sql">true</property>-->
         <property name="hibernate.connection.autocommit">true</property>
-        <property name="hbm2ddl.auto">create</property>
-<!--        <property name="hbm2ddl.auto">update</property>-->
+<!--        <property name="hbm2ddl.auto">create</property>-->
+       <property name="hbm2ddl.auto">update</property>
 
         <mapping class="org.mobiloc.lobgasp.model.SpatialDBEntity"/>
         <mapping class="org.mobiloc.lobgasp.osm.model.POIEntity"/>

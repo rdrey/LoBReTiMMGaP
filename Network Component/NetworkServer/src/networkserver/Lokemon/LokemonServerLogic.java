@@ -6,6 +6,7 @@
 package networkserver.Lokemon;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -38,6 +39,7 @@ public class LokemonServerLogic extends Thread{
     //Send the map data in the specified area to the player
     static void sendMapDataToClient(int playerId, double lat, double lng, double radius)
     {
+        long start = System.currentTimeMillis();
         //Send XML map data in the region to the player.        
         SpatialProvider sp = new SpatialProvider();
         List<SpatialDBEntity> entities = sp.provide(new Coordinate(lng, lat),radius);        
@@ -77,8 +79,11 @@ public class LokemonServerLogic extends Thread{
             
             if(so != null)
             {
-                so.setGeomBytes(ent.getGeom());
+                Geometry geom = ent.getGeom();
+                so.setCoords(geom.getCoordinates());
+                //so.setGeomBytes(ent.getGeom());
                 gameObjects.add(so);
+                
             }
         }
         
@@ -87,8 +92,9 @@ public class LokemonServerLogic extends Thread{
         msg.doubles.add(lng);
         msg.doubles.add(radius);        
         msg.objectDict.put("SpatialObjects", gameObjects);
-        
-        System.out.println("Server served request for "+ gameObjects.size() + " spatial objects!");
+
+        long total = System.currentTimeMillis() - start;
+        System.out.println("Server served request for "+ gameObjects.size() + " spatial objects in "+total+"ms");
         ServerVariables.playerThreadMap.get(playerId).sendGameStateUpdate(msg);
         
     }
