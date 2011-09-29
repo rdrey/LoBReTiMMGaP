@@ -1,5 +1,11 @@
 package android.lokemon;
 
+import java.util.ArrayList;
+import java.util.Random;
+
+import android.lokemon.G.BattleMove;
+import android.lokemon.G.BattleType;
+import android.lokemon.G.Gender;
 import android.lokemon.G.Mode;
 import android.lokemon.game_objects.BagItem;
 import android.lokemon.game_objects.Pokemon;
@@ -7,11 +13,31 @@ import android.lokemon.screens.BattleScreen;
 import android.util.Log;
 
 public class Battle {
-
+	
+	private enum MoveResult {RAN_AWAY, VICTORY, NONE, CAUGHT_POKEMON};
+	public BattleType battleType;
+	
+	// battle variables
+	private Random random;
+	private boolean waitingForOpponent;
+	private boolean waitingForPlayer;
+	private boolean waitingForNewPoke;
+	private String resultMessage;
+	
+	// move variables
+	private BattleMove player_move;
+	private int player_move_index;
+	private BattleMove opponent_move;
+	private int opponent_move_index;
+	private Pokemon player_next_poke;
+	private Pokemon opponent_next_poke;
+	
 	// current pokemon selected by player
 	private Pokemon poke_player;
+	private int[] player_stages;
 	// current pokemon selected by opponent
 	private Pokemon poke_opp;
+	private int[] opp_stages;
 	// how many pokemon are able to battle
 	int pokeCount;
 	// how many usable items are there
@@ -20,19 +46,20 @@ public class Battle {
 	// a reference to the screen that displays the battle
 	private BattleScreen display;
 
-	public Battle(BattleScreen screen)
+	private Battle(BattleScreen screen, int player_start_index, Pokemon opponent_start)
 	{
+		G.mode = Mode.BATTLE;
+		
 		display = screen;
 		pokeCount = 0;
 		itemCount = 0;
-		G.mode = Mode.BATTLE;
-		
-		switchPlayerPoke(0);
-		switchOppPoke(G.player.pokemon.get(2));
 		
 		for (int i = 0; i < G.player.pokemon.size(); i++)
+		{
 			if (G.player.pokemon.get(i).getHP() > 0)
 				pokeCount++;
+			G.player.pokemon.get(i).inBattle = false;
+		}
 		display.setNumPokemon(pokeCount);
 		if (pokeCount < 2)
 			display.disableSwitch();
@@ -41,45 +68,425 @@ public class Battle {
 			itemCount += i.getCount();
 		if (itemCount == 0)
 			display.disableBag();
+				
+		poke_player = G.player.pokemon.get(0);
+		poke_player.inBattle = true;
+		display.switchPlayerPoke(poke_player);
+		poke_opp = opponent_start;
+		display.switchOppPoke(poke_opp);
+		
+		player_stages = new int[5];
+		opp_stages = new int[5];
+		
+		resetTurn();
 		
 		G.battle = this;
 	}
 	
-	public void switchPlayerPoke(int index)
+	public Battle(BattleScreen screen)
 	{
-		Pokemon newPoke = G.player.pokemon.get(index);
-		if (poke_player != null) poke_player.inBattle = false;
-		newPoke.inBattle = true;
-		poke_player = newPoke;
-		display.switchPlayerPoke(poke_player);
+		this(screen, 0, G.game.genPokemon);
+		battleType = BattleType.WILD;
+		random = new Random();
 	}
 	
-	public void switchOppPoke(Pokemon newPoke)
+	public Battle(BattleScreen screen, Pokemon opponent_start, int seed)
 	{
-		poke_opp = newPoke;
-		display.switchOppPoke(poke_opp);
+		this(screen, 0, opponent_start);
+		battleType = BattleType.TRAINER;
+		itemCount -= G.player.items[0].getCount();
+		random = new Random(seed);
+	}
+	
+	public void switchPlayerPoke(int index)
+	{
+		player_next_poke = G.player.pokemon.get(index);
+		player_move = BattleMove.SWITCH_POKEMON;
+		finalizePlayerTurn();
 	}
 	
 	public void selectMove(int moveIndex)
 	{
-		// battle logic here
+		player_move = BattleMove.ATTACK;
+		player_move_index = moveIndex;
+		finalizePlayerTurn();
 	}
 	
 	public void useItem(int itemIndex)
 	{
-		BagItem item = G.player.items[itemIndex];
-		item.decrement();
-		itemCount--;
-		if (itemCount == 0)
-			display.disableBag();
-		// battle logic here
+		if (itemIndex == 0)
+			player_move = BattleMove.CATCH_POKEMON;
+		else
+			player_move = BattleMove.USE_ITEM;
+		player_move_index = itemIndex;
+		finalizePlayerTurn();
 	}
 	
-	// decide whether player can run away from battle (forfeits turn)
-	public boolean run()
+	public void run()
 	{
-		return true;
+		player_move = BattleMove.RUN;
+		finalizePlayerTurn();
+	}
+	
+	private synchronized void finalizePlayerTurn()
+	{
+		Log.i("Battle", waitingForOpponent + " " + player_move.toString());
+		
+		if (player_move == BattleMove.SWITCH_POKEMON)
+			G.game.sendSwitchBattleMessage(player_next_poke);
+		else
+			G.game.sendSimpleBattleMessage(player_move, player_move_index);
+		
+		waitingForPlayer = false;
+		if (battleType == BattleType.TRAINER)
+		{
+			if (!waitingForOpponent)
+				executeTurn();
+			else
+				display.showProgressDialog("Waiting for opponent...");
+		}	
+		else
+		{
+			performAI();
+			executeTurn();
+		}
+	}
+	
+	private void finalizedOppTurn()
+	{
+		Log.i("Battle", waitingForPlayer + " " + opponent_move.toString());
+		waitingForOpponent = false;
+		if (!waitingForPlayer)
+		{
+			display.cancelProgressDialog();
+			executeTurn();
+		}
+	}
+	
+	private void resetTurn()
+	{
+		waitingForPlayer = true;
+		waitingForOpponent = true;
+		resultMessage = "";
+	}
+	
+	private void performAI()
+	{
+		ArrayList<int[]> moves = poke_opp.getMovesAndPP();
+		opponent_move = BattleMove.ATTACK;
+		if (moves.size() > 0)
+			opponent_move_index = moves.get(random.nextInt(moves.size()))[0];
+		else opponent_move_index = -1;
+	}
+	
+	private void executeTurn()
+	{
+		if (poke_player.getSpeed() > poke_opp.getSpeed())
+			meFirst();
+		else if (poke_player.getSpeed() < poke_opp.getSpeed())
+			youFirst();
+		else if (G.player.id < G.game.opponentID)
+			meFirst();
+		else
+			youFirst();
+		
+		display.showToast(resultMessage);
+		resetTurn();
+	}
+	
+	private void meFirst()
+	{
+		MoveResult result = executeMove(player_move, player_move_index, poke_player, poke_opp,player_next_poke);
+		if (result == MoveResult.NONE)
+		{
+			result = executeMove(opponent_move, opponent_move_index, poke_opp, poke_player,opponent_next_poke);
+			switch(result)
+			{
+			case VICTORY:
+				pokeCount--;
+				display.setNumPokemon(pokeCount);
+				if (pokeCount == 0)
+				{
+					resultMessage = "You were defeated by " + (battleType == BattleType.TRAINER?display.getOppNick():"the wild " + poke_opp.getName() + "...");
+					// send defeated message
+				}
+				else
+				{
+					Pokemon new_poke = null;
+					for (Pokemon p:G.player.pokemon)
+					{
+						if (p.getHP() > 0)
+							new_poke = p;
+					}
+					
+					if (battleType == BattleType.TRAINER)
+						G.game.sendSwitchBattleMessage(new_poke);
+							
+					for (int i = 0; i < 5; i++)
+						player_stages[i] = 0;
+					poke_player.inBattle = false;
+					resultMessage += "Your " + poke_player.getName() + " has feinted.\n";
+					poke_player = new_poke;
+					poke_player.inBattle = true;
+					display.switchPlayerPoke(poke_player);
+				}
+				break;
+			case RAN_AWAY:
+				display.endBattle();
+				break;
+			}
+		}
+		else
+		{
+			switch(result)
+			{
+			case VICTORY:
+				if (battleType == BattleType.TRAINER)
+				{
+					waitingForNewPoke = true;
+					display.showProgressDialog("Waiting for opponent...");
+				}
+				else
+				{
+					resultMessage = "You defeated the wild " + poke_opp.getName() + "!";
+					// get experience from defeating wild pokemon
+					display.endBattle();
+				}
+				break;
+			case CAUGHT_POKEMON:
+				G.player.pokemon.add(poke_opp);
+				display.endBattle();
+				break;
+			case RAN_AWAY:
+				display.endBattle();
+				break;
+			}
+		}
+	}
+	
+	private void youFirst()
+	{
+		MoveResult result = executeMove(opponent_move, opponent_move_index, poke_opp, poke_player,opponent_next_poke);
+		if (result == MoveResult.NONE)
+		{
+			result = executeMove(player_move, player_move_index, poke_player, poke_opp,player_next_poke);
+			switch(result)
+			{
+			case VICTORY:
+				if (battleType == BattleType.TRAINER)
+				{
+					waitingForNewPoke = true;
+					display.showProgressDialog("Waiting for opponent...");
+				}
+				else
+				{
+					resultMessage = "You defeated the wild " + poke_opp.getName() + "!";
+					// get experience from defeating wild pokemon
+					display.endBattle();
+				}
+				break;
+			case CAUGHT_POKEMON:
+				G.player.pokemon.add(poke_opp);
+				display.endBattle();
+				break;
+			case RAN_AWAY:
+				display.endBattle();
+				break;
+			}
+		}
+		else
+		{
+			switch(result)
+			{
+			case VICTORY:
+				pokeCount--;
+				display.setNumPokemon(pokeCount);
+				if (pokeCount == 0)
+				{
+					resultMessage = "You were defeated by " + (battleType == BattleType.TRAINER?display.getOppNick():"the wild " + poke_opp.getName() + "...");
+					// send defeated message
+				}
+				else
+				{
+					Pokemon new_poke = null;
+					for (Pokemon p:G.player.pokemon)
+					{
+						if (p.getHP() > 0)
+							new_poke = p;
+					}
+					
+					if (battleType == BattleType.TRAINER)	
+						G.game.sendSwitchBattleMessage(new_poke);
+							
+					for (int i = 0; i < 5; i++)
+						player_stages[i] = 0;
+					poke_player.inBattle = false;
+					resultMessage += "Your " + poke_player.getName() + " has feinted.\n";
+					poke_player = new_poke;
+					poke_player.inBattle = true;
+					display.switchPlayerPoke(poke_player);
+				}
+				break;
+			case RAN_AWAY:
+				display.endBattle();
+				break;
+			}
+		}
+	}
+	
+	private MoveResult executeMove(BattleMove move, int index, Pokemon source, Pokemon target, Pokemon new_poke)
+	{
+		//RUN, USE_ITEM, ATTACK, SWITCH_POKEMON, CATCH_POKEMON
+		String player = source==poke_player?"You":display.getOppNick();
+		String pronoun = source==poke_player?"your":(display.getOppGender()==Gender.FEMALE?"her":"his");
+		switch(move)
+		{
+		case RUN:
+			if (battleType == BattleType.TRAINER)
+			{
+				if (source.getSpeed() > target.getSpeed())
+				{
+					resultMessage += player + " managed to run away!\n";
+					return MoveResult.RAN_AWAY;
+				}
+				else
+				{
+					resultMessage += player + " failed to run away.\n";
+					return MoveResult.NONE;
+				}
+			}
+			else
+			{
+				resultMessage += player + " managed to run away!\n";
+				return MoveResult.RAN_AWAY;
+			}
+		case USE_ITEM:
+			if (source == poke_player)
+			{
+				BagItem item = G.player.items[index];
+				item.decrement();
+				itemCount--;
+				if (itemCount == 0)
+					display.disableBag();
+				if (index == 1)
+				{
+					poke_player.setHP(poke_player.getTotalHP());
+					display.setPlayerPokeDetails(poke_player);
+				}
+				else
+					player_stages[index - 1]++;
+			}
+			else
+			{
+				if (index == 1)
+				{
+					poke_opp.setHP(poke_opp.getTotalHP());
+					display.setOppPokeDetails(poke_opp);
+				}
+				else
+					opp_stages[index - 1]++;
+			}		
+			resultMessage += player + " used a " + G.player.items[index].getName() + ".\n";
+			return MoveResult.NONE;
+		case ATTACK:
+			return executeAttack(index, source, target);
+		case SWITCH_POKEMON:
+			if (source == poke_player)
+			{
+				for (int i = 0; i < 5; i++)
+					player_stages[i] = 0;
+				poke_player.inBattle = false;
+				poke_player = new_poke;
+				poke_player.inBattle = true;
+				display.switchPlayerPoke(poke_player);
+				resultMessage += player + " swapped in " + pronoun + " " + poke_player.getName() + ".\n";
+			}
+			else
+			{
+				for (int i = 0; i < 5; i++)
+					opp_stages[i] = 0;
+				poke_opp = new_poke;
+				display.switchOppPoke(poke_opp);
+				resultMessage += player + " swapped in " + pronoun + " " + poke_opp.getName() + ".\n";
+			}
+			return MoveResult.NONE;
+		case CATCH_POKEMON:
+			BagItem item = G.player.items[0];
+			item.decrement();
+			itemCount--;
+			if (itemCount == 0)
+				display.disableBag();
+			if (target.getHP()/(float)target.getTotalHP() < 0.3)
+			{
+				resultMessage += "You caught the " + poke_opp.getName() + "!\n";
+				return MoveResult.CAUGHT_POKEMON;
+			}
+			else
+			{
+				resultMessage += "You failed to catch the " + poke_opp.getName() + ".\n";
+				return MoveResult.NONE;
+			}
+		default:
+			return MoveResult.NONE;
+		}
+	}
+	
+	private MoveResult executeAttack(int moveIndex, Pokemon source, Pokemon target)
+	{
+		MoveResult result;
+		target.setHP(target.getHP()-4);
+		if (target.getHP() <= 0)
+		{
+			target.setHP(0);
+			result = MoveResult.VICTORY;
+		}
+		else
+			result = MoveResult.NONE;
+		if (target == poke_opp)
+			display.setOppPokeDetails(poke_opp);
+		else
+			display.setPlayerPokeDetails(poke_player);
+		return result;
 	}
 	
 	public Pokemon getSelectedPokemon() {return poke_player;}
+	
+	/*
+	 * Network handling methods
+	 */
+	
+	// this method is called when a simple BATTLE_MOVE message is received
+	public synchronized void handleSimpleBattleMove(BattleMove move, int index)
+	{
+		opponent_move = move;
+		opponent_move_index = index;
+		finalizedOppTurn();
+	}
+	
+	// this method is called when a SWITCH_POKEMON battle move message is received
+	public synchronized void handleSwitchBattleMove(Pokemon new_poke)
+	{
+		if (waitingForNewPoke)
+		{
+			for (int i = 0; i < 5; i++)
+				opp_stages[i] = 0;
+			display.showToast(display.getOppNick() + "'s " + poke_opp.getName() + " has feinted.\n");
+			poke_opp = new_poke;
+			display.switchOppPoke(poke_opp);
+			display.cancelProgressDialog();
+			waitingForNewPoke = false;
+		}
+		else
+		{
+			opponent_move = BattleMove.SWITCH_POKEMON;
+			opponent_next_poke = new_poke;
+			finalizedOppTurn();
+		}
+	}
+	
+	// this method is called when the opponent has been defeated
+	public void handleOpponentDefeated(int [] defeatedPokes)
+	{
+		
+	}
 }

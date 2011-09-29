@@ -59,29 +59,29 @@ public class App {
         sp.addCustomAreaAroundPoint(FieldEntity.class, new Coordinate(18.461511, -33.957608));
         sp.addCustomAreaAroundPoint(FieldEntity.class, new Coordinate(18.461426, -33.958010));
 
-        Session s = HibernateUtil.getSessionFactory().getCurrentSession();
-        Transaction tx = s.beginTransaction();
-
-        List so = s.createQuery("from StepsEntity where name like 'JammieSteps'").list();
-        PubEntity pub = (PubEntity) so.get(0);
-        
-        WKTWriter wkt = new WKTWriter();
-        System.out.println(wkt.write(pub.getGeom()));
-        
-        
-        List cs = s.createQuery("from LibraryEntity where name like 'Rondebosch Public Library'").list();
-        LibraryEntity lib = (LibraryEntity) cs.get(0);
-
-        System.out.println("Distance: " + Math.toRadians(lib.getGeom().distance(pub.getGeom())) * Math.PI / 180.0 * 6378137.0);
-        System.out.println("Distance: " + lib.getGeom().distance(pub.getGeom()));
-        System.out.println("Distance: " + distance((Point)lib.getGeom(), (Point)pub.getGeom()));
-
-        serializeResults(PubEntity.class, "pub.out", s);
-
-//        serializeResults(Road.class, "roads.out", s);
-//        serializeResults(Building.class, "buildings.out", s);
-
-        tx.commit();
+//        Session s = HibernateUtil.getSessionFactory().getCurrentSession();
+//        Transaction tx = s.beginTransaction();
+//
+//        List so = s.createQuery("from StepsEntity where name like 'Jammie Steps'").list();
+//        PubEntity pub = (PubEntity) so.get(0);
+//        
+//        WKTWriter wkt = new WKTWriter();
+//        System.out.println(wkt.write(pub.getGeom()));
+//        
+//        
+//        List cs = s.createQuery("from LibraryEntity where name like 'Rondebosch Public Library'").list();
+//        LibraryEntity lib = (LibraryEntity) cs.get(0);
+//
+//        System.out.println("Distance: " + Math.toRadians(lib.getGeom().distance(pub.getGeom())) * Math.PI / 180.0 * 6378137.0);
+//        System.out.println("Distance: " + lib.getGeom().distance(pub.getGeom()));
+//        System.out.println("Distance: " + distance((Point)lib.getGeom(), (Point)pub.getGeom()));
+//
+//        serializeResults(PubEntity.class, "pub.out", s);
+//
+////        serializeResults(Road.class, "roads.out", s);
+////        serializeResults(Building.class, "buildings.out", s);
+//
+//        tx.commit();
         
         
 

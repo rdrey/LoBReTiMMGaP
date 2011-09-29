@@ -8,8 +8,9 @@ import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
 public class NetworkVariables {
 	public static final String TAG = "NetworkClient";
 	public static final int port = 10282;
-	//public static final String hostname = "192.168.1.4";//"blue.cs.uct.ac.za";
-	public static final String hostname = "137.158.60.206";//"blue.cs.uct.ac.za";
+	public static final String hostname = "46.137.162.239";//"blue.cs.uct.ac.za";
+	//public static final String hostname = "192.168.42.101";//"blue.cs.uct.ac.za";
+	//public static final String hostname = "137.158.60.206";//"blue.cs.uct.ac.za";
 	public static final int writeThreadBufferSize = 16;
 	public static final int initialNetworkMessageMapSize = 8;
 	

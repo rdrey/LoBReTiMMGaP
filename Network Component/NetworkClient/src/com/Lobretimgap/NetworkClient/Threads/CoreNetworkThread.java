@@ -370,6 +370,7 @@ public abstract class CoreNetworkThread extends Thread
 	                        
 	                        Log.i("NetworkTraffic", "Expected "+mSize+" bytes of input");
 
+	                        Log.i("Bandwidth", "Expected: "+mSize);
 	                        //Read in the object bytes
 	                        byte [] object = new byte [mSize];
 	                        int bytesRead = 0;
@@ -377,6 +378,7 @@ public abstract class CoreNetworkThread extends Thread
 	                        {
 	                            bytesRead += in.read(object, bytesRead, object.length - bytesRead);
 	                            Log.d("NetworkTraffic", "Read "+bytesRead+"/"+mSize+" bytes of input");
+	                            Log.d("Bandwidth", "Read: "+bytesRead+"/"+mSize);
 	                        }
 
 	                        //System.out.println("Mid receive, byte buffer at "+bytesRead);

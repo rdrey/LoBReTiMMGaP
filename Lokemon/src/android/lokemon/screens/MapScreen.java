@@ -1,7 +1,6 @@
 package android.lokemon.screens;
 
 import java.util.ArrayList;
-import java.util.List;
 import android.location.Location;
 import android.lokemon.G;
 import android.lokemon.G.TestMode;
@@ -31,6 +30,8 @@ import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.*;
 import android.lbg.*;
+import networkTransferObjects.NetworkMessageMedium;
+
 import org.mapsforge.android.maps.*;
 import com.example.android.apis.graphics.AnimateDrawable;
 
@@ -100,14 +101,12 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 						G.player.setLocation (end_loc);
 						mapController.setCenter(end);
 						end = null;
-						//animHandler.removeCallbacks(animator);
 						Log.i("Interface", "Animation done");
 					}
 					else
 					{
 						G.player.setLocation(loc);
 						mapController.setCenter(start);
-						//animHandler.postDelayed(animator, 50);
 					}
 				}
 				trainer_aura.requestRedraw();
@@ -272,11 +271,27 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     	Log.i("Interface", "Map view destroyed");
     }
     
-    public void switchToBattle()
+    public void switchToBattle(NetworkMessageMedium battleInitMessage, int seed)
     {
     	if (progressDialog.isShowing())
     		progressDialog.dismiss();
     	Intent intent = new Intent(this, BattleScreen.class);
+    	if (battleInitMessage != null)
+    	{
+    		intent.putExtra("battle","trainer");
+    		int [] stats = new int[5];
+    		for (int i = 0; i < 5; i++)
+    			stats[i] = battleInitMessage.integers.get(6+i);
+	    	intent.putExtra("stats", stats);
+	    	intent.putExtra("index", battleInitMessage.integers.get(3));
+	    	intent.putExtra("level", battleInitMessage.integers.get(4));
+	    	intent.putExtra("hp", battleInitMessage.integers.get(5));
+	    	intent.putExtra("seed", seed);
+	    	intent.putExtra("nick", battleInitMessage.strings.get(0));
+	    	intent.putExtra("gender", battleInitMessage.integers.get(2));
+    	}
+    	else
+    		intent.putExtra("battle","wild");
     	startActivityForResult(intent, 1);  	
     }
     
@@ -314,7 +329,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     
     public void showProgressDialog(String message)
     {
-    	progressDialog.setMessage(message);
+    	progressDialog = ProgressDialog.show(this, "", message, true, false);
     	progressDialog.show();
     }
     

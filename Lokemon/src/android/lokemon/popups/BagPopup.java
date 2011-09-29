@@ -7,6 +7,7 @@ import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.lokemon.G;
+import android.lokemon.G.BattleType;
 import android.lokemon.R;
 import android.lokemon.G.Mode;
 import android.lokemon.R.id;
@@ -25,9 +26,18 @@ public class BagPopup extends FadePopup{
 	{
 		super.onCreate(savedInstanceState);
 		entries = new ArrayList<BagItem>();
-		for (BagItem i:G.player.items)
-			if (i.getCount() > 0)
-				entries.add(i);
+		if (G.mode == Mode.MAP || G.battle.battleType == BattleType.WILD)
+		{
+			for (BagItem i:G.player.items)
+				if (i.getCount() > 0)
+					entries.add(i);
+		}
+		else
+		{
+			for (int i = 1; i < G.player.items.length; i++)
+				if (G.player.items[i].getCount() > 0)
+					entries.add(G.player.items[i]);
+		}
 		setListAdapter(new EntryAdapter(this, R.layout.bag_item, entries));
 	}
 
@@ -35,7 +45,8 @@ public class BagPopup extends FadePopup{
 	{
 		if (G.mode == Mode.BATTLE)
 		{
-			setResult(entries.get(pos).getIndex());
+			// returns the index of the item in the player's inventory
+			setResult(RESULT_FIRST_USER + entries.get(pos).getIndex());
 			finish();
 		}
 	}

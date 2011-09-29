@@ -46,7 +46,8 @@ public class Pokemon {
 		xp = (int)Math.pow(level, 3);
 		xp_to_level = (int)Math.pow(level+1, 3);
 		IV = new int[5]; // attack = 0, defense = 1, speed = 2, special = 3, hp = 4
-		for (int i = 0; i < IV.length; i++) IV[i] = (int)(Math.random() * 16);
+		for (int i = 0; i < IV.length; i++) 
+			IV[i] = G.random.nextInt(16);
 		EV = new int[5];
 		this.level = level - 1;
 		levelUp();
@@ -120,6 +121,7 @@ public class Pokemon {
 	public int getTotalHP() {return hp_total;}
 	
 	public int getHP() {return hp_current;}
+	public void setHP(int hp) {hp_current = hp;}
 	
 	public int getSpeed() {return speed;}
 	
@@ -142,6 +144,12 @@ public class Pokemon {
 	public int getSpriteAttack() {return base.spriteID_attack;}
 	
 	public Regions getHabitat() {return base.habitat;}
+	
+	public int[] getStats() {return new int[]{attack, defense, speed, special, hp_total};}
+	
+	public int[] getIVs() {return IV;}
+	
+	public int[] getEVs() {return EV;}
 	
 	public int getExperienceYield()
 	{

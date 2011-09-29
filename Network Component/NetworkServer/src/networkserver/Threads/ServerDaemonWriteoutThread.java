@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
 import networkTransferObjects.*;
 import networkserver.ServerCustomisation;
@@ -103,7 +104,37 @@ public class ServerDaemonWriteoutThread extends Thread
 
                 //Log.d(NetworkVariables.TAG, "Serialized Size: "+serializedObject.length);
                 //And then send it off.
-                os.write(message);
+                
+                //If message is too big, split it into multiple pieces
+                if(message.length > 8000)
+                {
+                    System.out.println("Need to send "+message.length+" bytes");
+                    int numMsgs = message.length /4096;
+                    int remainder = message.length % 4096;
+                    byte [][] msgs = new byte [numMsgs][4096];
+                    byte[] lastMsg = new byte [remainder];
+
+                    for(int i = 0; i < numMsgs;i++)
+                    {
+                        msgs[i] = Arrays.copyOfRange(message, i*4096, (i*4096) + 4096);
+                        os.write(msgs[i]);
+                        System.out.println("Sent "+(i*4096+4096)+"/"+message.length+" bytes");
+                    }
+                    
+                    if(remainder != 0)
+                    {
+                        lastMsg = Arrays.copyOfRange(message, numMsgs*4096, message.length);
+                        os.write(lastMsg);
+                        System.out.println("Sent "+(lastMsg.length + numMsgs*4096)+"/"+message.length+" bytes");
+                    }
+
+
+                }
+                else
+                {
+                    os.write(message);                    
+                }
+                os.flush();
             }
             catch(IOException e)
             {
