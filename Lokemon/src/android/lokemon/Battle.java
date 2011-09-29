@@ -34,6 +34,7 @@ public class Battle {
 	
 	// current pokemon selected by player
 	private Pokemon poke_player;
+	private int poke_player_index;
 	private int[] player_stages;
 	// current pokemon selected by opponent
 	private Pokemon poke_opp;
@@ -42,6 +43,9 @@ public class Battle {
 	int pokeCount;
 	// how many usable items are there
 	int itemCount;
+	// indicates which Pokemon were used in battle (and did not feint)
+	boolean [] battled;
+	boolean [] defeated;
 	
 	// a reference to the screen that displays the battle
 	private BattleScreen display;
@@ -69,7 +73,16 @@ public class Battle {
 		if (itemCount == 0)
 			display.disableBag();
 				
-		poke_player = G.player.pokemon.get(0);
+		battled = new boolean[G.player.pokemon.size()];
+		defeated = new boolean[G.player.pokemon.size()];
+		// this selection assumes the player has at least one battle-ready pokemon
+		int i = 0;
+		while (G.player.pokemon.get(i).getHP() <= 0)
+			i++;
+		
+		poke_player_index = i;
+		poke_player = G.player.pokemon.get(i);
+		battled[i] = true;
 		poke_player.inBattle = true;
 		display.switchPlayerPoke(poke_player);
 		poke_opp = opponent_start;
@@ -197,27 +210,76 @@ public class Battle {
 	private void meFirst()
 	{
 		MoveResult result = executeMove(player_move, player_move_index, poke_player, poke_opp,player_next_poke);
-		if (result == MoveResult.NONE)
+		boolean finished = false;
+		switch(result)
 		{
+		case NONE:
 			result = executeMove(opponent_move, opponent_move_index, poke_opp, poke_player,opponent_next_poke);
+			break;
+		case VICTORY:
+			if (battleType == BattleType.TRAINER)
+			{
+				if (opponent_move == BattleMove.SWITCH_POKEMON)
+					executeMove(opponent_move, opponent_move_index, poke_opp, poke_player,opponent_next_poke);
+				else
+				{
+					waitingForNewPoke = true;
+					display.showProgressDialog("Waiting for opponent...");
+				}
+			}
+			else
+			{
+				resultMessage = "You defeated the wild " + poke_opp.getName() + "!";
+				// get experience from defeating wild pokemon
+				display.endBattle();
+			}
+			finished = true;
+			break;
+		case CAUGHT_POKEMON:
+			G.player.pokemon.add(poke_opp);
+			display.endBattle();
+			finished = true;
+			break;
+		case RAN_AWAY:
+			display.endBattle();
+			finished = true;
+			break;
+		}
+		if (!finished)
+		{
 			switch(result)
 			{
 			case VICTORY:
 				pokeCount--;
 				display.setNumPokemon(pokeCount);
+				defeated[poke_player_index] = true;
+				
 				if (pokeCount == 0)
 				{
 					resultMessage = "You were defeated by " + (battleType == BattleType.TRAINER?display.getOppNick():"the wild " + poke_opp.getName() + "...");
 					// send defeated message
+					// no experience gained
+					display.endBattle();
 				}
 				else
 				{
+					if (pokeCount == 1)
+						display.disableSwitch();
+					
 					Pokemon new_poke = null;
+					int index = 0;
 					for (Pokemon p:G.player.pokemon)
 					{
 						if (p.getHP() > 0)
+						{
 							new_poke = p;
+							break;
+						}
+						index++;
 					}
+					
+					battled[index] = true;
+					poke_player_index = index;
 					
 					if (battleType == BattleType.TRAINER)
 						G.game.sendSwitchBattleMessage(new_poke);
@@ -232,32 +294,8 @@ public class Battle {
 				}
 				break;
 			case RAN_AWAY:
-				display.endBattle();
-				break;
-			}
-		}
-		else
-		{
-			switch(result)
-			{
-			case VICTORY:
-				if (battleType == BattleType.TRAINER)
-				{
-					waitingForNewPoke = true;
-					display.showProgressDialog("Waiting for opponent...");
-				}
-				else
-				{
-					resultMessage = "You defeated the wild " + poke_opp.getName() + "!";
-					// get experience from defeating wild pokemon
-					display.endBattle();
-				}
-				break;
-			case CAUGHT_POKEMON:
-				G.player.pokemon.add(poke_opp);
-				display.endBattle();
-				break;
-			case RAN_AWAY:
+				// send ran away message
+				// no experience gained (but opponent does)
 				display.endBattle();
 				break;
 			}
@@ -267,9 +305,71 @@ public class Battle {
 	private void youFirst()
 	{
 		MoveResult result = executeMove(opponent_move, opponent_move_index, poke_opp, poke_player,opponent_next_poke);
-		if (result == MoveResult.NONE)
+		boolean finished = false;
+		switch(result)
 		{
+		case NONE:
 			result = executeMove(player_move, player_move_index, poke_player, poke_opp,player_next_poke);
+			break;
+		case VICTORY:
+			pokeCount--;
+			display.setNumPokemon(pokeCount);
+			defeated[poke_player_index] = true;
+			
+			if (pokeCount == 0)
+			{
+				resultMessage = "You were defeated by " + (battleType == BattleType.TRAINER?display.getOppNick():"the wild " + poke_opp.getName() + "...");
+				// send defeated message
+				// no experience gained
+				display.endBattle();
+			}
+			else
+			{
+				resultMessage += "Your " + poke_player.getName() + " has feinted.\n";
+				
+				if (pokeCount == 1)
+					display.disableSwitch();
+				
+				if (player_move == BattleMove.SWITCH_POKEMON)
+					executeMove(player_move, player_move_index, poke_player, poke_opp,player_next_poke);
+				else
+				{
+					Pokemon new_poke = null;
+					int index = 0;
+					for (Pokemon p:G.player.pokemon)
+					{
+						if (p.getHP() > 0)
+						{
+							new_poke = p;
+							break;
+						}
+						index++;
+					}
+					
+					battled[index] = true;
+					poke_player_index = index;
+					
+					if (battleType == BattleType.TRAINER)
+						G.game.sendSwitchBattleMessage(new_poke);
+							
+					for (int i = 0; i < 5; i++)
+						player_stages[i] = 0;
+					poke_player.inBattle = false;
+					poke_player = new_poke;
+					poke_player.inBattle = true;
+					display.switchPlayerPoke(poke_player);
+				}
+			}
+			finished = true;
+			break;
+		case RAN_AWAY:
+			// gain experience from opponent running away
+			finished = true;
+			display.endBattle();
+			break;
+		}
+		if (!finished)
+		{
 			switch(result)
 			{
 			case VICTORY:
@@ -288,44 +388,6 @@ public class Battle {
 			case CAUGHT_POKEMON:
 				G.player.pokemon.add(poke_opp);
 				display.endBattle();
-				break;
-			case RAN_AWAY:
-				display.endBattle();
-				break;
-			}
-		}
-		else
-		{
-			switch(result)
-			{
-			case VICTORY:
-				pokeCount--;
-				display.setNumPokemon(pokeCount);
-				if (pokeCount == 0)
-				{
-					resultMessage = "You were defeated by " + (battleType == BattleType.TRAINER?display.getOppNick():"the wild " + poke_opp.getName() + "...");
-					// send defeated message
-				}
-				else
-				{
-					Pokemon new_poke = null;
-					for (Pokemon p:G.player.pokemon)
-					{
-						if (p.getHP() > 0)
-							new_poke = p;
-					}
-					
-					if (battleType == BattleType.TRAINER)	
-						G.game.sendSwitchBattleMessage(new_poke);
-							
-					for (int i = 0; i < 5; i++)
-						player_stages[i] = 0;
-					poke_player.inBattle = false;
-					resultMessage += "Your " + poke_player.getName() + " has feinted.\n";
-					poke_player = new_poke;
-					poke_player.inBattle = true;
-					display.switchPlayerPoke(poke_player);
-				}
 				break;
 			case RAN_AWAY:
 				display.endBattle();
@@ -400,6 +462,10 @@ public class Battle {
 				poke_player.inBattle = true;
 				display.switchPlayerPoke(poke_player);
 				resultMessage += player + " swapped in " + pronoun + " " + poke_player.getName() + ".\n";
+				
+				// pokemon has now contributed to battle (unless it feints before the end)
+				poke_player_index = G.player.pokemon.indexOf(poke_player);
+				battled[poke_player_index] = true;
 			}
 			else
 			{
