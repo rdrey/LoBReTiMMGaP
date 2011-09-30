@@ -3,6 +3,7 @@ package networkserver.Threads;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import networkserver.LogMaker;
 import networkserver.ServerCustomisation;
 
 /**
@@ -42,9 +43,9 @@ public class ServerCoreThread  extends Thread {
         {
             try
             {
-                System.out.println("Waiting for a connection....");
+                LogMaker.println("Waiting for a connection....");
                 Socket con = socket.accept();                
-                System.out.println("Client accepted: "+ con);                
+                LogMaker.println("Client accepted: "+ con);                
                 ServerDaemonThread daemonThread = customSettings.buildInstance();
                 daemonThread.setSocket(con);
                 daemonThread.start();

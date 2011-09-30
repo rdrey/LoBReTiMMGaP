@@ -70,7 +70,7 @@ public class SpatialProvider {
                 if (((SpatialDBEntity)so).xmlRule((AbstractNode) poiOrWay)) {
                     try {
                         SpatialDBEntity temp = ((SpatialDBEntity)so).getClass().newInstance();
-//                        System.out.println("Found " + so.getClass());
+//                        LogMaker.println("Found " + so.getClass());
                         Serializable save = s.save(temp.construct((AbstractNode) poiOrWay));
                     } catch (InstantiationException ex) {
                         Logger.getLogger(SpatialProvider.class.getName()).log(Level.SEVERE, null, ex);

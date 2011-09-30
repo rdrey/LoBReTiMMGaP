@@ -17,6 +17,7 @@ import networkserver.EventListeners.RequestReceivedListener;
 import networkserver.EventListeners.TerminationRequestReceivedListener;
 import networkserver.EventListeners.UpdateReceivedListener;
 import networkserver.Events.NetworkEvent;
+import networkserver.LogMaker;
 import networkserver.Peer2Peer.ClientPeer;
 import networkserver.ServerVariables;
 import networkserver.Threads.ServerDaemonThread;
@@ -46,7 +47,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
     
     @Override
     protected void registerPlayer(PlayerRegistrationMessage initialMessage) {
-        System.out.println("Player Registerd: ID:"+initialMessage.playerID+", name: "+initialMessage.playerName);
+        LogMaker.println("Player Registerd: ID:"+initialMessage.playerID+", name: "+initialMessage.playerName);
         player = new LokemonPlayer(initialMessage.playerID, initialMessage.playerName);
         LokemonServerVariables.playerList.add(player);
         player.setAvatar(initialMessage.integers.get(0));
@@ -101,7 +102,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
                 double y = ((NetworkMessageMedium)msg).doubles.get(1);
                 player.setPosition(new Location(x, y));
                 
-                //System.out.println("Position update: Latitude = "+x+", Longitude = "+y);
+                //LogMaker.println("Position update: Latitude = "+x+", Longitude = "+y);
             }
             else if (sMsg.equals("EnteredBattle"))
             {
@@ -141,7 +142,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
     TerminationRequestReceivedListener trrListen = new TerminationRequestReceivedListener() {
 
         public void EventOccured(NetworkEvent e) {
-            System.out.println("Termination requested: "+ ((NetworkMessage)e.getMessage()).getMessage());
+            LogMaker.println("Termination requested: "+ ((NetworkMessage)e.getMessage()).getMessage());
             ServerVariables.playerThreadMap.get(player.getPlayerID()).shutdownThread();
             LokemonServerVariables.playerList.remove(player);            
         }

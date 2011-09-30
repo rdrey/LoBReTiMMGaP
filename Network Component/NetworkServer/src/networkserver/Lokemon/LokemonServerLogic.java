@@ -17,6 +17,7 @@ import networkTransferObjects.Lokemon.LokemonSpatialObject;
 import networkTransferObjects.NetworkMessage;
 import networkTransferObjects.NetworkMessageLarge;
 import networkTransferObjects.UtilityObjects.Location;
+import networkserver.LogMaker;
 import networkserver.ServerVariables;
 import org.mobiloc.lobgasp.App;
 import org.mobiloc.lobgasp.SpatialProvider;
@@ -94,7 +95,7 @@ public class LokemonServerLogic extends Thread{
         msg.objectDict.put("SpatialObjects", gameObjects);
 
         long total = System.currentTimeMillis() - start;
-        System.out.println("Server served request for "+ gameObjects.size() + " spatial objects in "+total+"ms");
+        LogMaker.println("Server served request for "+ gameObjects.size() + " spatial objects in "+total+"ms");
         ServerVariables.playerThreadMap.get(playerId).sendGameStateUpdate(msg);
         
     }
@@ -123,11 +124,7 @@ public class LokemonServerLogic extends Thread{
                         {
                             if(App.distFrom(pl.getPosition().getX(), pl.getPosition().getY(),
                             player.getPosition().getX(), player.getPosition().getY()) < LokemonServerVariables.areaOfInterest)
-                            {
-                                if(pl.getBusy())
-                                {
-                                    System.out.println("Player "+ pl.getPlayerID()+" is busy!");
-                                }
+                            {                               
                                 players.add(pl);
                             }
                         }
@@ -143,7 +140,7 @@ public class LokemonServerLogic extends Thread{
                 }
             });
             msg.objectDict.put("PlayerList", players);
-            //System.out.println("Sent player list of length: "+ players.size());
+            //LogMaker.println("Sent player list of length: "+ players.size());
             ServerVariables.playerThreadMap.get(player.getPlayerID()).sendGameStateUpdate(msg);
         }
         else
@@ -207,7 +204,7 @@ public class LokemonServerLogic extends Thread{
             /* First check to see how long ago this message was sent. If it was > pickupLatency,
              * we have no need to wait, so instantly reply with success.
              */
-             System.out.println("Message sent: "+ (System.currentTimeMillis() - timeStamp) +"ms ago!"); //DEBUG
+             
              if(System.currentTimeMillis() - timeStamp > LokemonServerVariables.pickupLatency)
              {
                  NetworkMessage msg = new NetworkMessage("Accept");

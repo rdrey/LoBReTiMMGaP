@@ -36,7 +36,7 @@ import org.mobiloc.lobgasp.osm.model.Ways.TunnelEntity;
 public class App {
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        LogMaker.println("Hello World!");
 
         SpatialProvider sp = new SpatialProvider();
         //TODO interface for custom objects
@@ -66,15 +66,15 @@ public class App {
 //        PubEntity pub = (PubEntity) so.get(0);
 //        
 //        WKTWriter wkt = new WKTWriter();
-//        System.out.println(wkt.write(pub.getGeom()));
+//        LogMaker.println(wkt.write(pub.getGeom()));
 //        
 //        
 //        List cs = s.createQuery("from LibraryEntity where name like 'Rondebosch Public Library'").list();
 //        LibraryEntity lib = (LibraryEntity) cs.get(0);
 //
-//        System.out.println("Distance: " + Math.toRadians(lib.getGeom().distance(pub.getGeom())) * Math.PI / 180.0 * 6378137.0);
-//        System.out.println("Distance: " + lib.getGeom().distance(pub.getGeom()));
-//        System.out.println("Distance: " + distance((Point)lib.getGeom(), (Point)pub.getGeom()));
+//        LogMaker.println("Distance: " + Math.toRadians(lib.getGeom().distance(pub.getGeom())) * Math.PI / 180.0 * 6378137.0);
+//        LogMaker.println("Distance: " + lib.getGeom().d istance(pub.getGeom()));
+//        LogMaker.println("Distance: " + distance((Point)lib.getGeom(), (Point)pub.getGeom()));
 //
 //        serializeResults(PubEntity.class, "pub.out", s);
 //

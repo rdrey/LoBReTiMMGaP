@@ -19,6 +19,7 @@ import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
 import networkserver.EventListeners.*;
 import networkserver.Events.NetworkEvent;
+import networkserver.LogMaker;
 import networkserver.Peer2Peer.ClientPeer;
 import networkserver.ServerVariables;
 
@@ -245,7 +246,7 @@ public abstract class ServerDaemonThread extends Thread{
                             bytesRead += in.read(object, bytesRead, object.length - bytesRead);
                         }
 
-                        //System.out.println("Mid receive, byte buffer at "+bytesRead);
+                        //LogMaker.println("Mid receive, byte buffer at "+bytesRead);
                         ProtostuffIOUtil.mergeFrom(object, msg, schema);
                         processNetworkMessage(msg);
                     }
@@ -382,7 +383,7 @@ public abstract class ServerDaemonThread extends Thread{
                     }else if (msg instanceof NetworkMessageMedium)
                     {
                         int targetPlayerId = ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-2);
-                        System.out.println("Sending Direct Communication from: "+ ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-1)
+                        LogMaker.println("Sending Direct Communication from: "+ ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-1)
                                 + " to: "+targetPlayerId);
                         if(ServerVariables.playerThreadMap.get(targetPlayerId) != null)
                         {
