@@ -12,6 +12,7 @@ import android.lokemon.popups.MovesPopup;
 import android.lokemon.popups.PokemonPopup;
 import android.os.Bundle;
 import android.widget.*;
+import android.util.Log;
 import android.view.*;
 
 public class BattleScreen extends Activity implements View.OnClickListener{
@@ -41,6 +42,7 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	
 	// dialogs
 	private ProgressDialog progressDialog;
+	private Toast toast;
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -70,6 +72,8 @@ public class BattleScreen extends Activity implements View.OnClickListener{
         opp_bar = (ProgressBar)findViewById(R.id.opp_health);
         
         pokeballs = (ImageView)findViewById(R.id.pokeballs);
+        
+        toast  = Toast.makeText(this, "", Toast.LENGTH_LONG);
         
         // initiate battle correctly
         Bundle data = getIntent().getExtras();
@@ -148,6 +152,18 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	{
 		super.onPause();
 		showBattleInterface(false);
+	}
+	
+	public void onStop()
+	{
+		Log.i("Battle", "Battle activity stopped");
+		super.onStop();
+	}
+	
+	public void onDestroy()
+	{
+		Log.i("Battle", "Battle activity destroyed");
+		super.onDestroy();
 	}
 	
 	public void onResume()
@@ -230,7 +246,7 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	
 	public void showToast(String message)
 	{
-		Toast toast = Toast.makeText(this, message, Toast.LENGTH_LONG);
+		toast.setText(message);
     	toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
     	toast.show();
 	}

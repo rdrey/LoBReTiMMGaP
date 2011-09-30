@@ -488,14 +488,14 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		display.updateLocation(location);
 		
 		// gets regions in a 100m radius if player has moved more than 50m
-		if (!waitingForRegions && (lastUpdateLocation == null || location.distanceTo(lastUpdateLocation) > 5000))
+		if (!waitingForRegions && (lastUpdateLocation == null || location.distanceTo(lastUpdateLocation) > 100))
 		{
 			// request regions
 			waitingForRegions = true;
 			NetworkMessageMedium msg = new NetworkMessageMedium("MapDataRequest");
 			msg.doubles.add(location.getLatitude());
 			msg.doubles.add(location.getLongitude());
-			msg.doubles.add(10000.0);
+			msg.doubles.add(200.0);
 			networkBinder.sendRequest(msg);
 			lastUpdateLocation = location;
 		}
@@ -818,7 +818,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								}
 								else if (nr.getID() < id)
 								{
-									Log.i("Regions", "Removing id=" + nr.getID());
+									Log.i("Regions", "Keeping id=" + nr.getID());
 									display.removeRegion(nr);
 									i.remove();
 									if (i.hasNext())

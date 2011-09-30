@@ -40,12 +40,13 @@ public class Battle {
 	private Pokemon poke_opp;
 	private int[] opp_stages;
 	// how many pokemon are able to battle
-	int pokeCount;
+	private int pokeCount;
 	// how many usable items are there
-	int itemCount;
+	private int itemCount;
 	// indicates which Pokemon were used in battle (and did not feint)
-	boolean [] battled;
-	boolean [] defeated;
+	private boolean [] battled;
+	private boolean [] defeated;
+	private ArrayList<Integer> opp_defeated;
 	
 	// a reference to the screen that displays the battle
 	private BattleScreen display;
@@ -75,6 +76,8 @@ public class Battle {
 				
 		battled = new boolean[G.player.pokemon.size()];
 		defeated = new boolean[G.player.pokemon.size()];
+		opp_defeated = new ArrayList<Integer>();
+		
 		// this selection assumes the player has at least one battle-ready pokemon
 		int i = 0;
 		while (G.player.pokemon.get(i).getHP() <= 0)
@@ -217,6 +220,7 @@ public class Battle {
 			result = executeMove(opponent_move, opponent_move_index, poke_opp, poke_player,opponent_next_poke);
 			break;
 		case VICTORY:
+			opp_defeated.add(poke_opp.index);
 			if (battleType == BattleType.TRAINER)
 			{
 				if (opponent_move == BattleMove.SWITCH_POKEMON)
@@ -373,6 +377,7 @@ public class Battle {
 			switch(result)
 			{
 			case VICTORY:
+				opp_defeated.add(poke_opp.index);
 				if (battleType == BattleType.TRAINER)
 				{
 					waitingForNewPoke = true;
@@ -451,7 +456,7 @@ public class Battle {
 			resultMessage += player + " used a " + G.player.items[index].getName() + ".\n";
 			return MoveResult.NONE;
 		case ATTACK:
-			return executeAttack(index, source, target);
+			return executeAttack(index, source, target,player);
 		case SWITCH_POKEMON:
 			if (source == poke_player)
 			{
@@ -497,10 +502,15 @@ public class Battle {
 		}
 	}
 	
-	private MoveResult executeAttack(int moveIndex, Pokemon source, Pokemon target)
+	private MoveResult executeAttack(int moveIndex, Pokemon source, Pokemon target, String playerName)
 	{
 		MoveResult result;
-		target.setHP(target.getHP()-4);
+		int damage = (int)(source.getAttack()/(float)target.getDefense() * 2);
+		if (playerName == null)
+			resultMessage += "The wild " + source.getName() + " inflicted " + damage + " damage.\n";
+		else
+			resultMessage += playerName + "'s " + source.getName() + " inflicted " + damage + " damage.\n";
+		target.setHP(target.getHP()-damage);
 		if (target.getHP() <= 0)
 		{
 			target.setHP(0);
@@ -554,5 +564,19 @@ public class Battle {
 	public void handleOpponentDefeated(int [] defeatedPokes)
 	{
 		
+	}
+	
+	public void handlePlayerDisconnected()
+	{
+		
+	}
+	
+	// this method is called when an opponent is disconnected during battle
+	public void handleOpponentDisconnected()
+	{
+		if (waitingForOpponent || waitingForNewPoke)
+			display.cancelProgressDialog();
+		display.showToast(display.getOppNick() + " has been disconnected");
+		display.endBattle();
 	}
 }

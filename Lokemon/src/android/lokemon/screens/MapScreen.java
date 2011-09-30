@@ -50,6 +50,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 	// dialogs
 	private AlertDialog battleAlert;
 	private ProgressDialog progressDialog;
+	private Toast toast;
 	
 	// map overlays (declared in drawing order)
 	private ArrayWayOverlay regions;
@@ -178,6 +179,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         
         progressDialog = new ProgressDialog(this, ProgressDialog.STYLE_SPINNER);
     	progressDialog.setCancelable(false);
+    	toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
         
     	playerIDs = new ArrayList<Integer>();
     	itemIDs = new ArrayList<Integer>();
@@ -322,7 +324,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     // create alert dialog to notify the user of important events
     public void showToast(String message) 
     {
-    	Toast toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
+    	toast.setText(message);
     	toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
     	toast.show();
     }
