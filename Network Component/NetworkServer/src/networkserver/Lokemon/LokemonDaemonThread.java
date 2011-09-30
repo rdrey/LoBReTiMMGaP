@@ -120,6 +120,8 @@ public class LokemonDaemonThread extends ServerDaemonThread{
         public void EventOccured(NetworkEvent e) {
             NetworkMessage msg = (NetworkMessage)e.getMessage();
             String sMsg = msg.getMessage();
+            
+            
             if(sMsg.equals("GetPlayers"))
             {
                 LokemonServerLogic.sendPlayersToClient(player);

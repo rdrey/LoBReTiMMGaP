@@ -256,7 +256,7 @@ public abstract class ServerDaemonThread extends Thread{
                 {//Failed to read in length field properly
                     if(headerBytesRead == -1)
                     {//Stream closed
-                        System.err.println("End of stream!");
+                        LogMaker.errorPrintln("End of stream!");
                         fireEvent(new NetworkEvent(this, "Connection to client lost!\n"),  ConnectionLostListener.class);
                         shutdownThread();
                     }
@@ -269,20 +269,20 @@ public abstract class ServerDaemonThread extends Thread{
             }            
             catch(IOException e)
             {
-                System.err.println("Error occured while reading from thread : "+e);
+                LogMaker.errorPrintln("Error occured while reading from thread : "+e);
                 fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
                 this.shutdownThread();                
                 break;
             }
             catch(NullPointerException e)
             {
-                System.err.println("Null Pointer Exception: +"+ e.getMessage());
+                LogMaker.errorPrintln("Null Pointer Exception: +"+ e.getMessage());
                 fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
                 stopOperation = true;
             }
             catch(RuntimeException e)
             {
-                System.err.println("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?\n"+e);
+                LogMaker.errorPrintln("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?\n"+e);
             }
             finally
             {
@@ -297,7 +297,7 @@ public abstract class ServerDaemonThread extends Thread{
     {
         if(message.getTimeStamp() == 0)
         {
-            System.err.println("Error: Timestamp on message was 0!");
+            LogMaker.errorPrintln("Error: Timestamp on message was 0!");
         }
         if(message instanceof PlayerRegistrationMessage)
         {            
@@ -327,6 +327,8 @@ public abstract class ServerDaemonThread extends Thread{
         else
         {
             NetworkMessage msg = (NetworkMessage)message;
+            
+            LogMaker.println("Client "+playerID+":Received "+msg.getMessageType().toString());
             switch(msg.getMessageType())
             {
                 case UPDATE_MESSAGE:
@@ -392,7 +394,7 @@ public abstract class ServerDaemonThread extends Thread{
                     }
                     else //Should never be anything other than NetworkMessage medium or large.
                     {//If you want to add your own types of direct communication, add special cases here
-                        System.err.println("PlayerID: "+playerID+" attempted direct peer " +
+                        LogMaker.errorPrintln("PlayerID: "+playerID+" attempted direct peer " +
                                 "communication with an unrecognised object type");
                     }
                     break;
@@ -421,6 +423,7 @@ public abstract class ServerDaemonThread extends Thread{
         //Later perhaps we can more gracefully deal with this. Perhaps add wait
         //a little while and then try again?
         object.setTimeStamp(System.currentTimeMillis());
+        LogMaker.println("Client "+playerID+":Sending "+object.getMessageType().toString());
         if(!out.writeMessage(object))
         {
             throw new BufferOverflowException();
@@ -439,7 +442,7 @@ public abstract class ServerDaemonThread extends Thread{
         catch(IOException e)
         {
             //We dont really care if the socket failed to close correctly.
-            System.err.println("Socket failed to close correctly. \n"+e);
+            LogMaker.errorPrintln("Socket failed to close correctly. \n"+e);
         }
         finally
         {

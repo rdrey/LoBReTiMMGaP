@@ -20,4 +20,9 @@ public class LogMaker {
         System.out.println(formatter.format(current)+": "+message);
     }
     
+    public static void errorPrintln(String message)
+    {
+        println("ERROR: "+message);
+    }
+    
 }

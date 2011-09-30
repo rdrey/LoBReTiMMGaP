@@ -139,7 +139,7 @@ public class ServerDaemonWriteoutThread extends Thread
             }
             catch(IOException e)
             {
-                System.err.println("Failed to send object to client! \n"+e);
+                LogMaker.errorPrintln("IOEXCEPTION: Failed to send object to client! \n"+e);
             }
             catch(InterruptedException e)
             {
@@ -149,7 +149,7 @@ public class ServerDaemonWriteoutThread extends Thread
             }
             catch(Exception e)
             {
-                System.err.println("Unexpected error occured in network write thread!\n " );
+                LogMaker.errorPrintln("Unexpected error occured in network write thread!\n " );
                 e.printStackTrace(System.err);
             }
             finally
