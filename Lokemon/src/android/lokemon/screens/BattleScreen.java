@@ -4,6 +4,7 @@ import android.app.*;
 import android.content.*;
 import android.lokemon.Battle;
 import android.lokemon.G;
+import android.lokemon.G.Gender;
 import android.lokemon.R;
 import android.lokemon.game_objects.Pokemon;
 import android.lokemon.popups.BagPopup;
@@ -21,6 +22,8 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	private Button bag_button;
 	private Button run_button;
 	private ViewGroup battle_buttons;
+	private Gender opp_gender;
+	private String opp_nick;
 	
 	// display widgets
 	private ImageView player_poke;
@@ -68,10 +71,17 @@ public class BattleScreen extends Activity implements View.OnClickListener{
         
         pokeballs = (ImageView)findViewById(R.id.pokeballs);
         
-        // set up dialogs
-        progressDialog = new ProgressDialog(this, ProgressDialog.STYLE_SPINNER);
-        progressDialog.setCancelable(false);
-        new Battle(this);
+        // initiate battle correctly
+        Bundle data = getIntent().getExtras();
+        if (data.getString("battle").equals("trainer"))
+        {
+        	opp_gender = Gender.values()[data.getInt("gender")];
+        	opp_nick = data.getString("nick");
+        	Pokemon opp_start = new Pokemon(data.getInt("index"), data.getInt("hp"), 0, data.getInt("level"), null, null, data.getIntArray("stats"), null);
+        	new Battle(this, opp_start,data.getInt("seed"));
+        }
+        else
+        	new Battle(this);
 	}
 	
 	public void onClick(View v)
@@ -100,15 +110,16 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 		switch(requestCode)
 		{
 		case 1:
-			G.battle.switchPlayerPoke(resultCode);
+			if (resultCode != RESULT_CANCELED)
+				G.battle.switchPlayerPoke(resultCode - RESULT_FIRST_USER);
 			break;
 		case 2:
-			G.battle.selectMove(resultCode);
-			if (resultCode > -1)
-				showProgressDialog("Waiting for opponent...");
+			if (resultCode != RESULT_CANCELED)
+				G.battle.selectMove(resultCode - RESULT_FIRST_USER);
 			break;
 		case 3:
-			G.battle.useItem(resultCode);
+			if (resultCode != RESULT_CANCELED)
+				G.battle.useItem(resultCode - RESULT_FIRST_USER);
 			break;
 		}
 	}
@@ -122,11 +133,7 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 		builder.setCancelable(false);
 		builder.setPositiveButton("Run!", new DialogInterface.OnClickListener() 
 			{
-	           public void onClick(DialogInterface dialog, int id) 
-	           {
-	        	   if (G.battle.run())
-	       			finish();
-	           }
+	           public void onClick(DialogInterface dialog, int id)  {G.battle.run(); }
 	       })
 	       .setNegativeButton("Stay", new DialogInterface.OnClickListener() {
 	           public void onClick(DialogInterface dialog, int id) {
@@ -165,9 +172,11 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	
 	public void showProgressDialog(String message)
     {
-    	progressDialog.setMessage(message);
+		progressDialog = ProgressDialog.show(this, "", message, true, false);
     	progressDialog.show();
     }
+	
+	public void cancelProgressDialog() {progressDialog.dismiss();}
 	
 	// display new player Pokemon stats
 	public void setPlayerPokeDetails(Pokemon poke)
@@ -213,4 +222,19 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 		bag_button.setClickable(false);
 		bag_button.getBackground().setAlpha(128);
 	}
+	
+	public void endBattle()
+	{
+		finish();
+	}
+	
+	public void showToast(String message)
+	{
+		Toast toast = Toast.makeText(this, message, Toast.LENGTH_LONG);
+    	toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
+    	toast.show();
+	}
+	
+	public String getOppNick() {return opp_nick;}
+	public Gender getOppGender() {return opp_gender;}
 }

@@ -36,15 +36,10 @@ public class MovesPopup extends FadePopup{
 	{
 		if (G.mode == Mode.BATTLE)
 		{
-			setResult(entries.get(pos)[0]);
+			// returns the actual move index
+			setResult(RESULT_FIRST_USER + entries.get(pos)[0]);
 			finish();
 		}
-	}
-	
-	public void onBackPressed()
-	{
-		setResult(1);
-		super.onBackPressed();
 	}
 	
 	private class EntryAdapter extends ArrayAdapter<int[]>{

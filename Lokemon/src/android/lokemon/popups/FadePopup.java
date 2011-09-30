@@ -24,6 +24,12 @@ public class FadePopup extends ListActivity {
 		background.startTransition(500);
 	}
 	
+	public void onBackPressed()
+	{
+		this.setResult(RESULT_CANCELED);
+		super.onBackPressed();
+	}
+	
 	/*public void onPause()
 	{
 		super.onPause();

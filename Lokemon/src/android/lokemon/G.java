@@ -1,6 +1,7 @@
 package android.lokemon;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
@@ -25,6 +26,7 @@ public class G {
 	public static ElemType [] types;
 	public static Battle battle;
 	public static int [] region_colours;
+	public static Random random = new Random(System.currentTimeMillis());
 	
 	// icons used by map
 	public static Drawable player_marker_busy;
@@ -38,12 +40,14 @@ public class G {
 	public static String mapFile = "campus.map";
 	
 	// enums
+	public static enum BattleType {TRAINER, WILD};
 	public static enum Types {bug, electric, fire, flying, grass, ground, normal, poison, psychic, rock, steel, water};
 	public static enum Mode {BATTLE, MAP};
 	public static enum TestMode {CONTROL, EXPERIMENT};
 	public static enum Potions {HP, ATTACK, DEFENSE, SPECIAL, SPEED}
 	public static enum Gender {FEMALE, MALE};
 	public static enum PlayerState{BUSY, AVAILABLE};
+	public static enum BattleMove {RUN, USE_ITEM, ATTACK, SWITCH_POKEMON, CATCH_POKEMON, GAME_OVER};
 	public static enum Regions {CAVE, FOREST, GRASSLAND, MOUNTAIN, ROUGH_TERRAIN, URBAN, WATER_EDGE, POKEMON_CENTER, POKEMART, NONE};
-	public static enum Action {REQUEST_BATTLE, ACCEPT_BATTLE, REJECT_BATTLE, REJECT_ALL};
+	public static enum Action {REQUEST_BATTLE, ACCEPT_BATTLE, REJECT_BATTLE, REJECT_ALL, BATTLE_MOVE};
 }

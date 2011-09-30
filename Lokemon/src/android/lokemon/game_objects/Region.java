@@ -4,6 +4,8 @@ import org.mapsforge.android.maps.*;
 
 import android.lokemon.G;
 import android.lokemon.G.*;
+import android.util.Log;
+
 import com.vividsolutions.jts.geom.*;
 
 public class Region {
@@ -31,27 +33,23 @@ public class Region {
 		for (int i = 0; i < vertices.length;i++)
 		{
 			GeoPoint p = vertices[i];
-			coords[i] = new Coordinate(p.getLatitude(), p.getLongitude());
+			coords[i] = new Coordinate(p.getLongitude(),p.getLatitude());
 		}
 		LinearRing ring = new LinearRing(coordFactory.create(coords), geomFactory);
 		polygon = geomFactory.createPolygon(ring, null);
 	}
 	
-	public Region(Geometry geom, Regions region, int id)
+	public Region(networkTransferObjects.UtilityObjects.Location [] coords, Regions region, int id)
 	{
-		this.id = id;
-		this.region = region;
-		this.polygon = geom;
-		
-		// create GeoPoint vertices for map view
-		this.vertices = new GeoPoint[geom.getNumPoints()];
-		int index = 0;
-		for (Coordinate c:geom.getCoordinates())
-		{
-			this.vertices[index] = new GeoPoint(c.x,c.y);
-			index++;
-		}
-		regionWay = new OverlayWay(new GeoPoint[][]{vertices}, G.region_fill[region.ordinal()], G.region_outline[region.ordinal()]);
+		this(convertToGeoPoints(coords), region, id);
+	}
+	
+	private static GeoPoint[] convertToGeoPoints(networkTransferObjects.UtilityObjects.Location [] coords)
+	{
+		GeoPoint vs [] = new GeoPoint[coords.length];
+		for (int i =0; i < vs.length; i++)
+			vs[i] = new GeoPoint(coords[i].getY(),coords[i].getX());
+		return vs;
 	}
 	
 	public GeoPoint[] getVertices() {return vertices;}

@@ -49,7 +49,8 @@ public class PokemonPopup extends FadePopup{
 			{
 				if (i.next() == selected)
 				{
-					setResult(index);
+					// returns the index of the pokemon in the player's inventory
+					setResult(RESULT_FIRST_USER + index);
 					break;
 				}
 				index++;

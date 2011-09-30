@@ -10,6 +10,7 @@ import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 import android.location.Location;
 import android.lokemon.G.Action;
+import android.lokemon.G.BattleMove;
 import android.lokemon.G.Gender;
 import android.lokemon.G.Mode;
 import android.lokemon.G.PlayerState;
@@ -58,13 +59,23 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	private WorldPotion selectedItem;
 	private boolean foundPokeInRegion;
 	
+	// battle variabes
+	private int randomSeed;
+	public int opponentID;
+	private NetworkMessageMedium battleInitMessage;
+	public Pokemon genPokemon; // easiest to have it public
+	
 	// network objects
 	private boolean networkReqLock; // when true all battle requests from players are ignored
 	private boolean waitingForAccept; // when true all messages other than battle acceptance are ignored
-	private boolean networkConnected;
 	private boolean busyConnecting;
 	private boolean networkBound;
 	private boolean busyBinding;
+	
+	// we don't want to overwhelm the client with responses if there is a backlog
+	private boolean waitingForRegions;
+	private boolean waitingForPlayers;
+	private boolean waitingForItems;
 	
 	// periodically requests game state updates from server
 	private Handler networkUpdater;
@@ -95,9 +106,8 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				new GeoPoint(-33.958005, 18.461639),
 				new GeoPoint(-33.957511, 18.461701),
 				new GeoPoint(-33.957411, 18.460988)};
-		regions.add(new Region(points,Regions.GRASSLAND,0));
 		
-		display.addRegion(regions.get(0));
+		//addRegion(new Region(points,Regions.GRASSLAND,0));
 		
 		// network setup
 		networkReqLock = false;
@@ -111,48 +121,53 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			public void run() {
 				if (networkBound)
 				{
-					if (networkConnected)
+					if (networkBinder.isConnectedToServer())
 					{
 						if (G.player.playerState == PlayerState.AVAILABLE)
 						{
-							if (numUpdates == 3)
+							if (numUpdates >= 3 && !waitingForItems)
 							{
 								networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
 								numUpdates = 0;
+								waitingForItems = true;
+								Log.i("Items",  "Requesting game objects");
 							}
 							
-							networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
+							if (!waitingForPlayers)
+							{
+								networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
+								waitingForPlayers = true;
+							}
 							numUpdates++;
 							
 							// generate a Pokemon with probability based on catch rate if the player is in a special region
 							if (!waitingForAccept && currentRegion.ordinal() < 7 && !foundPokeInRegion)
 							{
-								double prob = Math.random();
+								double prob = G.random.nextDouble();
 								double total = 0;
 								ArrayList<BasePokemon> pokes_in_region = G.pokemon_by_region[currentRegion.ordinal()];
-								Pokemon newPoke = null;
 								for (int i = 0; i < pokes_in_region.size(); i++)
 								{
 									BasePokemon base = pokes_in_region.get(i);
-									total += base.catchrate;
+									total += base.catchrate/2.0;
 									if (prob < total)
 									{					
 										networkReqLock = true;
-										newPoke = new Pokemon(base.index, base.baseLevel+(int)(Math.random() * 4 + 1));
+										genPokemon = new Pokemon(base.index, base.baseLevel+G.random.nextInt(5));
 										foundPokeInRegion = true;
+										battleInitMessage = null;
 										initiateBattle();
 										break;
 									}
 								}
 							}
-							
-							networkUpdater.postDelayed(updater, 1000);
 						}
 					}
 					else if (!busyConnecting)
 					{
 						Log.i(NetworkVariables.TAG, "Trying to connect to game server...");
 						networkBinder.ConnectToServer();
+						busyConnecting = true;
 					}
 				}
 				else if (!busyBinding)
@@ -160,6 +175,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					Log.i(NetworkVariables.TAG, "Trying to rebind network service");
 					createConnection();
 				}
+				networkUpdater.postDelayed(updater, 1000);
 			}
 		};
 	}
@@ -232,10 +248,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		regions.add(index, region);
 		display.addRegion(region);
 	}
-	
-	/*
-	 * Methods related to initiating battles
-	 */
 	
 	public void requestItem(int itemID)
 	{
@@ -326,15 +338,25 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	public void acceptBattle()
 	{
 		// send Action.ACCEPT_BATTLE
-		networkBinder.sendDirectCommunication(getBattleInitiationMessage(Action.ACCEPT_BATTLE), selectedPlayer.getID());
+		opponentID = selectedPlayer.getID();
+		randomSeed = G.random.nextInt();
+		NetworkMessageMedium battleInit = getBattleInitiationMessage(Action.ACCEPT_BATTLE);
+		battleInit.integers.add(randomSeed);
+		networkBinder.sendDirectCommunication(battleInit, opponentID);
 		initiateBattle();
 	}
 	
-	public void initiateBattle()
+	private void initiateBattle()
 	{
 		// send busy status update
 		networkBinder.sendGameUpdate(new NetworkMessage("EnteredBattle"));
-		display.switchToBattle();
+		G.player.playerState = PlayerState.BUSY;
+		// switch to a battle against a network opponent
+		if (battleInitMessage != null)
+			display.switchToBattle(battleInitMessage, randomSeed);
+		// switch to a battle against a generated pokemon
+		else 
+			display.switchToBattle(null, G.random.nextInt());
 		networkReqLock = false;
 		waitingForAccept = false;
 	}
@@ -344,9 +366,30 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		// send available status update
 		selectedPlayer = null;
 		networkBinder.sendGameUpdate(new NetworkMessage("ExitedBattle"));
+		G.player.playerState = PlayerState.AVAILABLE;
 	}
 	
-	private NetworkMessage getBattleInitiationMessage(Action action)
+	public void sendSimpleBattleMessage(BattleMove move, int index)
+	{
+		NetworkMessageMedium nMsg = new NetworkMessageMedium(Action.BATTLE_MOVE.toString());
+		nMsg.integers.add(move.ordinal());
+		nMsg.integers.add(index);
+		networkBinder.sendDirectCommunication(nMsg, opponentID);
+	}
+	
+	public void sendSwitchBattleMessage(Pokemon new_poke)
+	{
+		NetworkMessageMedium nMsg = new NetworkMessageMedium(Action.BATTLE_MOVE.toString());
+		nMsg.integers.add(BattleMove.SWITCH_POKEMON.ordinal());
+		nMsg.integers.add(new_poke.index);
+		nMsg.integers.add(new_poke.getLevel());
+		nMsg.integers.add(new_poke.getHP());
+		for (int stat:new_poke.getStats())
+			nMsg.integers.add(stat);
+		networkBinder.sendDirectCommunication(nMsg, opponentID);
+	}
+	
+	private NetworkMessageMedium getBattleInitiationMessage(Action action)
 	{
 		// data in request: action, id, nick, gender, base, hp, attack, defense, speed, special, level
 		NetworkMessageMedium msg = new NetworkMessageMedium(action.toString());
@@ -356,12 +399,10 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		msg.integers.add(G.player.id);
 		msg.integers.add(G.player.gender.ordinal());
 		msg.integers.add(first.index);
-		msg.integers.add(first.getHP());
-		msg.integers.add(first.getAttack());
-		msg.integers.add(first.getDefense());
-		msg.integers.add(first.getSpeed());
-		msg.integers.add(first.getSpecial());
 		msg.integers.add(first.getLevel());
+		msg.integers.add(first.getHP());
+		for (int stat:first.getStats())
+			msg.integers.add(stat);
 		
 		msg.strings.add(G.player.nickname);
 		
@@ -447,13 +488,14 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		display.updateLocation(location);
 		
 		// gets regions in a 100m radius if player has moved more than 50m
-		if (lastUpdateLocation == null || location.distanceTo(lastUpdateLocation) > 50)
+		if (!waitingForRegions && (lastUpdateLocation == null || location.distanceTo(lastUpdateLocation) > 5000))
 		{
 			// request regions
+			waitingForRegions = true;
 			NetworkMessageMedium msg = new NetworkMessageMedium("MapDataRequest");
 			msg.doubles.add(location.getLatitude());
 			msg.doubles.add(location.getLongitude());
-			msg.doubles.add(100.0);
+			msg.doubles.add(10000.0);
 			networkBinder.sendRequest(msg);
 			lastUpdateLocation = location;
 		}
@@ -465,10 +507,11 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		networkBinder.sendGameUpdate(msg);
 		
 		// check which region type the player is in
-		currentRegion = checkRegion(location);
+		Regions newRegion = checkRegion(location);
 		// can only find one Pokemon in a region at a time
-		if (currentRegion == Regions.NONE)
+		if (currentRegion != newRegion)
 			foundPokeInRegion = false;
+		currentRegion = newRegion;
 	}
 
 	public void onLocationError(int errorCode) 
@@ -479,7 +522,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	private Regions checkRegion(Location location)
 	{
 		Regions current = Regions.NONE;
-		Point point = Region.geomFactory.createPoint(new Coordinate(location.getLatitude(), location.getLongitude()));
+		Point point = Region.geomFactory.createPoint(new Coordinate(location.getLongitude(), location.getLatitude()));
 		synchronized (regions)
 		{
 			for (Region region:regions)
@@ -534,34 +577,37 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	
 	public boolean handleMessage(Message msg) 
 	{
-		Log.e(NetworkVariables.TAG, NetworkComBinder.EventType.values()[msg.what].toString());
+		Log.i(NetworkVariables.TAG, NetworkComBinder.EventType.values()[msg.what].toString());
 		switch (NetworkComBinder.EventType.values()[msg.what])
 		{
 			case CONNECTION_ESTABLISHED:
 			{
 				display.showToast("Connected to game server");
-				networkConnected = true;
 				busyConnecting = false;
-				
-				// get player id and tell the server where the player is
+				break;	
+			}
+			case PLAYER_REGISTERED:
+			{
+				// get player id
 				G.player.id = networkBinder.getPlayerId();
-				onLocationChanged(G.player.getLocation());
-				
+				// tell the server where the player is
+				onLocationChanged(G.player.getLocation());			
 				// start requesting updates from server
 				networkUpdater.postDelayed(updater, 1000);
-				break;	
+				break;
 			}
 			case CONNECTION_LOST:
 			{
 				display.showToast("Connection to game server lost");
-				networkConnected = false;
 				break;
 			}
 			case CONNECTION_FAILED:
 			{
 				display.showToast("Could not connect to game server");
 				busyConnecting = false;
-				networkConnected = false;
+				// if the connection fails without ever having been connected we need to start the updater
+				networkUpdater.removeCallbacks(updater);
+				networkUpdater.postDelayed(updater, 1000);
 				break;
 			}
 			case GAMESTATE_RECEIVED:
@@ -571,6 +617,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				Log.i(NetworkVariables.TAG, tag);
 				if (tag.equals("Response:GetGameObjects"))
 				{
+					waitingForItems = false;
 					ArrayList<LokemonPotion> ilist = (ArrayList<LokemonPotion>)nMsg.objectDict.get("ItemList");
 					if (ilist != null)
 					{
@@ -654,6 +701,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				}
 				else if (tag.equals("Response:GetPlayers"))
 				{
+					waitingForPlayers = false;
 					ArrayList<LokemonPlayer> plist = (ArrayList<LokemonPlayer>)nMsg.objectDict.get("PlayerList");
 					if (plist != null)
 					{
@@ -739,6 +787,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				}
 				else if (tag.equals("MapDataResponse"))
 				{
+					waitingForRegions = false;
 					ArrayList<LokemonSpatialObject> rlist = (ArrayList<LokemonSpatialObject>)nMsg.objectDict.get("SpatialObjects");
 					if (rlist != null)
 					{
@@ -780,7 +829,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								{
 									Log.i("Regions", "Inserting id=" + id);
 									newIndices.add(index);
-									newRegions.add(new Region(lr.getGeom(), Regions.values()[lr.getType().ordinal()], lr.getObjectId()));
+									newRegions.add(new Region(lr.getCoords(), Regions.values()[lr.getType().ordinal()], lr.getObjectId()));
 									if (it.hasNext())
 									{
 										lr = it.next();
@@ -807,12 +856,12 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 							else if (lr != null)
 							{
 								Log.i("Regions", "Adding id=" + lr.getObjectId());
-								addRegion(new Region(lr.getGeom(), Regions.values()[lr.getType().ordinal()], lr.getObjectId()));
+								addRegion(new Region(lr.getCoords(), Regions.values()[lr.getType().ordinal()], lr.getObjectId()));
 								while (it.hasNext()) 
 								{
 									lr = it.next();
 									Log.i("Regions", "Adding id=" + lr.getObjectId());
-									addRegion(new Region(lr.getGeom(), Regions.values()[lr.getType().ordinal()], lr.getObjectId()));
+									addRegion(new Region(lr.getCoords(), Regions.values()[lr.getType().ordinal()], lr.getObjectId()));
 								}
 							}
 							
@@ -870,13 +919,19 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 						break;
 					case ACCEPT_BATTLE:
 						if (waitingForAccept)
-							initiateBattle();						
+						{
+							battleInitMessage = (NetworkMessageMedium)nMsg;
+							opponentID = selectedPlayer.getID();
+							randomSeed = battleInitMessage.integers.get(10);
+							initiateBattle();
+						}
 						break;
 					case REQUEST_BATTLE:
 						NetworkMessageMedium req = (NetworkMessageMedium)nMsg;
 						if (G.mode == Mode.MAP && !networkReqLock)
 						{
 							networkReqLock = true;
+							battleInitMessage = (NetworkMessageMedium)nMsg;
 							selectedPlayer = new NetworkPlayer(req.integers.get(1), req.strings.get(0), Gender.values()[req.integers.get(2)], null);
 							display.showBattleIncomingDialog(req.strings.get(0));
 						}
@@ -891,6 +946,21 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 							rejectBattle(false);
 						}
 						break;
+					case BATTLE_MOVE:
+						if (G.mode == Mode.BATTLE)
+						{
+							NetworkMessageMedium mMsg = (NetworkMessageMedium)nMsg;
+							if (BattleMove.values()[mMsg.integers.get(0)] != BattleMove.SWITCH_POKEMON)
+								G.battle.handleSimpleBattleMove(BattleMove.values()[mMsg.integers.get(0)], mMsg.integers.get(1));
+							else
+							{
+								int stats[] = new int[5];
+								for (int i= 0; i < 5; i++)
+									stats[i] = mMsg.integers.get(4+i);
+								Pokemon new_poke = new Pokemon(mMsg.integers.get(1), mMsg.integers.get(3),0, mMsg.integers.get(2), null, null, stats, null);
+								G.battle.handleSwitchBattleMove(new_poke);
+							}
+						}
 					}
 				}
 				catch (IllegalArgumentException e)
