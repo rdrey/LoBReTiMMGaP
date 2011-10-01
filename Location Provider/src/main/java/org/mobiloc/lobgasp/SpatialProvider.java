@@ -117,7 +117,7 @@ public class SpatialProvider {
         Transaction tx = s.beginTransaction();
 
         Criteria query = s.createCriteria(source);
-        query.add(SpatialRestrictions.within("geom", poly));
+        query.add(SpatialRestrictions.overlaps("geom", poly));
         List list = query.list();
 
         tx.commit();
