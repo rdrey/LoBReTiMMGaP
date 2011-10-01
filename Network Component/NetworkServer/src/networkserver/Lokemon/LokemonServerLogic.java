@@ -79,9 +79,7 @@ public class LokemonServerLogic extends Thread{
                 so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.CAVE);
             }
 
-            /*
-             * TODO 4 Lawrence: Uncomment once you've rebuilt my component
-             *
+            
             else if (ent instanceof FastFoodEntity) {
                 so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.CLINIC);
             }
@@ -91,7 +89,7 @@ public class LokemonServerLogic extends Thread{
             else if (ent instanceof ATMEntity) {
                 so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.SHOP);
             }
-             */
+             
             
             if(so != null)
             {
