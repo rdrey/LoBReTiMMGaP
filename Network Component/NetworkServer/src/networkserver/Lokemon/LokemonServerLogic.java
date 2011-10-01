@@ -22,6 +22,7 @@ import networkserver.ServerVariables;
 import org.mobiloc.lobgasp.App;
 import org.mobiloc.lobgasp.SpatialProvider;
 import org.mobiloc.lobgasp.model.SpatialDBEntity;
+import org.mobiloc.lobgasp.osm.model.POIs.*;
 import org.mobiloc.lobgasp.osm.model.Ways.*;
 
 /**
@@ -76,7 +77,21 @@ public class LokemonServerLogic extends Thread{
             else if(ent instanceof TunnelEntity)
             {
                 so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.CAVE);
-            }  
+            }
+
+            /*
+             * TODO 4 Lawrence: Uncomment once you've rebuilt my component
+             *
+            else if (ent instanceof FastFoodEntity) {
+                so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.CLINIC);
+            }
+            else if (ent instanceof PubEntity) {
+                so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.CLINIC);
+            }
+            else if (ent instanceof ATMEntity) {
+                so = new LokemonSpatialObject(ent.getId(), LokemonSpatialObject.SpatialObjectType.SHOP);
+            }
+             */
             
             if(so != null)
             {

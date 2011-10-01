@@ -17,6 +17,8 @@ import org.hibernate.Session;
 import org.mobiloc.lobgasp.util.HibernateUtil;
 import org.hibernate.Transaction;
 import org.mobiloc.lobgasp.model.SpatialDBEntity;
+import org.mobiloc.lobgasp.osm.model.POIs.ATMEntity;
+import org.mobiloc.lobgasp.osm.model.POIs.FastFoodEntity;
 import org.mobiloc.lobgasp.osm.model.Ways.BuildingEntity;
 import org.mobiloc.lobgasp.osm.model.POIs.LibraryEntity;
 import org.mobiloc.lobgasp.osm.model.POIs.PubEntity;
@@ -42,6 +44,8 @@ public class App {
         //TODO interface for custom objects
         sp.register(PubEntity.class, PubEntity.class);
         sp.register(LibraryEntity.class, LibraryEntity.class);
+        sp.register(ATMEntity.class, ATMEntity.class);
+        sp.register(FastFoodEntity.class, FastFoodEntity.class);
 
         sp.register(TunnelEntity.class, TunnelEntity.class);
         sp.register(StepsEntity.class, StepsEntity.class);

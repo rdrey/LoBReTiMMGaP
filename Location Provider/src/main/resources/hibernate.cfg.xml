@@ -20,6 +20,8 @@
         <mapping class="org.mobiloc.lobgasp.osm.model.POIs.NamedPOIEntity"/>
         <mapping class="org.mobiloc.lobgasp.osm.model.POIs.PubEntity"/>
         <mapping class="org.mobiloc.lobgasp.osm.model.POIs.LibraryEntity"/>
+        <mapping class="org.mobiloc.lobgasp.osm.model.POIs.ATMEntity"/>
+        <mapping class="org.mobiloc.lobgasp.osm.model.POIs.FastFoodEntity"/>
 
         <mapping class="org.mobiloc.lobgasp.osm.model.WayEntity"/>
         <mapping class="org.mobiloc.lobgasp.osm.model.Ways.TunnelEntity"/>
