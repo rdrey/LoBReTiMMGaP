@@ -36,7 +36,7 @@ import org.mobiloc.lobgasp.osm.model.Ways.TunnelEntity;
 public class App {
 
     public static void main(String[] args) {
-        LogMaker.println("Hello World!");
+        System.out.println("Hello World!");
 
         SpatialProvider sp = new SpatialProvider();
         //TODO interface for custom objects

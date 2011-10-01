@@ -37,7 +37,7 @@ public class OSMParserTest extends TestCase {
         try {
             result = OSMParser.parse(path);
         } catch (Exception exception) {
-            LogMaker.println(exception.getMessage());
+            System.out.println(exception.getMessage());
         }
         String p = result.getNodes().iterator().next().tags.get("name");
         assertEquals(p, "UCT Club");
