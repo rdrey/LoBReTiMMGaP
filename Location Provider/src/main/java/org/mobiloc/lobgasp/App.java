@@ -62,6 +62,12 @@ public class App {
         sp.addCustomAreaAroundPoint(ForestEntity.class, new Coordinate(18.461702, -33.95692));
         sp.addCustomAreaAroundPoint(FieldEntity.class, new Coordinate(18.461511, -33.957608));
         sp.addCustomAreaAroundPoint(FieldEntity.class, new Coordinate(18.461426, -33.958010));
+        sp.addCustomAreaAroundPoint(FastFoodEntity.class, new Coordinate(18.460786, -33.956937));
+        sp.addCustomAreaAroundPoint(FastFoodEntity.class, new Coordinate(18.460384, -33.959117));
+
+        sp.addCustomAreaAroundPoint(ATMEntity.class, new Coordinate(18.46091, -33.956256));
+        sp.addCustomAreaAroundPoint(ATMEntity.class, new Coordinate(18.462299, -33.957524));
+
 
 //        Session s = HibernateUtil.getSessionFactory().getCurrentSession();
 //        Transaction tx = s.beginTransaction();
