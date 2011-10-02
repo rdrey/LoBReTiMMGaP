@@ -12,6 +12,7 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
 import networkTransferObjects.*;
+import networkTransferObjects.UtilityObjects.QuickLZ;
 import networkserver.LogMaker;
 import networkserver.ServerCustomisation;
 
@@ -41,7 +42,7 @@ public class ServerDaemonWriteoutThread extends Thread
     public ServerDaemonWriteoutThread(Socket writeOutSocket) throws IOException
     {
         socket = writeOutSocket;
-        os = socket.getOutputStream();
+        os = socket.getOutputStream();        
         messageQueue = new ArrayBlockingQueue<NetworkMessage>(ServerCustomisation.threadWriteOutBufferSize);
         b.order(ByteOrder.BIG_ENDIAN);
         
@@ -51,6 +52,10 @@ public class ServerDaemonWriteoutThread extends Thread
     //the client. If the message queue is full, it will return false, otherwise true.
     public boolean writeMessage(NetworkMessage message)
     {
+        if(messageQueue.size() > 0.8 * ServerCustomisation.threadWriteOutBufferSize)
+        {
+            LogMaker.println("WARNING: Output buffer is at "+messageQueue.size()+"/"+ServerCustomisation.threadWriteOutBufferSize);
+        }
         return messageQueue.offer(message);
     }
 
@@ -92,6 +97,10 @@ public class ServerDaemonWriteoutThread extends Thread
 
             	//Serialize the message
                 byte [] serializedObject = ProtostuffIOUtil.toByteArray(msg, schema, buffer);
+                
+                //Compress the serialized bytes
+                byte [] tempArray = QuickLZ.compress(serializedObject, 3);
+                serializedObject = tempArray;
 
                 //Calculate and create a leading length field (4 bytes of data, an integer)                
                 b.clear();

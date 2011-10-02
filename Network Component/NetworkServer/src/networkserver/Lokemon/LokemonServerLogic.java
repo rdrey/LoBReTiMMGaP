@@ -368,6 +368,7 @@ public class LokemonServerLogic extends Thread{
             catch(Exception e)
             {
                 LogMaker.errorPrintln("Unexpected error occuring in server logic! (Ignoring and continuing), Error:\n"+e);
+                e.printStackTrace();
             }
         }
     }
