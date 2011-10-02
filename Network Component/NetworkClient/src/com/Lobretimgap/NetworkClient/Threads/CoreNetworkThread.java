@@ -382,10 +382,10 @@ public abstract class CoreNetworkThread extends Thread
 	                            Log.d("Bandwidth", "Read: "+bytesRead+"/"+mSize);
 	                        }
 	                        
-	                        byte [] decompressed = QuickLZ.decompress(object);
+	                        //byte [] decompressed = QuickLZ.decompress(object);
 
 	                        //System.out.println("Mid receive, byte buffer at "+bytesRead);
-	                        ProtostuffIOUtil.mergeFrom(decompressed, msg, schema);
+	                        ProtostuffIOUtil.mergeFrom(object, msg, schema);
 	                        processNetworkMessage(msg);
 	                    }  
 	                }
