@@ -1,6 +1,7 @@
 package com.Lobretimgap.NetworkClient;
 
-import com.Lobretimgap.NetworkClient.Lokemon.*;
+
+import com.Lobretimgap.NetworkClient.Implementation.NetworkThreadImplementation;
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
 
 
@@ -23,7 +24,7 @@ public class NetworkVariables {
 	public static final boolean keepAliveEnabled = false;
 	
 	//Replace CoreNetworkThread.class with a concrete implementation of that class.
-	public static final Class<CoreNetworkThreadLokemon> coreNetworkThreadClass = CoreNetworkThreadLokemon.class;
+	public static final Class<NetworkThreadImplementation> coreNetworkThreadClass = NetworkThreadImplementation.class;
 	
 	/**
 	 * Uses the class type above to create a concrete instance of the CoreNetworkThread 
