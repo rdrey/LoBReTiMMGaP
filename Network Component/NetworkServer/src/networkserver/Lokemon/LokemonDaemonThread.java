@@ -5,8 +5,8 @@
 
 package networkserver.Lokemon;
 
+import java.util.ArrayList;
 import networkTransferObjects.Lokemon.LokemonPlayer;
-import java.util.Vector;
 import networkTransferObjects.NetworkMessage;
 import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
@@ -31,6 +31,8 @@ public class LokemonDaemonThread extends ServerDaemonThread{
     LokemonPlayer player;
     
     public static final double DEGREE_METER_HACK = 111111;
+    
+    public ArrayList<Integer> interestedParties = new ArrayList<Integer>();
 
     public LokemonDaemonThread()
     {
@@ -59,8 +61,8 @@ public class LokemonDaemonThread extends ServerDaemonThread{
     }
 
     @Override
-    protected Vector<ClientPeer> getPeerList(int playerId, String playerName) {
-        return new Vector<ClientPeer>();
+    protected ArrayList<ClientPeer> getPeerList(int playerId, String playerName) {
+        return new ArrayList<ClientPeer>();
     }
 
     //============================================Listener processing==========================================================
@@ -138,6 +140,20 @@ public class LokemonDaemonThread extends ServerDaemonThread{
         public void EventOccured(NetworkEvent e) {
             //Lost connection to client, so remove them from our game states
             LokemonServerVariables.playerList.remove(player);
+            
+            for(Integer pl : interestedParties)
+            {
+                //If the interested party still exists
+                if(ServerVariables.playerThreadMap.containsKey(pl.intValue()))
+                {
+                    NetworkMessageMedium failMsg = new NetworkMessageMedium("NOTIFICATION:PlayerDisconnected");                    
+                    
+                    failMsg.integers.add(pl.intValue());
+                    failMsg.integers.add(playerID);
+                    
+                    ServerVariables.playerThreadMap.get(pl.intValue()).forwardDirectCommunication(failMsg);
+                }
+            }
         }
     };
 
