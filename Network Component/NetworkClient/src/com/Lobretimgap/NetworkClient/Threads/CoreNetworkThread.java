@@ -18,6 +18,7 @@ import networkTransferObjects.NetworkMessage;
 import networkTransferObjects.NetworkMessageLarge;
 import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
+import networkTransferObjects.UtilityObjects.QuickLZ;
 import android.util.Log;
 
 import com.Lobretimgap.NetworkClient.NetworkVariables;
