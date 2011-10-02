@@ -3,6 +3,7 @@ package networkserver.Threads;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import networkserver.LogMaker;
 import networkserver.ServerCustomisation;
 
 /**
@@ -26,7 +27,7 @@ public class ServerCoreThread  extends Thread {
             socket = new ServerSocket(ServerCustomisation.port);
         }catch(IOException e)
         {
-            System.err.println("Error aquiring port: "+e);
+            LogMaker.errorPrintln("Error aquiring port: "+e);
             System.exit(1);
         }
     }
@@ -42,25 +43,25 @@ public class ServerCoreThread  extends Thread {
         {
             try
             {
-                System.out.println("Waiting for a connection....");
+                LogMaker.println("Waiting for a connection....");
                 Socket con = socket.accept();                
-                System.out.println("Client accepted: "+ con);                
+                LogMaker.println("Client accepted: "+ con);                
                 ServerDaemonThread daemonThread = customSettings.buildInstance();
                 daemonThread.setSocket(con);
                 daemonThread.start();
                 
             }catch(IOException e)
             {
-                System.err.println("Error while accepting socket: "+e);                
+                LogMaker.errorPrintln("Error while accepting socket: "+e);                
             }
             catch(InstantiationException e)
             {
-                System.err.println("Failed to create an instance ServerDaemonThread!" +
+                LogMaker.errorPrintln("Failed to create an instance ServerDaemonThread!" +
                         " Have you extended it with a parameterless constructor?\n"+e);
             }
             catch(IllegalAccessException e)
             {
-                System.err.println("Failed to create an instance of ServerDaemonThread! \n"+ e);
+                LogMaker.errorPrintln("Failed to create an instance of ServerDaemonThread! \n"+ e);
             }
         }
         

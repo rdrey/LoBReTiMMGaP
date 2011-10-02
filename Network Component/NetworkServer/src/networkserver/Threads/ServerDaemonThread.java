@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Vector;
 import javax.swing.event.EventListenerList;
 import networkTransferObjects.NetworkMessage;
@@ -19,6 +20,9 @@ import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
 import networkserver.EventListeners.*;
 import networkserver.Events.NetworkEvent;
+import networkserver.LogMaker;
+import networkserver.Lokemon.LokemonDaemonThread;
+import networkserver.Lokemon.LokemonServerVariables;
 import networkserver.Peer2Peer.ClientPeer;
 import networkserver.ServerVariables;
 
@@ -91,7 +95,7 @@ public abstract class ServerDaemonThread extends Thread{
      * peer to peer connections with (or an empty list to disable P2P connections).
      * Guarenteed to only be called after registerPlayer.
      */
-    protected abstract Vector<ClientPeer> getPeerList(int playerId, String playerName);
+    protected abstract ArrayList<ClientPeer> getPeerList(int playerId, String playerName);
 
     /**
      * Will make a request to the server to check out what kind of latency there is between android device and server.
@@ -118,12 +122,12 @@ public abstract class ServerDaemonThread extends Thread{
 
     private void sendPeerList()
     {
-        Vector<ClientPeer> peers = getPeerList(playerID, playerName);
+        ArrayList<ClientPeer> peers = getPeerList(playerID, playerName);
         //Set the network address on peers, in case implementer didnt.
         for(int i = 0; i < peers.size(); i++)
         {
-            int playerId = peers.elementAt(i).playerId;
-            peers.elementAt(i).networkAddress = ServerVariables.playerNetworkAddressList.get(new Integer(playerId));
+            int playerId = peers.get(i).playerId;
+            peers.get(i).networkAddress = ServerVariables.playerNetworkAddressList.get(new Integer(playerId));
         }
         //Now send these to the client
         NetworkMessage message = new NetworkMessage("Peer list transfer");
@@ -245,7 +249,7 @@ public abstract class ServerDaemonThread extends Thread{
                             bytesRead += in.read(object, bytesRead, object.length - bytesRead);
                         }
 
-                        //System.out.println("Mid receive, byte buffer at "+bytesRead);
+                        //LogMaker.println("Mid receive, byte buffer at "+bytesRead);
                         ProtostuffIOUtil.mergeFrom(object, msg, schema);
                         processNetworkMessage(msg);
                     }
@@ -255,8 +259,7 @@ public abstract class ServerDaemonThread extends Thread{
                 {//Failed to read in length field properly
                     if(headerBytesRead == -1)
                     {//Stream closed
-                        System.err.println("End of stream!");
-                        fireEvent(new NetworkEvent(this, "Connection to client lost!\n"),  ConnectionLostListener.class);
+                        LogMaker.errorPrintln("End of stream!");                        
                         shutdownThread();
                     }
                 } 
@@ -268,20 +271,17 @@ public abstract class ServerDaemonThread extends Thread{
             }            
             catch(IOException e)
             {
-                System.err.println("Error occured while reading from thread : "+e);
-                fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
-                this.shutdownThread();                
-                break;
+                LogMaker.errorPrintln("Error occured while reading from thread : "+e);
+                this.shutdownThread();                                
             }
             catch(NullPointerException e)
             {
-                System.err.println("Null Pointer Exception: +"+ e.getMessage());
-                fireEvent(new NetworkEvent(this, "Connection to client lost!\n" + e),  ConnectionLostListener.class);
-                stopOperation = true;
+                LogMaker.errorPrintln("Null Pointer Exception: +"+ e.getMessage());
+                this.shutdownThread();
             }
             catch(RuntimeException e)
             {
-                System.err.println("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?\n"+e);
+                LogMaker.errorPrintln("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?\n"+e);
             }
             finally
             {
@@ -296,7 +296,7 @@ public abstract class ServerDaemonThread extends Thread{
     {
         if(message.getTimeStamp() == 0)
         {
-            System.err.println("Error: Timestamp on message was 0!");
+            LogMaker.errorPrintln("Error: Timestamp on message was 0!");
         }
         if(message instanceof PlayerRegistrationMessage)
         {            
@@ -326,6 +326,14 @@ public abstract class ServerDaemonThread extends Thread{
         else
         {
             NetworkMessage msg = (NetworkMessage)message;
+            try
+            {
+                LogMaker.println("Client "+playerID+":Received "+msg.getMessageType().toString());
+            }
+            catch(NullPointerException e)
+            {
+                //Might happen
+            }
             switch(msg.getMessageType())
             {
                 case UPDATE_MESSAGE:
@@ -372,28 +380,39 @@ public abstract class ServerDaemonThread extends Thread{
                 case DIRECT_COMMUNICATION_MESSAGE:
                     //We need to forward this to its destination (another client).
                     //We know its either a medium or large message.
+                    int targetPlayerId = 0;
                     if(msg instanceof NetworkMessageLarge)
                     {
-                        int targetPlayerId = ((NetworkMessageLarge)msg).integers.get(((NetworkMessageLarge)msg).integers.size()-2);
-                        if(ServerVariables.playerThreadMap.get(targetPlayerId) != null)
-                        {
-                            ServerVariables.playerThreadMap.get(targetPlayerId).forwardDirectCommunication(msg);
-                        }
+                        targetPlayerId = ((NetworkMessageLarge)msg).integers.get(((NetworkMessageLarge)msg).integers.size()-2);
+                         LogMaker.println("Sending Direct Communication from: "+ ((NetworkMessageLarge)msg).integers.get(((NetworkMessageLarge)msg).integers.size()-1)
+                                + " to: "+targetPlayerId); 
+                        
                     }else if (msg instanceof NetworkMessageMedium)
                     {
-                        int targetPlayerId = ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-2);
-                        System.out.println("Sending Direct Communication from: "+ ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-1)
-                                + " to: "+targetPlayerId);
-                        if(ServerVariables.playerThreadMap.get(targetPlayerId) != null)
-                        {
-                            ServerVariables.playerThreadMap.get(targetPlayerId).forwardDirectCommunication(msg);
-                        }
+                        targetPlayerId = ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-2);
+                        LogMaker.println("Sending Direct Communication from: "+ ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-1)
+                                + " to: "+targetPlayerId);                        
                     }
                     else //Should never be anything other than NetworkMessage medium or large.
                     {//If you want to add your own types of direct communication, add special cases here
-                        System.err.println("PlayerID: "+playerID+" attempted direct peer " +
+                        LogMaker.errorPrintln("PlayerID: "+playerID+" attempted direct peer " +
                                 "communication with an unrecognised object type");
+                        break;
                     }
+                    
+                    if(ServerVariables.playerThreadMap.get(targetPlayerId) != null)
+                    {
+                        ((LokemonDaemonThread)this).interestedParties.add(targetPlayerId);
+                        ServerVariables.playerThreadMap.get(targetPlayerId).forwardDirectCommunication(msg);
+                    }
+                    else//If the player isnt available, return as much to the sender
+                    {
+                        NetworkMessageMedium failReply = new NetworkMessageMedium("ERROR: Direct communication target "+ targetPlayerId+" is no longer connected!");
+                        failReply.integers.add(targetPlayerId);
+                        failReply.integers.add(playerID);
+                        forwardDirectCommunication(failReply);
+                    }
+                    
                     break;
                 case TIME_REQUEST:
                     //Reply with a new message. Timestamp will automatically be added in
@@ -420,6 +439,14 @@ public abstract class ServerDaemonThread extends Thread{
         //Later perhaps we can more gracefully deal with this. Perhaps add wait
         //a little while and then try again?
         object.setTimeStamp(System.currentTimeMillis());
+        try
+        {
+            LogMaker.println("Client "+playerID+":Sending "+object.getMessageType().toString());
+        }
+        catch(NullPointerException e)
+        {
+            //Who knows why this might happen
+        }
         if(!out.writeMessage(object))
         {
             throw new BufferOverflowException();
@@ -430,6 +457,8 @@ public abstract class ServerDaemonThread extends Thread{
     {
         try
         {
+            //First notify everyone that the connection is lost
+            fireEvent(new NetworkEvent(this, "Connection to client lost!\n"),  ConnectionLostListener.class);
             out.shutdownThread();
             stopOperation = true;
             this.interrupt();
@@ -438,7 +467,7 @@ public abstract class ServerDaemonThread extends Thread{
         catch(IOException e)
         {
             //We dont really care if the socket failed to close correctly.
-            System.err.println("Socket failed to close correctly. \n"+e);
+            LogMaker.errorPrintln("Socket failed to close correctly. \n"+e);
         }
         finally
         {

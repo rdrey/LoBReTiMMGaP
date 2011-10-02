@@ -14,7 +14,7 @@ import networkserver.Threads.ServerDaemonThread;
 public class ServerCustomisation <T extends ServerDaemonThread>
 {
     //Public variables
-    public static final int threadWriteOutBufferSize = 16;
+    public static final int threadWriteOutBufferSize = 256;
     public static final int initialNetworkMessageMapSize = 8;
     public static final int port = 10282;
     

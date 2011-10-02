@@ -70,7 +70,7 @@ public class SpatialProvider {
                 if (((SpatialDBEntity)so).xmlRule((AbstractNode) poiOrWay)) {
                     try {
                         SpatialDBEntity temp = ((SpatialDBEntity)so).getClass().newInstance();
-//                        System.out.println("Found " + so.getClass());
+//                        LogMaker.println("Found " + so.getClass());
                         Serializable save = s.save(temp.construct((AbstractNode) poiOrWay));
                     } catch (InstantiationException ex) {
                         Logger.getLogger(SpatialProvider.class.getName()).log(Level.SEVERE, null, ex);
@@ -93,7 +93,7 @@ public class SpatialProvider {
 
             SpatialDBEntity entity = type.newInstance();
             Point point = GeometryFactory.createPointFromInternalCoord(coordinate, example);
-            entity.setGeom(point.buffer(radius));
+            entity.setGeom(point.buffer(radius, 2));
             s.save(entity);
 
             tx.commit();
@@ -117,7 +117,7 @@ public class SpatialProvider {
         Transaction tx = s.beginTransaction();
 
         Criteria query = s.createCriteria(source);
-        query.add(SpatialRestrictions.within("geom", poly));
+        query.add(SpatialRestrictions.intersects("geom", poly));
         List list = query.list();
 
         tx.commit();

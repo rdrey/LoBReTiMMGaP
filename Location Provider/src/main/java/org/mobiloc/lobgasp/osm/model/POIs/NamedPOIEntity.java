@@ -27,7 +27,7 @@ public class NamedPOIEntity extends POIEntity {
     @Override
     public SpatialDBEntity construct(AbstractNode in) {
         this.setName(in.tags.get("name"));
-        this.setGeom(((OSMNode) in).getGeom());
+        this.setGeom(((OSMNode) in).getGeom().buffer(0.0001f, 2));
         return this;
     }
 

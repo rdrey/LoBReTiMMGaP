@@ -5,8 +5,8 @@
 
 package networkserver.Lokemon;
 
+import java.util.ArrayList;
 import networkTransferObjects.Lokemon.LokemonPlayer;
-import java.util.Vector;
 import networkTransferObjects.NetworkMessage;
 import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
@@ -17,6 +17,7 @@ import networkserver.EventListeners.RequestReceivedListener;
 import networkserver.EventListeners.TerminationRequestReceivedListener;
 import networkserver.EventListeners.UpdateReceivedListener;
 import networkserver.Events.NetworkEvent;
+import networkserver.LogMaker;
 import networkserver.Peer2Peer.ClientPeer;
 import networkserver.ServerVariables;
 import networkserver.Threads.ServerDaemonThread;
@@ -30,6 +31,8 @@ public class LokemonDaemonThread extends ServerDaemonThread{
     LokemonPlayer player;
     
     public static final double DEGREE_METER_HACK = 111111;
+    
+    public ArrayList<Integer> interestedParties = new ArrayList<Integer>();
 
     public LokemonDaemonThread()
     {
@@ -46,7 +49,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
     
     @Override
     protected void registerPlayer(PlayerRegistrationMessage initialMessage) {
-        System.out.println("Player Registerd: ID:"+initialMessage.playerID+", name: "+initialMessage.playerName);
+        LogMaker.println("Player Registerd: ID:"+initialMessage.playerID+", name: "+initialMessage.playerName);
         player = new LokemonPlayer(initialMessage.playerID, initialMessage.playerName);
         LokemonServerVariables.playerList.add(player);
         player.setAvatar(initialMessage.integers.get(0));
@@ -58,8 +61,8 @@ public class LokemonDaemonThread extends ServerDaemonThread{
     }
 
     @Override
-    protected Vector<ClientPeer> getPeerList(int playerId, String playerName) {
-        return new Vector<ClientPeer>();
+    protected ArrayList<ClientPeer> getPeerList(int playerId, String playerName) {
+        return new ArrayList<ClientPeer>();
     }
 
     //============================================Listener processing==========================================================
@@ -101,7 +104,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
                 double y = ((NetworkMessageMedium)msg).doubles.get(1);
                 player.setPosition(new Location(x, y));
                 
-                //System.out.println("Position update: Latitude = "+x+", Longitude = "+y);
+                //LogMaker.println("Position update: Latitude = "+x+", Longitude = "+y);
             }
             else if (sMsg.equals("EnteredBattle"))
             {
@@ -119,6 +122,8 @@ public class LokemonDaemonThread extends ServerDaemonThread{
         public void EventOccured(NetworkEvent e) {
             NetworkMessage msg = (NetworkMessage)e.getMessage();
             String sMsg = msg.getMessage();
+            
+            
             if(sMsg.equals("GetPlayers"))
             {
                 LokemonServerLogic.sendPlayersToClient(player);
@@ -135,13 +140,27 @@ public class LokemonDaemonThread extends ServerDaemonThread{
         public void EventOccured(NetworkEvent e) {
             //Lost connection to client, so remove them from our game states
             LokemonServerVariables.playerList.remove(player);
+            
+            for(Integer pl : interestedParties)
+            {
+                //If the interested party still exists
+                if(ServerVariables.playerThreadMap.containsKey(pl.intValue()))
+                {
+                    NetworkMessageMedium failMsg = new NetworkMessageMedium("NOTIFICATION:PlayerDisconnected");                    
+                    
+                    failMsg.integers.add(pl.intValue());
+                    failMsg.integers.add(playerID);
+                    
+                    ServerVariables.playerThreadMap.get(pl.intValue()).forwardDirectCommunication(failMsg);
+                }
+            }
         }
     };
 
     TerminationRequestReceivedListener trrListen = new TerminationRequestReceivedListener() {
 
         public void EventOccured(NetworkEvent e) {
-            System.out.println("Termination requested: "+ ((NetworkMessage)e.getMessage()).getMessage());
+            LogMaker.println("Termination requested: "+ ((NetworkMessage)e.getMessage()).getMessage());
             ServerVariables.playerThreadMap.get(player.getPlayerID()).shutdownThread();
             LokemonServerVariables.playerList.remove(player);            
         }

@@ -17,6 +17,8 @@ import org.hibernate.Session;
 import org.mobiloc.lobgasp.util.HibernateUtil;
 import org.hibernate.Transaction;
 import org.mobiloc.lobgasp.model.SpatialDBEntity;
+import org.mobiloc.lobgasp.osm.model.POIs.ATMEntity;
+import org.mobiloc.lobgasp.osm.model.POIs.FastFoodEntity;
 import org.mobiloc.lobgasp.osm.model.Ways.BuildingEntity;
 import org.mobiloc.lobgasp.osm.model.POIs.LibraryEntity;
 import org.mobiloc.lobgasp.osm.model.POIs.PubEntity;
@@ -42,6 +44,8 @@ public class App {
         //TODO interface for custom objects
         sp.register(PubEntity.class, PubEntity.class);
         sp.register(LibraryEntity.class, LibraryEntity.class);
+        sp.register(ATMEntity.class, ATMEntity.class);
+        sp.register(FastFoodEntity.class, FastFoodEntity.class);
 
         sp.register(TunnelEntity.class, TunnelEntity.class);
         sp.register(StepsEntity.class, StepsEntity.class);
@@ -58,6 +62,12 @@ public class App {
         sp.addCustomAreaAroundPoint(ForestEntity.class, new Coordinate(18.461702, -33.95692));
         sp.addCustomAreaAroundPoint(FieldEntity.class, new Coordinate(18.461511, -33.957608));
         sp.addCustomAreaAroundPoint(FieldEntity.class, new Coordinate(18.461426, -33.958010));
+        sp.addCustomAreaAroundPoint(FastFoodEntity.class, new Coordinate(18.460786, -33.956937));
+        sp.addCustomAreaAroundPoint(FastFoodEntity.class, new Coordinate(18.460384, -33.959117));
+
+        sp.addCustomAreaAroundPoint(ATMEntity.class, new Coordinate(18.46091, -33.956256));
+        sp.addCustomAreaAroundPoint(ATMEntity.class, new Coordinate(18.462299, -33.957524));
+
 
 //        Session s = HibernateUtil.getSessionFactory().getCurrentSession();
 //        Transaction tx = s.beginTransaction();
@@ -66,15 +76,15 @@ public class App {
 //        PubEntity pub = (PubEntity) so.get(0);
 //        
 //        WKTWriter wkt = new WKTWriter();
-//        System.out.println(wkt.write(pub.getGeom()));
+//        LogMaker.println(wkt.write(pub.getGeom()));
 //        
 //        
 //        List cs = s.createQuery("from LibraryEntity where name like 'Rondebosch Public Library'").list();
 //        LibraryEntity lib = (LibraryEntity) cs.get(0);
 //
-//        System.out.println("Distance: " + Math.toRadians(lib.getGeom().distance(pub.getGeom())) * Math.PI / 180.0 * 6378137.0);
-//        System.out.println("Distance: " + lib.getGeom().distance(pub.getGeom()));
-//        System.out.println("Distance: " + distance((Point)lib.getGeom(), (Point)pub.getGeom()));
+//        LogMaker.println("Distance: " + Math.toRadians(lib.getGeom().distance(pub.getGeom())) * Math.PI / 180.0 * 6378137.0);
+//        LogMaker.println("Distance: " + lib.getGeom().d istance(pub.getGeom()));
+//        LogMaker.println("Distance: " + distance((Point)lib.getGeom(), (Point)pub.getGeom()));
 //
 //        serializeResults(PubEntity.class, "pub.out", s);
 //
