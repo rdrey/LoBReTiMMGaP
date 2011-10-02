@@ -99,8 +99,8 @@ public class ServerDaemonWriteoutThread extends Thread
                 byte [] serializedObject = ProtostuffIOUtil.toByteArray(msg, schema, buffer);
                 
                 //Compress the serialized bytes
-                //byte [] tempArray = QuickLZ.compress(serializedObject, 3);
-                //serializedObject = tempArray;
+                byte [] tempArray = QuickLZ.compress(serializedObject, 3);
+                serializedObject = tempArray;
 
                 //Calculate and create a leading length field (4 bytes of data, an integer)                
                 b.clear();
