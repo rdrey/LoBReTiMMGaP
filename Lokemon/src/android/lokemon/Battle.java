@@ -47,7 +47,7 @@ public class Battle {
 	// indicates which Pokemon were used in battle (and did not feint)
 	private boolean [] battled;
 	private boolean [] defeated;
-	private ArrayList<Integer> opp_defeated;
+	private ArrayList<Integer> opp_defeated; // tuples (index, level)
 	
 	// a reference to the screen that displays the battle
 	private BattleScreen display;
@@ -222,6 +222,7 @@ public class Battle {
 			break;
 		case VICTORY:
 			opp_defeated.add(poke_opp.index);
+			opp_defeated.add(poke_opp.getLevel());
 			if (battleType == BattleType.TRAINER)
 			{
 				if (opponent_move == BattleMove.SWITCH_POKEMON)
@@ -383,6 +384,7 @@ public class Battle {
 			{
 			case VICTORY:
 				opp_defeated.add(poke_opp.index);
+				opp_defeated.add(poke_opp.getLevel());
 				if (battleType == BattleType.TRAINER)
 				{
 					waitingForNewPoke = true;
@@ -528,6 +530,12 @@ public class Battle {
 			if (source.getType1() == move.type || (source.getType2()!=null && source.getType2() == move.type))
 				stab_mod = 1.5f;
 			
+			// calculate type effectiveness
+			float type_mod = G.type_modifiers[move.type.ordinal][target.getType1().ordinal];
+			if (target.getType2() != null)
+				type_mod *= G.type_modifiers[move.type.ordinal][target.getType2().ordinal];
+			
+			
 			
 			int damage = (int)(source.getAttack()/(float)target.getDefense() * 2);
 			if (playerName == null)
@@ -560,8 +568,8 @@ public class Battle {
 	public String calculateExperience()
 	{
 		int totalXP = 0;
-		for (Integer i:opp_defeated)
-			totalXP += G.base_pokemon[i].getExperienceYield();
+		for (int i = 0; i < opp_defeated.size(); i+=2)
+			totalXP += G.base_pokemon[opp_defeated.get(i)].getExperienceYield() * opp_defeated.get(i+1);
 		ArrayList<Pokemon> contributors = new ArrayList<Pokemon>();
 		for (int i = 0; i < battled.length; i++)
 			if (battled[i] && !defeated[i])
@@ -570,10 +578,14 @@ public class Battle {
 		String result = "";
 		for (Pokemon poke:contributors)
 		{
+			int lv = poke.getLevel();
 			String name = poke.getName();
 			int r = poke.addExperience(ind_share);
 			if (r == 1)
-				result += name + " leveled up.\n";
+			{
+				int dif = poke.getLevel() - lv;
+				result += name + " leveled up " + dif + (dif==1?" level.\n":" levels.\n");
+			}
 			else if (r == 2)
 				result += name + " evolved into " + poke.getName() + "!\n";
 		}

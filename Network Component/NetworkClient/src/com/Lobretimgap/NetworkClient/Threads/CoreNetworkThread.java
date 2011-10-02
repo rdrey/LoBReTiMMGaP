@@ -421,6 +421,8 @@ public abstract class CoreNetworkThread extends Thread
 	            }
 				finally
 	            {
+					b.rewind();
+					b.clear();
 	            	buffer.clear();
 	            }
 	        }

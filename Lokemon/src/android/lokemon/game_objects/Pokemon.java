@@ -50,7 +50,7 @@ public class Pokemon {
 			IV[i] = G.random.nextInt(16);
 		EV = new int[5];
 		this.level = level - 1;
-		levelUp();
+		levelUp(1);
 	}
 	
 	// recreates existing Pokemon with specific hp, level, IVs and EVs
@@ -82,39 +82,44 @@ public class Pokemon {
 				Util.getIntArray(object.getJSONArray("pp")));
 	}
 	
-	private int levelUp()
+	private void levelUp(int levels)
 	{
-		if (base.evolution != null && level + 1 >= base.evolution[1]) 
-			return evolve();
-		else
-		{
-			level++;
-			attack = calculateStat(base.attack, EV[0], IV[0]);
-			defense = calculateStat(base.defense, EV[1], IV[1]);
-			speed = calculateStat(base.speed, EV[2], IV[2]);
-			special = calculateStat(base.special, EV[3], IV[3]);
-			hp_total = (int)((IV[4] + base.hp + Math.sqrt(EV[4])/8.0 + 50) * level / 50.0 + 10);
-			hp_current = hp_total;
-			xp_to_level = (int)Math.pow(level+1, 3);
-			return 1;
-		}
+		level+=levels;
+		attack = calculateStat(base.attack, EV[0], IV[0]);
+		defense = calculateStat(base.defense, EV[1], IV[1]);
+		speed = calculateStat(base.speed, EV[2], IV[2]);
+		special = calculateStat(base.special, EV[3], IV[3]);
+		hp_total = (int)((IV[4] + base.hp + Math.sqrt(EV[4])/8.0 + 50) * level / 50.0 + 10);
+		hp_current = hp_total;
+		xp_to_level = (int)Math.pow(level+1, 3);
 	}
 	
-	private int evolve()
+	private void evolve()
 	{
 		index = base.evolution[0];
 		base = G.base_pokemon[index];
-		levelUp();
-		return 2;
 	}
 	
 	public int addExperience(int xp)
 	{
 		this.xp += xp;
-		if (this.xp >= xp_to_level) 
-			return levelUp();
+		int lv = (int)Math.cbrt(this.xp);
+		if (lv > this.level) 
+		{
+			if (base.evolution != null && lv >= base.evolution[1])
+			{
+				evolve();
+				levelUp(lv-this.level);
+				return 2; // 2 means the pokemon evolved
+			}
+			else
+			{
+				levelUp(lv-this.level);
+				return 1; // 1 means the pokemon leveled up
+			}
+		}
 		else
-			return 0;
+			return 0; // 0 means experience was added without any effect
 	}
 	
 	public BasePokemon getBase() {return base;}

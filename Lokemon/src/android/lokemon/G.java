@@ -27,6 +27,7 @@ public class G {
 	public static Battle battle;
 	public static int [] region_colours;
 	public static Random random = new Random(System.currentTimeMillis());
+	public static float [][] type_modifiers;
 	
 	// icons used by map
 	public static Drawable player_marker_busy;
