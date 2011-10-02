@@ -82,9 +82,10 @@ public class Pokemon {
 				Util.getIntArray(object.getJSONArray("pp")));
 	}
 	
-	private void levelUp()
+	private int levelUp()
 	{
-		if (base.evolution != null && level + 1 >= base.evolution[1]) evolve();
+		if (base.evolution != null && level + 1 >= base.evolution[1]) 
+			return evolve();
 		else
 		{
 			level++;
@@ -95,20 +96,25 @@ public class Pokemon {
 			hp_total = (int)((IV[4] + base.hp + Math.sqrt(EV[4])/8.0 + 50) * level / 50.0 + 10);
 			hp_current = hp_total;
 			xp_to_level = (int)Math.pow(level+1, 3);
+			return 1;
 		}
 	}
 	
-	private void evolve()
+	private int evolve()
 	{
 		index = base.evolution[0];
 		base = G.base_pokemon[index];
 		levelUp();
+		return 2;
 	}
 	
-	public void addExperience(int xp)
+	public int addExperience(int xp)
 	{
 		this.xp += xp;
-		if (this.xp >= xp_to_level) levelUp();
+		if (this.xp >= xp_to_level) 
+			return levelUp();
+		else
+			return 0;
 	}
 	
 	public BasePokemon getBase() {return base;}

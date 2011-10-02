@@ -46,6 +46,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 	private TextView coins;
 	private TextView rank;
 	private ViewGroup hud;
+	private TextView persistent_alert;
 	
 	// dialogs
 	private AlertDialog battleAlert;
@@ -168,6 +169,9 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         coins.setText(G.player.coins + "");
         rank = (TextView)findViewById(R.id.rank_label);
         rank.setText("?");
+        persistent_alert = (TextView)findViewById(R.id.persistent_alert);
+        persistent_alert.setText("Your Pokémon need to be\nhealed at a Pokémon Center!");
+        persistent_alert.setVisibility(View.INVISIBLE);
         
         hud = (ViewGroup)findViewById(R.id.hud);
         
@@ -201,6 +205,8 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         		return true;
         	}
         };
+        ItemizedOverlay.boundCenter(getResources().getDrawable(R.drawable.marker_item));
+        
         regions = new ArrayWayOverlay(null, null);
         setupTrainerAura();
         setupTrainerCircle();
@@ -264,13 +270,6 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     			break;
     		}
     	}
-    }
-    
-    protected void onDestroy()
-    {
-    	super.onDestroy();
-    	G.game.endGame();
-    	Log.i("Interface", "Map view destroyed");
     }
     
     public void switchToBattle(NetworkMessageMedium battleInitMessage, int seed)
@@ -429,4 +428,9 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 		end = Util.fromLocation(location);
 		end_loc = location;
 	}
+	
+	public void showNoPokemonAlert(boolean show)
+	{persistent_alert.setVisibility(show?View.VISIBLE:View.INVISIBLE);}
+	
+	public void updateCoins() {coins.setText(G.player.coins + "");}
 }

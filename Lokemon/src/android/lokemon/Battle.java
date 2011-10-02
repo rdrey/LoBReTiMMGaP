@@ -8,6 +8,7 @@ import android.lokemon.G.BattleType;
 import android.lokemon.G.Gender;
 import android.lokemon.G.Mode;
 import android.lokemon.game_objects.BagItem;
+import android.lokemon.game_objects.Move;
 import android.lokemon.game_objects.Pokemon;
 import android.lokemon.screens.BattleScreen;
 import android.util.Log;
@@ -40,7 +41,7 @@ public class Battle {
 	private Pokemon poke_opp;
 	private int[] opp_stages;
 	// how many pokemon are able to battle
-	private int pokeCount;
+	public int pokeCount;
 	// how many usable items are there
 	private int itemCount;
 	// indicates which Pokemon were used in battle (and did not feint)
@@ -233,7 +234,7 @@ public class Battle {
 			}
 			else
 			{
-				resultMessage = "You defeated the wild " + poke_opp.getName() + "!";
+				resultMessage = "You defeated the wild " + poke_opp.getName() + "!\n" + calculateExperience();
 				// get experience from defeating wild pokemon
 				display.endBattle();
 			}
@@ -262,6 +263,8 @@ public class Battle {
 				{
 					resultMessage = "You were defeated by " + (battleType == BattleType.TRAINER?display.getOppNick():"the wild " + poke_opp.getName() + "...");
 					// send defeated message
+					if (battleType == BattleType.TRAINER)
+						G.game.sendSimpleBattleMessage(BattleMove.GAME_OVER, -1);
 					// no experience gained
 					display.endBattle();
 				}
@@ -324,6 +327,8 @@ public class Battle {
 			{
 				resultMessage = "You were defeated by " + (battleType == BattleType.TRAINER?display.getOppNick():"the wild " + poke_opp.getName() + "...");
 				// send defeated message
+				if (battleType == BattleType.TRAINER)
+					G.game.sendSimpleBattleMessage(BattleMove.GAME_OVER, -1);
 				// no experience gained
 				display.endBattle();
 			}
@@ -385,7 +390,7 @@ public class Battle {
 				}
 				else
 				{
-					resultMessage = "You defeated the wild " + poke_opp.getName() + "!";
+					resultMessage = "You defeated the wild " + poke_opp.getName() + "!\n" + calculateExperience();
 					// get experience from defeating wild pokemon
 					display.endBattle();
 				}
@@ -504,28 +509,83 @@ public class Battle {
 	
 	private MoveResult executeAttack(int moveIndex, Pokemon source, Pokemon target, String playerName)
 	{
-		MoveResult result;
-		int damage = (int)(source.getAttack()/(float)target.getDefense() * 2);
-		if (playerName == null)
-			resultMessage += "The wild " + source.getName() + " inflicted " + damage + " damage.\n";
-		else
-			resultMessage += playerName + "'s " + source.getName() + " inflicted " + damage + " damage.\n";
-		target.setHP(target.getHP()-damage);
-		if (target.getHP() <= 0)
+		if (moveIndex != -1)
 		{
-			target.setHP(0);
-			result = MoveResult.VICTORY;
+			MoveResult result;
+			Move move = G.moves[moveIndex];
+			
+			// determine if critical hit was landed
+			int critical_mod = 1;
+			double val = random.nextDouble();
+			if (move.critical)
+				if (val<(source.getSpeed()/64.0f))
+					critical_mod = 2;
+			else if (val<(source.getSpeed()/512.0f))
+				critical_mod = 2;
+			
+			// determine if same-type attack bonus is applicable
+			float stab_mod = 1;
+			if (source.getType1() == move.type || (source.getType2()!=null && source.getType2() == move.type))
+				stab_mod = 1.5f;
+			
+			
+			int damage = (int)(source.getAttack()/(float)target.getDefense() * 2);
+			if (playerName == null)
+				resultMessage += "The wild " + source.getName() + " inflicted " + damage + " damage.\n";
+			else
+				resultMessage += (source==poke_player?"Your ":(playerName + "'s ")) + source.getName() + " inflicted " + damage + " damage.\n";
+			target.setHP(target.getHP()-damage);
+			if (target.getHP() <= 0)
+			{
+				target.setHP(0);
+				result = MoveResult.VICTORY;
+			}
+			else
+				result = MoveResult.NONE;
+			if (target == poke_opp)
+				display.setOppPokeDetails(poke_opp);
+			else
+				display.setPlayerPokeDetails(poke_player);
+			return result;
 		}
 		else
-			result = MoveResult.NONE;
-		if (target == poke_opp)
-			display.setOppPokeDetails(poke_opp);
-		else
-			display.setPlayerPokeDetails(poke_player);
-		return result;
+		{
+			resultMessage += "No moves exist...\n";
+			return MoveResult.NONE;
+		}
 	}
 	
 	public Pokemon getSelectedPokemon() {return poke_player;}
+	
+	public String calculateExperience()
+	{
+		int totalXP = 0;
+		for (Integer i:opp_defeated)
+			totalXP += G.base_pokemon[i].getExperienceYield();
+		ArrayList<Pokemon> contributors = new ArrayList<Pokemon>();
+		for (int i = 0; i < battled.length; i++)
+			if (battled[i] && !defeated[i])
+				contributors.add(G.player.pokemon.get(i));
+		int ind_share = totalXP/contributors.size();
+		String result = "";
+		for (Pokemon poke:contributors)
+		{
+			String name = poke.getName();
+			int r = poke.addExperience(ind_share);
+			if (r == 1)
+				result += name + " leveled up.\n";
+			else if (r == 2)
+				result += name + " evolved into " + poke.getName() + "!\n";
+		}
+		
+		// requires better calculation, but for now this will do
+		int coin = totalXP / 100;
+		if (coin == 0) coin = 1;
+		G.player.coins += coin;
+		result += "You earned " + coin + (coin==1?" coin.\n":" coins.\n");
+		
+		return result;
+	}
 	
 	/*
 	 * Network handling methods
@@ -546,7 +606,6 @@ public class Battle {
 		{
 			for (int i = 0; i < 5; i++)
 				opp_stages[i] = 0;
-			display.showToast(display.getOppNick() + "'s " + poke_opp.getName() + " has feinted.\n");
 			poke_opp = new_poke;
 			display.switchOppPoke(poke_opp);
 			display.cancelProgressDialog();
@@ -561,21 +620,22 @@ public class Battle {
 	}
 	
 	// this method is called when the opponent has been defeated
-	public void handleOpponentDefeated(int [] defeatedPokes)
+	public void handleOpponentDefeated()
 	{
-		
+		display.showToast("You defeated " + display.getOppNick() + "!\n" + calculateExperience());
+		display.endBattle();
 	}
 	
+	// this method is called when the player loses connection to game server
 	public void handlePlayerDisconnected()
 	{
-		
+		display.showToast("You have been disconnected");
+		display.endBattle();
 	}
 	
 	// this method is called when an opponent is disconnected during battle
 	public void handleOpponentDisconnected()
 	{
-		if (waitingForOpponent || waitingForNewPoke)
-			display.cancelProgressDialog();
 		display.showToast(display.getOppNick() + " has been disconnected");
 		display.endBattle();
 	}

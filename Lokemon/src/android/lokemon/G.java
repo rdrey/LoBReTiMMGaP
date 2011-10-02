@@ -47,7 +47,7 @@ public class G {
 	public static enum Potions {HP, ATTACK, DEFENSE, SPECIAL, SPEED}
 	public static enum Gender {FEMALE, MALE};
 	public static enum PlayerState{BUSY, AVAILABLE};
-	public static enum BattleMove {RUN, USE_ITEM, ATTACK, SWITCH_POKEMON, CATCH_POKEMON, GAME_OVER};
+	public static enum BattleMove {RUN, USE_ITEM, ATTACK, SWITCH_POKEMON, CATCH_POKEMON, GAME_OVER, DISCONNECTED};
 	public static enum Regions {CAVE, FOREST, GRASSLAND, MOUNTAIN, ROUGH_TERRAIN, URBAN, WATER_EDGE, POKEMON_CENTER, POKEMART, NONE};
 	public static enum Action {REQUEST_BATTLE, ACCEPT_BATTLE, REJECT_BATTLE, REJECT_ALL, BATTLE_MOVE};
 }

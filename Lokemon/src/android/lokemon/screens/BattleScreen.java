@@ -4,6 +4,8 @@ import android.app.*;
 import android.content.*;
 import android.lokemon.Battle;
 import android.lokemon.G;
+import android.lokemon.G.BattleMove;
+import android.lokemon.G.BattleType;
 import android.lokemon.G.Gender;
 import android.lokemon.R;
 import android.lokemon.game_objects.Pokemon;
@@ -43,6 +45,8 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	// dialogs
 	private ProgressDialog progressDialog;
 	private Toast toast;
+	
+	private boolean battle_finish_normal;
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -156,14 +160,16 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	
 	public void onStop()
 	{
-		Log.i("Battle", "Battle activity stopped");
 		super.onStop();
-	}
-	
-	public void onDestroy()
-	{
-		Log.i("Battle", "Battle activity destroyed");
-		super.onDestroy();
+		if (!battle_finish_normal)
+		{
+			if (G.battle.battleType == BattleType.TRAINER)
+				G.game.sendSimpleBattleMessage(BattleMove.DISCONNECTED, -1);
+			setResult(RESULT_CANCELED);
+			endBattle();
+			Log.i("Battle", "Battle stopping abnormally");
+		}
+		Log.i("Battle", "Battle activity stopped");
 	}
 	
 	public void onResume()
@@ -241,6 +247,7 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	
 	public void endBattle()
 	{
+		battle_finish_normal = true;
 		finish();
 	}
 	

@@ -36,8 +36,6 @@ public class Trainer {
 		this.gender = gender;
 		pokemon = new ArrayList<Pokemon>();
 		pokemon.add(new Pokemon(startPokemon, 5));
-		pokemon.add(new Pokemon(3, 5));
-		pokemon.add(new Pokemon(6, 5));
 		items = new BagItem[6];
 		items[0] = new PokeBall();
 		items[1] = new Potion(Potions.HP);
