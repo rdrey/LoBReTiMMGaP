@@ -93,7 +93,7 @@ public class SpatialProvider {
 
             SpatialDBEntity entity = type.newInstance();
             Point point = GeometryFactory.createPointFromInternalCoord(coordinate, example);
-            entity.setGeom(point.buffer(radius));
+            entity.setGeom(point.buffer(radius, 2));
             s.save(entity);
 
             tx.commit();

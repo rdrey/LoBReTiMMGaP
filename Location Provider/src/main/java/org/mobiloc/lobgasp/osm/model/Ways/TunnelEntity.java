@@ -19,7 +19,7 @@ public class TunnelEntity extends WayEntity {
     {
         this.setName(in.tags.get("name"));
         this.setOSMid(Long.parseLong(in.id));
-        this.setGeom(((Way) in).getLineString().buffer(0.0001));
+        this.setGeom(((Way) in).getLineString().buffer(0.0001, 2));
         return this;
     }
 

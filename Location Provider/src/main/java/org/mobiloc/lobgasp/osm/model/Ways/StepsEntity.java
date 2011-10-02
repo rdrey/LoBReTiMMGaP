@@ -19,7 +19,7 @@ public class StepsEntity extends WayEntity {
     {
         this.setName(in.tags.get("name"));
         this.setOSMid(Long.parseLong(in.id));
-        this.setGeom(((Way) in).getLineString().buffer(0.00003));
+        this.setGeom(((Way) in).getLineString().buffer(0.00003 , 2));
         return this;
     }
 
