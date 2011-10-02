@@ -326,8 +326,14 @@ public abstract class ServerDaemonThread extends Thread{
         else
         {
             NetworkMessage msg = (NetworkMessage)message;
-            
-            LogMaker.println("Client "+playerID+":Received "+msg.getMessageType().toString());
+            try
+            {
+                LogMaker.println("Client "+playerID+":Received "+msg.getMessageType().toString());
+            }
+            catch(NullPointerException e)
+            {
+                //Might happen
+            }
             switch(msg.getMessageType())
             {
                 case UPDATE_MESSAGE:
@@ -433,7 +439,14 @@ public abstract class ServerDaemonThread extends Thread{
         //Later perhaps we can more gracefully deal with this. Perhaps add wait
         //a little while and then try again?
         object.setTimeStamp(System.currentTimeMillis());
-        LogMaker.println("Client "+playerID+":Sending "+object.getMessageType().toString());
+        try
+        {
+            LogMaker.println("Client "+playerID+":Sending "+object.getMessageType().toString());
+        }
+        catch(NullPointerException e)
+        {
+            //Who knows why this might happen
+        }
         if(!out.writeMessage(object))
         {
             throw new BufferOverflowException();
