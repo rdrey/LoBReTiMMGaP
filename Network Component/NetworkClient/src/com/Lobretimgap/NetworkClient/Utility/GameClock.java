@@ -21,6 +21,7 @@ public class GameClock implements TimeSource {
 	private long timeDelta = 0;
 	
 	private ArrayList<TimeSyncPacket> accumulationList = new ArrayList<GameClock.TimeSyncPacket>();
+	private ArrayList<Long> latencyAccumulationList = new ArrayList<Long>();
 	
 	public long getTimeDelta() {
 		return timeDelta;
@@ -91,7 +92,7 @@ public class GameClock implements TimeSource {
 		int deltaCount = 0;
 		for(Object pct: workList)
 		{
-			if(Math.abs(meanLatency - ((TimeSyncPacket)pct).latency) <= stdDeviation)
+			if(Math.abs(medianLatency - ((TimeSyncPacket)pct).latency) <= stdDeviation)
 			{
 				averageTimeDelta += ((TimeSyncPacket)pct).timedel;
 				deltaCount++;
@@ -116,6 +117,69 @@ public class GameClock implements TimeSource {
 		public int compareTo(TimeSyncPacket another) {
 			return (int) (latency - another.latency);			
 		}
+	}
+	
+	public void accumulateLatencyPacket(long latency)
+	{
+		if(latencyAccumulationList.size() == 9)
+		{
+			latencyAccumulationList.remove(0);
+			latencyAccumulationList.add(latency);
+		}
+		else
+		{
+			latencyAccumulationList.add(latency);
+		}
+	}
+	
+	/***
+	 * Returns the last known good estimate of the one way latency to the server
+	 */
+	public long getLatency()
+	{
+		//Transform to an array so we can sort.
+		Object [] latencyList = latencyAccumulationList.toArray();		
+		//Sort based on latency (see the comparable interface in TimeSyncPacket)
+		Arrays.sort(latencyList);
+		
+		//Get the median latency
+		long medianLatency = ((Long)latencyList[latencyList.length/2]).longValue();		
+		
+		//Now lets work out the standard deviation
+		//First we need the mean
+		long meanLatency = 0;
+		for(Object pct : latencyList)
+		{
+			meanLatency += ((Long)pct).longValue();
+		}
+		
+		meanLatency /= latencyList.length;		
+		
+		//Now we can get the square differences and finally std deviation
+		double stdDeviation = 0;
+		for(Object pct : latencyList)
+		{
+			stdDeviation += (((Long)pct).longValue() - meanLatency) * (((Long)pct).longValue() - meanLatency);
+		}
+		stdDeviation /= latencyList.length;
+		stdDeviation = Math.sqrt(stdDeviation);
+				
+		//Ok, now we have the std deviation and the median, so we are going to
+		//ignore all samples above approximately 1 standard deviation from the median, and 
+		//get the mean of the remaining samples' timeDeltas.
+		long averageLatency = 0;
+		int latencyCount = 0;
+		for(Object pct: latencyList)
+		{
+			if(Math.abs(medianLatency - ((Long)pct).longValue()) <= stdDeviation)
+			{
+				averageLatency += ((Long)pct).longValue();
+				latencyCount++;
+			}
+		}
+		averageLatency /= latencyCount;
+		
+		return averageLatency;
 	}
 	
 	
