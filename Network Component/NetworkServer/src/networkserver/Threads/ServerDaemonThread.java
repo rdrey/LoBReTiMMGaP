@@ -17,6 +17,7 @@ import networkTransferObjects.NetworkMessage;
 import networkTransferObjects.NetworkMessageLarge;
 import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
+import networkTransferObjects.UtilityObjects.QuickLZ;
 import networkserver.EventListeners.*;
 import networkserver.Events.NetworkEvent;
 import networkserver.LogMaker;
@@ -247,8 +248,10 @@ public abstract class ServerDaemonThread extends Thread{
                             bytesRead += in.read(object, bytesRead, object.length - bytesRead);
                         }
 
+                        byte [] decompressed = QuickLZ.decompress(object);
+
                         //LogMaker.println("Mid receive, byte buffer at "+bytesRead);
-                        ProtostuffIOUtil.mergeFrom(object, msg, schema);
+                        ProtostuffIOUtil.mergeFrom(decompressed, msg, schema);
                         processNetworkMessage(msg);
                     }
                     
