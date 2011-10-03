@@ -354,7 +354,7 @@ public abstract class CoreNetworkThread extends Thread
 			isRunning = true;
 			registerWithServer(getPlayerRegistrationInformation());
 			
-			startLatencyLogger();
+			//startLatencyLogger();
 	        //Do running stuff        
 	        while(!stopOperation)
 	        {
