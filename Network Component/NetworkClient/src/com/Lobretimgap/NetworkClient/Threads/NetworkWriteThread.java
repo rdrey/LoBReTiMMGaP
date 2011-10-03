@@ -15,6 +15,7 @@ import networkTransferObjects.NetworkMessage;
 import networkTransferObjects.NetworkMessageLarge;
 import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
+import networkTransferObjects.UtilityObjects.QuickLZ;
 import android.util.Log;
 
 import com.Lobretimgap.NetworkClient.NetworkVariables;
@@ -149,6 +150,15 @@ public class NetworkWriteThread extends Thread
             	{            		
 	            	//Serialize the message
 	                byte [] serializedObject = ProtostuffIOUtil.toByteArray(msg, schema, buffer);
+	                int startSize = serializedObject.length;
+	                //Compress the message
+	                byte [] tempArray = QuickLZ.compress(serializedObject, 1);
+	                serializedObject = tempArray;
+	                
+	                //Logging
+	                Log.i("compression", "SENDING: Pre-compression: "+startSize
+	                		+", Post-compression: " + serializedObject.length
+	                		+", Saved Bytes: " + (startSize - serializedObject.length));
 	                                
 	                //Calculate and create a leading length field (4 bytes of data, an integer)
 	                b.clear();
@@ -163,6 +173,8 @@ public class NetworkWriteThread extends Thread
 	                //Log.d(NetworkVariables.TAG, "Serialised Size: "+serializedObject.length);
 	                //And then send it off.
 	                os.write(message);
+	                
+	                Log.i("bandwidth", "SENT: "+message.length);
             	}
                 
             }

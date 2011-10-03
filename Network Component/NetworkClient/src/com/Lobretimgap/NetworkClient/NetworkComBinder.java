@@ -5,6 +5,7 @@ import java.nio.channels.AlreadyConnectedException;
 import java.util.ArrayList;
 
 import networkTransferObjects.NetworkMessage;
+import android.content.Context;
 import android.os.Binder;
 import com.Lobretimgap.NetworkClient.EventListeners.*;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
@@ -21,11 +22,13 @@ public class NetworkComBinder extends Binder {
 	private CoreNetworkThread networkThread;
 	private boolean isConnected = false;
 	private ArrayList<Messenger> linkedMessengers = new ArrayList<Messenger>();
+	private Context context;
 	
-	public NetworkComBinder() throws IllegalAccessException, InstantiationException
+	public NetworkComBinder(Context appContext) throws IllegalAccessException, InstantiationException
 	{
+		context = appContext;
 		networkThread = NetworkVariables.getInstance();
-		
+		networkThread.setContext(context);
 		addListener(ConnectionEstablishedListener.class, new ConnectionEstablishedListener() {			
 			public void EventOccured(NetworkEvent e) {
 				isConnected = true;							 			
@@ -57,7 +60,7 @@ public class NetworkComBinder extends Binder {
 				boolean success = true;
 				try {
 					networkThread = NetworkVariables.getInstance();
-					
+					networkThread.setContext(context);
 					addListener(ConnectionEstablishedListener.class, new ConnectionEstablishedListener() {			
 						public void EventOccured(NetworkEvent e) {
 							isConnected = true;							 			

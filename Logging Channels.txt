@@ -1,0 +1,13 @@
+Logging channels
+	bandwidth
+		All received messages raw size
+		All sent messages raw size
+	compression
+		Uncompressed size of serialized objects
+		Compressed size of serialized objects
+	latency
+		Latency updates every second or as often as possible
+	networks
+		change in data connection type, new type
+	timesync
+		All info related to the time synchronisation

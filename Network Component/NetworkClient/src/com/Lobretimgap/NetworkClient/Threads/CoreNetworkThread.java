@@ -19,12 +19,15 @@ import networkTransferObjects.NetworkMessageLarge;
 import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
 import networkTransferObjects.UtilityObjects.QuickLZ;
+import android.content.Context;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.Lobretimgap.NetworkClient.NetworkVariables;
 import com.Lobretimgap.NetworkClient.EventListeners.ConnectionEstablishedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.ConnectionFailedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.ConnectionLostListener;
+import com.Lobretimgap.NetworkClient.EventListeners.DataNetworkListener;
 import com.Lobretimgap.NetworkClient.EventListeners.DirectMessageListener;
 import com.Lobretimgap.NetworkClient.EventListeners.GamestateReceivedListener;
 import com.Lobretimgap.NetworkClient.EventListeners.LatencyUpdateListener;
@@ -60,6 +63,10 @@ public abstract class CoreNetworkThread extends Thread
     private boolean awaitingLatencyResponse = false;
     public int playerId = -1;
     
+    //Logging stuff
+    private Context context;
+    private TelephonyManager manager;
+    
     private static Schema<PlayerRegistrationMessage> playerRegSchema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
     private static Schema<NetworkMessageMedium> mediumMsgSchema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
     private static Schema<NetworkMessageLarge> largeMsgSchema = RuntimeSchema.getSchema(NetworkMessageLarge.class);
@@ -80,6 +87,11 @@ public abstract class CoreNetworkThread extends Thread
 		peers = new Vector<ClientPeer>();
 		b.order(ByteOrder.BIG_ENDIAN);		
 		gameClock = new GameClock();		
+	}
+	
+	public void setContext(Context appContext)
+	{
+		context = appContext;
 	}
 	
 	/**
@@ -128,6 +140,24 @@ public abstract class CoreNetworkThread extends Thread
 			}
 		}
 		Log.i(NetworkVariables.TAG, "Connection to server has been established.");
+	}
+	
+	private void startLatencyLogger()
+	{
+		//start the actual latency loggers
+		Timer t = new Timer();
+		t.schedule(new TimerTask() {
+			
+			@Override
+			public void run() 
+			{			
+				requestNetworkLatency();
+			}
+		}, 1000, 1000);
+		
+		//and start listening for network events
+		manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+		manager.listen(new DataNetworkListener(this), DataNetworkListener.LISTEN_DATA_CONNECTION_STATE);
 	}
 	
 	
@@ -323,6 +353,8 @@ public abstract class CoreNetworkThread extends Thread
 		{
 			isRunning = true;
 			registerWithServer(getPlayerRegistrationInformation());
+			
+			startLatencyLogger();
 	        //Do running stuff        
 	        while(!stopOperation)
 	        {
@@ -369,20 +401,22 @@ public abstract class CoreNetworkThread extends Thread
 	                        b.rewind();
 	                        int mSize = b.getInt();
 	                        
-	                        Log.i("NetworkTraffic", "Expected "+mSize+" bytes of input");
-
-	                        Log.i("Bandwidth", "Expected: "+mSize);
 	                        //Read in the object bytes
 	                        byte [] object = new byte [mSize];
 	                        int bytesRead = 0;
 	                        while(bytesRead != mSize)
 	                        {
-	                            bytesRead += in.read(object, bytesRead, object.length - bytesRead);
-	                            Log.d("NetworkTraffic", "Read "+bytesRead+"/"+mSize+" bytes of input");
-	                            Log.d("Bandwidth", "Read: "+bytesRead+"/"+mSize);
+	                            bytesRead += in.read(object, bytesRead, object.length - bytesRead);	                            
 	                        }
 	                        
+	                        Log.i("bandwidth", "RECEIVED: "+(mSize+5));
+	    	                
 	                        byte [] decompressed = QuickLZ.decompress(object);
+	                        
+	                      //Logging
+	    	                Log.i("compression", "RECEIVING: Pre-compression: "+decompressed.length
+	    	                		+", Post-compression: " + mSize
+	    	                		+", Saved Bytes: " + (decompressed.length - mSize));
 
 	                        //System.out.println("Mid receive, byte buffer at "+bytesRead);
 	                        ProtostuffIOUtil.mergeFrom(decompressed, msg, schema);
@@ -414,9 +448,13 @@ public abstract class CoreNetworkThread extends Thread
 	            {
 	            	Log.e(NetworkVariables.TAG, "Null Pointer Exception in run loop.", e);
 	            }
+	            catch(BufferOverflowException e)
+	            {
+	            	Log.e(NetworkVariables.TAG, "Output buffer has overflowed!");
+	            }
 	            catch(RuntimeException e)
 	            {
-	            	Log.e(NetworkVariables.TAG, "Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?");
+	            	Log.e(NetworkVariables.TAG, "Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?" + e);
 	            }
 	            catch(NoSuchMethodError e)
 	            {
@@ -515,6 +553,12 @@ public abstract class CoreNetworkThread extends Thread
 	            	//WE have received a response to an earlier latency request.
 	            	awaitingLatencyResponse = false;
 	            	latencyEndTime = System.currentTimeMillis();
+	            	
+	            	//Logging
+	            	Log.i("latency", DataNetworkListener.getNetworkTypeString(manager.getNetworkType())
+	            			+": "+ (latencyEndTime - latencyStartTime));
+	            	
+	            	
 	            	if(latencyStartTime < latencyEndTime)
 	            	{
 	            		fireEvent(new NetworkEvent(this, (latencyEndTime - latencyStartTime)),  LatencyUpdateListener.class);
@@ -564,7 +608,7 @@ public abstract class CoreNetworkThread extends Thread
 	            		
 	            		long serverTime = msg.getTimeStamp();
 	            		long clockDelta = (currentTime - latency) - serverTime ; //difference between local time and server time
-	            		Log.i(NetworkVariables.TAG, "Client-server time delta is: "+clockDelta);
+	            		Log.i("timesync", "Client-server time delta is: "+clockDelta);
 	            		gameClock.setTimeDelta(clockDelta);
 	            		timeSyncReceived++;
 	            		//Next packets will be sent by a scheduled timer, to ensure a 2 second delay between messages
