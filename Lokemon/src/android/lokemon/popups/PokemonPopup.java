@@ -34,7 +34,6 @@ public class PokemonPopup extends FadePopup{
 			for (Pokemon p:G.player.pokemon)
 				if (p.getHP() > 0 && !p.inBattle) entries.add(p);
 		}
-		Log.e("battle",this.toString() + " " /*+ entries.toString()*/);
 		setListAdapter(new EntryAdapter(this, R.layout.pokemon_item, entries));
 	}
 

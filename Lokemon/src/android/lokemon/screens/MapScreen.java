@@ -103,7 +103,6 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 						G.player.setLocation (end_loc);
 						mapController.setCenter(end);
 						end = null;
-						Log.i("Interface", "Animation done");
 					}
 					else
 					{

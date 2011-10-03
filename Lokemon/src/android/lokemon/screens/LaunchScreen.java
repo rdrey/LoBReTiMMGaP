@@ -72,13 +72,11 @@ public class LaunchScreen extends Activity implements View.OnClickListener{
     {
     	if (v == new_button)
     	{
-    		Log.d("Input", "'New game' pressed");
     		Intent intent = new Intent(v.getContext(), IntroScreen.class);
             startActivityForResult(intent,1);
     	}
     	else if (v == continue_button)
     	{
-    		Log.d("Input", "'Continue' pressed");
     		Intent intent = new Intent(v.getContext(), MapScreen.class);
             startActivity(intent);
     	}
