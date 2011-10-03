@@ -139,8 +139,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
 
         public void EventOccured(NetworkEvent e) {
             //Lost connection to client, so remove them from our game states
-            LokemonServerVariables.playerList.remove(player);
-            
+            LokemonServerVariables.playerList.remove(player);            
             for(Integer pl : interestedParties)
             {
                 //If the interested party still exists

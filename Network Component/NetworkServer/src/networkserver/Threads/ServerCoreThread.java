@@ -27,7 +27,7 @@ public class ServerCoreThread  extends Thread {
             socket = new ServerSocket(ServerCustomisation.port);
         }catch(IOException e)
         {
-            LogMaker.errorPrintln("Error aquiring port: "+e, -1);
+            LogMaker.errorPrintln("Error aquiring port: "+e);
             System.exit(1);
         }
     }
@@ -43,25 +43,25 @@ public class ServerCoreThread  extends Thread {
         {
             try
             {
-                LogMaker.println("Waiting for a connection....", -1);
+                LogMaker.println("Waiting for a connection....");
                 Socket con = socket.accept();                
-                LogMaker.println("Client accepted: "+ con, -1);                
+                LogMaker.println("Client accepted: "+ con);                
                 ServerDaemonThread daemonThread = customSettings.buildInstance();
                 daemonThread.setSocket(con);
                 daemonThread.start();
                 
             }catch(IOException e)
             {
-                LogMaker.errorPrintln("Error while accepting socket: "+e, -1);                
+                LogMaker.errorPrintln("Error while accepting socket: "+e);                
             }
             catch(InstantiationException e)
             {
                 LogMaker.errorPrintln("Failed to create an instance ServerDaemonThread!" +
-                        " Have you extended it with a parameterless constructor?\n"+e, -1);
+                        " Have you extended it with a parameterless constructor?\n"+e);
             }
             catch(IllegalAccessException e)
             {
-                LogMaker.errorPrintln("Failed to create an instance of ServerDaemonThread! \n"+ e, -1);
+                LogMaker.errorPrintln("Failed to create an instance of ServerDaemonThread! \n"+ e);
             }
         }
         
