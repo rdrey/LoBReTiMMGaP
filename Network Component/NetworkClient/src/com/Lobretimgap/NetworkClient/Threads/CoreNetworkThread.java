@@ -81,6 +81,7 @@ public abstract class CoreNetworkThread extends Thread
     private boolean timeSyncInProgress = false;
     private int timeSyncReceived = 0;
     private Timer syncTimer = new Timer();
+    private int timeSyncSent = 0;
 	
 	public CoreNetworkThread()
 	{
@@ -215,21 +216,31 @@ public abstract class CoreNetworkThread extends Thread
 	{
 		if(!timeSyncInProgress)
 		{
+			syncTimer = new Timer();
 			timeSyncInProgress = true;
 			timeSyncReceived = 0;
 			NetworkMessage msg = new NetworkMessage("TimeRequest");
 			msg.setMessageType(NetworkMessage.MessageType.TIME_REQUEST);
 			writeOut(msg);
 			
-			//Now we schedule a timer task to send another 5 requests, at 2 second intervals.
+			//Now we schedule a timer task to send another 5 requests, at 2 second intervals
 			syncTimer.schedule(new TimerTask() {				
 				@Override
 				public void run() {
-					NetworkMessage msg = new NetworkMessage("TimeRequest");
-					msg.setMessageType(NetworkMessage.MessageType.TIME_REQUEST);
-					writeOut(msg);
+					if(timeSyncSent < 6)
+					{
+						NetworkMessage msg = new NetworkMessage("TimeRequest");
+						msg.setMessageType(NetworkMessage.MessageType.TIME_REQUEST);
+						writeOut(msg);
+						timeSyncSent++;
+					}
+					else
+					{
+						syncTimer.cancel();
+						timeSyncSent = 0;
+					}
 				}
-			}, 500, 2000);
+			}, 500, 1000);
 		}
 	}
 	
