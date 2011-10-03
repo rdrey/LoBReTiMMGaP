@@ -576,6 +576,7 @@ public abstract class CoreNetworkThread extends Thread
 	            	
 	            	if(latencyStartTime < latencyEndTime)
 	            	{
+	            		gameClock.accumulateLatencyPacket((latencyEndTime - latencyStartTime));
 	            		fireEvent(new NetworkEvent(this, (latencyEndTime - latencyStartTime)),  LatencyUpdateListener.class);
 	            	}
 	            	break;
