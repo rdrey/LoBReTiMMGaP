@@ -34,6 +34,18 @@ public class LaunchScreen extends Activity implements View.OnClickListener{
         welcome_text = (TextView)findViewById(R.id.welcome_text);
     }
     
+    protected void onActivityResult (int requestCode, int resultCode, Intent data)
+    {
+    	if (requestCode == 1)
+    	{
+    		if (resultCode == RESULT_FIRST_USER)
+    		{
+		    	Intent intent = new Intent(this.getApplicationContext(), MapScreen.class);
+		        startActivity(intent);
+    		}
+    	}
+    }
+    
     public void onStart () 
     {
     	// load game data
@@ -62,7 +74,7 @@ public class LaunchScreen extends Activity implements View.OnClickListener{
     	{
     		Log.d("Input", "'New game' pressed");
     		Intent intent = new Intent(v.getContext(), IntroScreen.class);
-            startActivity(intent);
+            startActivityForResult(intent,1);
     	}
     	else if (v == continue_button)
     	{

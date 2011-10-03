@@ -27,7 +27,8 @@ public class IntroScreen extends Activity implements View.OnClickListener, Compo
 	// first, second and third screen views
 	private View [] first;
 	private View [] second;
-	private View [] third;
+	
+	private int screenNum;
 	
 	/** Called when the activity is first created. */
     @Override
@@ -49,12 +50,13 @@ public class IntroScreen extends Activity implements View.OnClickListener, Compo
         red = (RadioButton)findViewById(R.id.red);
         leaf = (RadioButton)findViewById(R.id.leaf);
         
-        first = new View [5];
+        first = new View [6];
         first[0] = findViewById(R.id.nick_label);
         first[1] = findViewById(R.id.nick_field);
         first[2] = findViewById(R.id.avatar_label);
         first[3] = findViewById(R.id.avatars);
         first[4] = next;
+        first[5] = back;
         
         second = new View[6];
         second[0] = back;
@@ -64,32 +66,44 @@ public class IntroScreen extends Activity implements View.OnClickListener, Compo
         second[4] = findViewById(R.id.poke_description);
         second[5] = findViewById(R.id.poke_stats);
         
-        third = new View[0];
         
         enableViews(second, false);
-        enableViews(third, false);
         enableViews(first, true);
+        screenNum = 0;
         
         ((TextView)second[4]).setText(G.base_pokemon[0].getDescription());
         ((TextView)second[5]).setText(Html.fromHtml(G.base_pokemon[0].getBaseStats()));
+    }
+    
+    public void onBackPressed()
+    {
+    	screenNum--;
+    	if (screenNum == 0)
+		{
+    		enableViews(second, false);
+    		enableViews(first, true);
+		}
+		else
+		{
+			setResult(RESULT_CANCELED);
+			finish();
+		}
     }
     
     public void onClick(View v)
     {
     	if (v == next)
     	{
-    		if (back.isEnabled())
+    		screenNum++;
+    		if (screenNum == 2)
     		{
     			
     			enableViews(second, false);
     			// create new player
     			new Trainer(((EditText)first[1]).getText().toString(), (bulbasaur.isChecked()?0:(charmander.isChecked()?3:6)),(leaf.isChecked()?Gender.FEMALE:Gender.MALE));
     			Trainer.saveTrainer(this);
-    			Intent intent = new Intent(v.getContext(), MapScreen.class);
-                startActivity(intent);
+    			setResult(RESULT_FIRST_USER);
                 finish();
-    			
-                //enableViews(third, true);
     		}
     		else
     		{
@@ -98,10 +112,7 @@ public class IntroScreen extends Activity implements View.OnClickListener, Compo
     		}
     	}
     	else if (v == back)
-    	{
-    		enableViews(second, false);
-    		enableViews(first, true);
-    	}
+    		onBackPressed();
     }
     
     public void onCheckedChanged(CompoundButton b, boolean checked)

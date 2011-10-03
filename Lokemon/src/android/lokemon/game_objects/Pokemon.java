@@ -98,6 +98,7 @@ public class Pokemon {
 	{
 		index = base.evolution[0];
 		base = G.base_pokemon[index];
+		restorePP();
 	}
 	
 	public int addExperience(int xp)
@@ -163,6 +164,12 @@ public class Pokemon {
 			if (base.moves[i] == moveIndex)
 				break;
 		pp[i/2]--;
+	}
+	
+	public void restorePP()
+	{
+		for (int i = 0; i < base.moves.length; i+=2) 
+			pp[i/2] = G.moves[base.moves[i]].pp;
 	}
 	
 	public int[] getStats() {return new int[]{attack, defense, speed, special, hp_total};}

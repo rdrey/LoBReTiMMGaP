@@ -20,6 +20,7 @@ import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
 import networkTransferObjects.UtilityObjects.QuickLZ;
 import android.content.Context;
+import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -81,12 +82,13 @@ public abstract class CoreNetworkThread extends Thread
     private boolean timeSyncInProgress = false;
     private int timeSyncReceived = 0;
     private Timer syncTimer = new Timer();
+    private int timeSyncSent = 0;
 	
 	public CoreNetworkThread()
 	{
 		peers = new Vector<ClientPeer>();
 		b.order(ByteOrder.BIG_ENDIAN);		
-		gameClock = new GameClock();		
+		gameClock = new GameClock();
 	}
 	
 	public void setContext(Context appContext)
@@ -98,9 +100,10 @@ public abstract class CoreNetworkThread extends Thread
 	 * Asynchronously connects to the server
 	 */
 	public void connectToServerAsync()
-	{
+	{		
 		if(!connected)
 		{			
+			startLatencyLogger();
 			this.start();
 		}
 	}
@@ -142,6 +145,9 @@ public abstract class CoreNetworkThread extends Thread
 		Log.i(NetworkVariables.TAG, "Connection to server has been established.");
 	}
 	
+	/***
+	 * Starts the latency logging as well as the data networks logging.
+	 */
 	private void startLatencyLogger()
 	{
 		//start the actual latency loggers
@@ -151,7 +157,10 @@ public abstract class CoreNetworkThread extends Thread
 			@Override
 			public void run() 
 			{			
-				requestNetworkLatency();
+				if(connected)
+				{
+					requestNetworkLatency();
+				}
 			}
 		}, 1000, 1000);
 		
@@ -215,21 +224,31 @@ public abstract class CoreNetworkThread extends Thread
 	{
 		if(!timeSyncInProgress)
 		{
+			syncTimer = new Timer();
 			timeSyncInProgress = true;
 			timeSyncReceived = 0;
 			NetworkMessage msg = new NetworkMessage("TimeRequest");
 			msg.setMessageType(NetworkMessage.MessageType.TIME_REQUEST);
 			writeOut(msg);
 			
-			//Now we schedule a timer task to send another 5 requests, at 2 second intervals.
+			//Now we schedule a timer task to send another 5 requests, at 2 second intervals
 			syncTimer.schedule(new TimerTask() {				
 				@Override
 				public void run() {
-					NetworkMessage msg = new NetworkMessage("TimeRequest");
-					msg.setMessageType(NetworkMessage.MessageType.TIME_REQUEST);
-					writeOut(msg);
+					if(timeSyncSent < 6)
+					{
+						NetworkMessage msg = new NetworkMessage("TimeRequest");
+						msg.setMessageType(NetworkMessage.MessageType.TIME_REQUEST);
+						writeOut(msg);
+						timeSyncSent++;
+					}
+					else
+					{
+						syncTimer.cancel();
+						timeSyncSent = 0;
+					}
 				}
-			}, 500, 2000);
+			}, 500, 1000);
 		}
 	}
 	
@@ -353,8 +372,7 @@ public abstract class CoreNetworkThread extends Thread
 		{
 			isRunning = true;
 			registerWithServer(getPlayerRegistrationInformation());
-			
-			//startLatencyLogger();
+
 	        //Do running stuff        
 	        while(!stopOperation)
 	        {

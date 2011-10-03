@@ -44,8 +44,7 @@ public class Trainer {
 		items[4] = new Potion(Potions.SPECIAL);
 		items[5] = new Potion(Potions.SPEED);
 		// give a new player a starting gift
-		for (int i = 0; i < 6; i++)
-			items[0].increment();
+		items[0].increment();
 		items[1].increment();
 		
 		this.aura = new OverlayItem();

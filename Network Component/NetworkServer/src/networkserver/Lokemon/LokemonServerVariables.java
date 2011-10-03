@@ -23,13 +23,13 @@ public class LokemonServerVariables {
 
     //Meters
     public static final double itemSpawnRangeMin = 60.0;
-    public static final double itemSpawnRangeMax = 500.0;
+    public static final double itemSpawnRangeMax = 200.0;
     //If an item is closer than this distance to the player, no more items will be spawned near him
-    public static final double noSpawnRange = 100.00;
+    public static final double noSpawnRange = 50.00;
 
     //Time in miliseconds before new items are spawned. Set at 50seconds by default
-    public static final int itemSpawnTimer = 50000;
-    public static final int maxItemsIngame = 500;
+    public static final int itemSpawnTimer = 30000;
+    public static final int maxItemsIngame = 30;
 
     //Miliseconds to wait for additional item pickup requests before sending an ack to the player.
     public static final long pickupLatency = 200;

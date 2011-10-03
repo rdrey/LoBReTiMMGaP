@@ -82,7 +82,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	// periodically requests game state updates from server
 	private Handler networkUpdater;
 	private Runnable updater;
-	private int numUpdates;
+	private double elapsedTime;
 	
 	private NetworkComBinder networkBinder;
 	private final Messenger networkEventMessenger;
@@ -121,7 +121,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		// network setup
 		networkReqLock = false;
 		waitingForAccept = false;
-		numUpdates = 0;
+		elapsedTime = 0;
 		busyBinding = false;
 		busyConnecting = false;
 		networkEventMessenger = new Messenger(new Handler(this));
@@ -134,12 +134,11 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					{
 						if (G.mode == Mode.MAP)
 						{
-							if (numUpdates >= 5 && !waitingForItems)
+							// 
+							if (!waitingForItems)
 							{
 								networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
-								numUpdates = 0;
 								waitingForItems = true;
-								Log.i("Items",  "Requesting game objects");
 							}
 							
 							if (!waitingForPlayers)
@@ -147,10 +146,9 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
 								waitingForPlayers = true;
 							}
-							numUpdates++;
 							
 							// generate a Pokemon with probability based on catch rate if the player is in a special region
-							if (!waitingForAccept && G.player.playerState == PlayerState.AVAILABLE)
+							if (G.player.playerState == PlayerState.AVAILABLE && !waitingForAccept)
 							{
 								if (currentRegion != null && currentRegion.ordinal() < 7 && !foundPokeInRegion)
 								{
@@ -555,8 +553,11 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			{
 				// heal all pokemon
 				for (Pokemon p:G.player.pokemon)
+				{
 					p.setHP(p.getTotalHP());
-				display.showToast("All your Pokémon have been healed!");
+					p.restorePP();
+				}
+				display.showToast("All your Pokémon have been restored!");
 				display.showNoPokemonAlert(false);
 				
 				// send available update
