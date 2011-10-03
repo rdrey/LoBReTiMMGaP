@@ -31,7 +31,7 @@ public class NetworkComBinder extends Binder {
 		networkThread.setContext(context);
 		addListener(ConnectionEstablishedListener.class, new ConnectionEstablishedListener() {			
 			public void EventOccured(NetworkEvent e) {
-				isConnected = true;							 			
+				isConnected = true;	
 			}
 		});
 		

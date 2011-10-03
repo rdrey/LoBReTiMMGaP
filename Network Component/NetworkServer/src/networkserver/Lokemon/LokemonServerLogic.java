@@ -369,6 +369,7 @@ public class LokemonServerLogic extends Thread{
                                         pot.setPosition(new Location(x, y));
                                         itemIDCounter++;
                                         LokemonServerVariables.itemMap.put(pot.getId(), pot);
+                                        LogMaker.println("Spawned new item with ID: "+pot.getId());
                                     }
                                 }
                             }
@@ -384,7 +385,7 @@ public class LokemonServerLogic extends Thread{
             }
             catch(Exception e)
             {
-                LogMaker.errorPrintln("Unexpected error occuring in server logic! (Ignoring and continuing), Error:\n"+e, -1);
+                LogMaker.errorPrintln("Unexpected error occuring in server logic! (Ignoring and continuing), Error:\n"+e);
                 e.printStackTrace();
             }
         }
