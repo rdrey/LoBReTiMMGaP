@@ -5,8 +5,6 @@ import java.util.Arrays;
 
 import android.util.Log;
 
-import com.Lobretimgap.NetworkClient.NetworkVariables;
-
 /***
  * Class to mimic the server game clock. Modifies local time with the difference in 
  * system clocks between server and client, so that accurate syncronisation can be 
@@ -44,7 +42,7 @@ public class GameClock implements TimeSource {
 	public void accumulateSyncPacket(TimeSyncPacket syncPacked)
 	{
 		accumulationList.add(syncPacked);
-		Log.i(NetworkVariables.TAG, "Latency of time request: "+syncPacked.latency+", time delta: "+ syncPacked.timedel);
+		Log.i("timesync", "Latency of time request: "+syncPacked.latency+", time delta: "+ syncPacked.timedel);
 	}
 	
 	/***
@@ -62,7 +60,8 @@ public class GameClock implements TimeSource {
 		
 		//Get the median latency
 		long medianLatency = ((TimeSyncPacket)workList[2]).latency;
-		Log.i(NetworkVariables.TAG, "Median latency was: "+ medianLatency);
+		Log.i("timesync", "Accumulation complete. Working out time delta.");
+		Log.i("timesync", "Median latency was: "+ medianLatency);
 		
 		//Now lets work out the standard deviation
 		//First we need the mean
@@ -73,7 +72,7 @@ public class GameClock implements TimeSource {
 		}
 		
 		meanLatency /= workList.length;
-		Log.i(NetworkVariables.TAG, "Mean latency was: "+ meanLatency);
+		Log.i("timesync", "Mean latency was: "+ meanLatency);
 		
 		//Now we can get the square differences and finally std deviation
 		double stdDeviation = 0;
@@ -83,7 +82,7 @@ public class GameClock implements TimeSource {
 		}
 		stdDeviation /= workList.length;
 		stdDeviation = Math.sqrt(stdDeviation);
-		Log.i(NetworkVariables.TAG, "Std Deviation was: "+ stdDeviation);
+		Log.i("timesync", "Std Deviation was: "+ stdDeviation);
 		
 		//Ok, now we have the std deviation and the median, so we are going to
 		//ignore all samples above approximately 1 standard deviation from the median, and 
@@ -99,7 +98,7 @@ public class GameClock implements TimeSource {
 			}
 		}
 		averageTimeDelta /= deltaCount;
-		Log.i(NetworkVariables.TAG, "Average Time Delta was: "+ averageTimeDelta);
+		Log.i("timesync", "Average Time Delta was: "+ averageTimeDelta);
 		//Finally lets update the clock with this converged estimate for the client-server time delta
 		timeDelta += averageTimeDelta;
 		accumulationList.clear();
