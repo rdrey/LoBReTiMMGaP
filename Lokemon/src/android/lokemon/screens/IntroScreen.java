@@ -87,6 +87,7 @@ public class IntroScreen extends Activity implements View.OnClickListener, Compo
     			Trainer.saveTrainer(this);
     			Intent intent = new Intent(v.getContext(), MapScreen.class);
                 startActivity(intent);
+                finish();
     			
                 //enableViews(third, true);
     		}

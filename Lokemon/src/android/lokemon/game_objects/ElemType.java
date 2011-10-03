@@ -13,6 +13,7 @@ public class ElemType {
 	public String name;
 	public int colour_id;
 	public int ordinal;
+	public Types type;
 	
 	// modifiers
 	
@@ -21,6 +22,7 @@ public class ElemType {
 		this.name = name;
 		this.colour_id = colour_id;
 		this.ordinal = ordinal;
+		this.type = Types.values()[ordinal]; 
 	}
 	
 	public static void loadTypes(String typeJSON) throws JSONException

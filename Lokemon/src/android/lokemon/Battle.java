@@ -15,6 +15,7 @@ import android.util.Log;
 
 public class Battle {
 	
+	private static float [] stage_mod = {0.25f,0.29f,0.33f,0.40f,0.50f,0.67f,1.0f,1.5f,2.0f,2.5f,3.0f,3.5f,4.0f};
 	private enum MoveResult {RAN_AWAY, VICTORY, NONE, CAUGHT_POKEMON};
 	public BattleType battleType;
 	
@@ -113,6 +114,7 @@ public class Battle {
 		battleType = BattleType.TRAINER;
 		itemCount -= G.player.items[0].getCount();
 		random = new Random(seed);
+		Log.i("Battle", seed + "");
 	}
 	
 	public void switchPlayerPoke(int index)
@@ -146,9 +148,7 @@ public class Battle {
 	}
 	
 	private synchronized void finalizePlayerTurn()
-	{
-		Log.i("Battle", waitingForOpponent + " " + player_move.toString());
-		
+	{		
 		if (player_move == BattleMove.SWITCH_POKEMON)
 			G.game.sendSwitchBattleMessage(player_next_poke);
 		else
@@ -171,7 +171,6 @@ public class Battle {
 	
 	private void finalizedOppTurn()
 	{
-		Log.i("Battle", waitingForPlayer + " " + opponent_move.toString());
 		waitingForOpponent = false;
 		if (!waitingForPlayer)
 		{
@@ -192,15 +191,29 @@ public class Battle {
 		ArrayList<int[]> moves = poke_opp.getMovesAndPP();
 		opponent_move = BattleMove.ATTACK;
 		if (moves.size() > 0)
-			opponent_move_index = moves.get(random.nextInt(moves.size()))[0];
+		{
+			int index = 0;
+			int max = 0;
+			for (int i = 0; i < moves.size(); i+=2)
+			{
+				if (G.moves[moves.get(i)[0]].power > max)
+				{
+					index = i;
+					max = G.moves[moves.get(i)[0]].power;
+				}
+			}
+			opponent_move_index = moves.get(index)[0];
+		}
 		else opponent_move_index = -1;
 	}
 	
 	private void executeTurn()
 	{
-		if (poke_player.getSpeed() > poke_opp.getSpeed())
+		float speed_player = poke_player.getSpeed() * stage_mod[player_stages[4]+6];
+		float speed_opp = poke_opp.getSpeed() * stage_mod[opp_stages[4]+6];
+		if (speed_player > speed_opp)
 			meFirst();
-		else if (poke_player.getSpeed() < poke_opp.getSpeed())
+		else if (speed_player < speed_opp)
 			youFirst();
 		else if (G.player.id < G.game.opponentID)
 			meFirst();
@@ -448,7 +461,7 @@ public class Battle {
 					display.setPlayerPokeDetails(poke_player);
 				}
 				else
-					player_stages[index - 1]++;
+					if (player_stages[index - 1] < 6) player_stages[index - 1]++;
 			}
 			else
 			{
@@ -458,7 +471,7 @@ public class Battle {
 					display.setOppPokeDetails(poke_opp);
 				}
 				else
-					opp_stages[index - 1]++;
+					if (opp_stages[index - 1] < 6) opp_stages[index - 1]++;
 			}		
 			resultMessage += player + " used a " + G.player.items[index].getName() + ".\n";
 			return MoveResult.NONE;
@@ -515,46 +528,133 @@ public class Battle {
 		{
 			MoveResult result;
 			Move move = G.moves[moveIndex];
-			
-			// determine if critical hit was landed
-			int critical_mod = 1;
-			double val = random.nextDouble();
-			if (move.critical)
-				if (val<(source.getSpeed()/64.0f))
-					critical_mod = 2;
-			else if (val<(source.getSpeed()/512.0f))
-				critical_mod = 2;
-			
-			// determine if same-type attack bonus is applicable
-			float stab_mod = 1;
-			if (source.getType1() == move.type || (source.getType2()!=null && source.getType2() == move.type))
-				stab_mod = 1.5f;
-			
-			// calculate type effectiveness
-			float type_mod = G.type_modifiers[move.type.ordinal][target.getType1().ordinal];
-			if (target.getType2() != null)
-				type_mod *= G.type_modifiers[move.type.ordinal][target.getType2().ordinal];
-			
-			
-			
-			int damage = (int)(source.getAttack()/(float)target.getDefense() * 2);
 			if (playerName == null)
-				resultMessage += "The wild " + source.getName() + " inflicted " + damage + " damage.\n";
+				resultMessage += "The wild " + source.getName() + " used " + move.name;
 			else
-				resultMessage += (source==poke_player?"Your ":(playerName + "'s ")) + source.getName() + " inflicted " + damage + " damage.\n";
-			target.setHP(target.getHP()-damage);
-			if (target.getHP() <= 0)
+				resultMessage += (source==poke_player?"Your ":(playerName + "'s ")) + source.getName() + " used " + move.name;
+			
+			if (random.nextDouble() < move.accuracy/100.0)
 			{
-				target.setHP(0);
-				result = MoveResult.VICTORY;
+				if (source == poke_player)
+					poke_player.decreasePP(moveIndex);
+				
+				// check if this is a damage dealing move
+				if (move.power > 0)
+				{
+					// determine stats with stage taken into account
+					float attack;
+					float defense;
+					float specialSource;
+					float specialTarget;
+					if (source == poke_player)
+					{
+						attack = source.getAttack() * stage_mod[player_stages[1] + 6];
+						defense = target.getAttack() * stage_mod[opp_stages[2] + 6];
+						specialSource = source.getSpecial() * stage_mod[player_stages[3] + 6];
+						specialTarget = target.getSpecial() * stage_mod[opp_stages[3] + 6];
+					}
+					else
+					{
+						attack = source.getAttack() * stage_mod[opp_stages[1] + 6];
+						defense = target.getAttack() * stage_mod[player_stages[2] + 6];
+						specialSource = source.getSpecial() * stage_mod[opp_stages[3] + 6];
+						specialTarget = target.getSpecial() * stage_mod[player_stages[3] + 6];
+					}
+					
+					// determine if critical hit was landed
+					int critical_mod = 1;
+					double val = random.nextDouble();
+					if (move.critical)
+						if (val<(source.getSpeed()/64.0f))
+							critical_mod = 2;
+					else if (val<(source.getSpeed()/512.0f))
+						critical_mod = 2;
+					
+					// determine if same-type attack bonus is applicable
+					float stab_mod = 1;
+					if (source.getType1() == move.type || (source.getType2()!=null && source.getType2() == move.type))
+						stab_mod = 1.5f;
+					
+					// calculate type effectiveness
+					float type_mod = G.type_modifiers[move.type.ordinal][target.getType1().ordinal];
+					if (target.getType2() != null)
+						type_mod *= G.type_modifiers[move.type.ordinal][target.getType2().ordinal];
+					
+					float modifier = critical_mod * stab_mod * type_mod * (float)(random.nextDouble() * 0.15 + 0.85);
+					
+					// THE DAMAGE FORMULA - awesome shit!
+					int damage;
+					if (move.special)
+						damage = (int)(((2 * source.getLevel() + 10)/250.0 * specialSource/specialTarget * move.power + 2) * modifier);
+					else
+						damage = (int)(((2 * source.getLevel() + 10)/250.0 * attack/defense * move.power + 2) * modifier);
+					
+					target.setHP(target.getHP()-damage);
+					if (target.getHP() <= 0)
+					{
+						target.setHP(0);
+						result = MoveResult.VICTORY;
+					}
+					else
+						result = MoveResult.NONE;
+					if (target == poke_opp)
+						display.setOppPokeDetails(poke_opp);
+					else
+						display.setPlayerPokeDetails(poke_player);
+					
+					 // build result string
+					 resultMessage += " and inflicted " + damage + " damage";
+					 String type_bonus = "";
+					 if (type_mod == 0.5)
+						 type_bonus = "MOVE INEFFECTIVE";
+					 else if (type_mod == 2.0)
+						 type_bonus = "SUPER EFFECTIVE MOVE";
+					 else if (type_mod == 0.0)
+						 type_bonus = "TARGET IMMUNE TO MOVE";
+					 String bonuses = type_bonus.length()==0?"":" ("+type_bonus;
+					 if (critical_mod > 1)
+						 bonuses = bonuses.length()==0?" (CRITICAL HIT":bonuses+", CRITICAL HIT";
+					 if (stab_mod > 1)
+						 bonuses = bonuses.length()==0?" (STAB BONUS":bonuses+", STAB BONUS";
+					 if (bonuses.length() == 0)
+						 resultMessage += ".\n";
+					 else
+						 resultMessage += bonuses + ").\n";			 
+				}
+				else
+				{
+					resultMessage += ".\n";
+					result = MoveResult.NONE;
+				}
+				boolean stage_effect = false;
+				for (int i = 1; i < move.stages.length; i++)
+				{
+					if (move.stages[i] != 0)
+					{
+						stage_effect = true;
+						if (move.stages[i] < 0)
+						{
+							if (source == poke_player)
+								if (opp_stages[i] > -6) opp_stages[i]--;
+							else
+								if (player_stages[i] > -6) player_stages[i]--;
+						}
+						else
+						{
+							if (source == poke_player)
+								if (player_stages[i] < 6) player_stages[i]++;
+							else
+								if (opp_stages[i] < 6) opp_stages[i]++;
+						}
+					}
+				}
+				return result;
 			}
 			else
-				result = MoveResult.NONE;
-			if (target == poke_opp)
-				display.setOppPokeDetails(poke_opp);
-			else
-				display.setPlayerPokeDetails(poke_player);
-			return result;
+			{
+				resultMessage += " and missed.\n";
+				return MoveResult.NONE;
+			}
 		}
 		else
 		{
@@ -646,9 +746,10 @@ public class Battle {
 	}
 	
 	// this method is called when an opponent is disconnected during battle
-	public void handleOpponentDisconnected()
+	public synchronized void handleOpponentDisconnected()
 	{
-		display.showToast(display.getOppNick() + " has been disconnected");
+		// you get experience points if the opponent disconnects
+		display.showToast(display.getOppNick() + " has been disconnected.\n" + calculateExperience());
 		display.endBattle();
 	}
 }

@@ -230,7 +230,6 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         	location_adapter = new LBGLocationAdapter(this, LBGLocationAdapter.GPS_LOCATION_ONLY, 0, 2, G.game);
         
         G.game.createConnection();
-        Log.i("Interface", "Map view created");
     }
     
     protected void onResume()
@@ -259,17 +258,23 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     	redrawHandler.removeCallbacks(redraw);
     }
     
+    public void onBackPressed()
+    {
+    	Trainer.saveTrainer(this);
+    	Log.i("Data save", "Map screen stopped and data saved.");
+    	finish();
+    }
+    
+    public void onStop()
+    {
+    	super.onStop();
+    	Trainer.saveTrainer(this);
+    	Log.i("Data save", "Map screen stopped and data saved.");
+    }
+    
     protected void onActivityResult (int requestCode, int resultCode, Intent data)
     {
-    	if (requestCode == 1)
-    	{
-    		switch (resultCode)
-    		{
-    		default:
-    			G.game.finalizeBattle();
-    			break;
-    		}
-    	}
+    	G.game.finalizeBattle();
     }
     
     public void switchToBattle(NetworkMessageMedium battleInitMessage, int seed)
@@ -335,6 +340,8 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     }
     
     public void cancelProgressDialog() {progressDialog.cancel();}
+    
+    public void cancelBattleAlert() {battleAlert.dismiss();}
     
     public void onClick(View v)
     {

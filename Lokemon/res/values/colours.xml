@@ -15,6 +15,6 @@
     <color name="rough_terrain">#b0b840</color>
     <color name="urban">#c83800</color>
     <color name="water_edge">#5ac6ef</color>
-    <color name="pokemon_center">#e7772f</color>
+    <color name="pokemon_center">#ff007f</color>
     <color name="pokemart">#78c7e0</color>
 </resources>

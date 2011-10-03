@@ -25,7 +25,7 @@ public class Util {
 	public static int getIntFromJSON(JSONObject obj, String name)
 	{
 		try {return obj.getInt(name);}
-		catch (JSONException e) {return -1;}
+		catch (JSONException e) {return 0;}
 	}
 	
 	public static boolean getBoolFromJSON(JSONObject obj, String name)

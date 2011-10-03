@@ -13,23 +13,22 @@
 		"index":1,
 		"name":"Growl",
 		"type":"normal",
-		"category":2,
+		"category":1,
 		"pp":40,
 		"accuracy":100,
-		"opp_effect":"decreases attack by 1 level",
+		"stage_attack":-1,
 		"desc":"Decreases target's Attack by 1 level."
 	},
 	{
 		"index":2,
 		"name":"Leech Seed",
 		"type":"grass",
-		"category":2,
+		"category":1,
 		"pp":10,
-		"accuracy":90,
-		"opp_effect":"decreases target hp by 1/16th or 1hp every turn",
-		"player_effect":"adds leeched hp to active poke",
-		"restrictions":"grass-type, Haze, switching",
-		"desc":"Plants seed on target that leeches HP."
+		"power":25,
+		"accuracy":100,		
+		"stage_hp":1,
+		"desc":"Damages the enemy, stealing some of their health."
 	},
 	{
 		"index":3,
@@ -46,11 +45,10 @@
 		"name":"Poison Powder",
 		"type":"poison",
 		"category":1,
-		"pp":35,
-		"accuracy":75,
-		"opp_effect":"is poisoned",
-		"restrictions":"poison-type,steel-type,has major status ailment",
-		"desc":"Poisons target."
+		"pp":35,		
+		"accuracy":75,		
+		"stage_hp":-1,
+		"desc":"Poisons the enemy, reducing their maximum health."
 	},
 	{
 		"index":5,
@@ -67,34 +65,29 @@
 		"index":6,
 		"name":"Growth",
 		"type":"normal",
-		"category":2,
+		"category":1,
 		"pp":40,
-		"player_effect":"increases special by one stage",
-		"restrictions":"does not affect critical hits",
-		"desc":"Increases active Pokémon's Special by 1 stage"
+		"accuracy":100,
+		"stage_special":1,
+		"desc":"Increases active Pokémon's Special by 1 stage."
 	},
 	{
 		"index":7,
 		"name":"Sleep Powder",
-		"type":"grass",
-		"category":1,
-		"pp":15,
-		"accuracy":75,
-		"opp_effect":"puts to sleep",
-		"restrictions":"has major status ailment",
-		"desc":"Puts target to sleep"
+		"type":"grass",		
+		"pp":15,		
+		"accuracy":75,		
+		"stage_speed":-1,
+		"desc":"Makes the enemy very sleeeeepy..... Slows them down by 1 stage."
 	},
 	{
 		"index":8,
 		"name":"Solar Beam",
-		"type":"grass",
-		"category":2,
+		"type":"grass",		
 		"pp":10,
-		"power":120,
-		"accuracy":100,
-		"turns":2,
-		"restrictions":"sleep,freez,partial trapping,flinch pauses",
-		"desc":"Deals large once-off damage but takes two turns to execute."
+		"power":80,
+		"accuracy":100,				
+		"desc":"A powerfull beam of light blasts the enemy, doing high damage"
 	},
 	{
 		"index":9,
@@ -109,36 +102,32 @@
 	{
 		"index":10,
 		"name":"Ember",
-		"type":"fire",
-		"category":1,
+		"type":"fire",		
 		"pp":25,
-		"power":40,
-		"accuracy":100,
-		"opp_effect":"10% chance of burning",
-		"restrictions":"has major status ailments",
-		"desc":"Deals once-off damage and has a chance of burning target."
+		"power":45,
+		"accuracy":100,				
+		"desc":"Starts a small fire under the enemy, doing moderate fire damage."
 	},
 	{
 		"index":11,
 		"name":"Leer",
 		"type":"normal",
-		"category":2,
+		"category":1,
 		"pp":30,
 		"accuracy":100,
-		"opp_effect":"decrease defense by 1 stage",
+		"stage_defense":-1,
 		"desc":"Decreases target's Defense by 1 stage."
 	},
 	{
 		"index":12,
 		"name":"Rage",
 		"type":"normal",
-		"category":2,
+		"category":1,
 		"pp":20,
 		"power":20,
 		"accuracy":100,
-		"player_effect":"rages every turn until fainting and doesn't use pp subsequently, increases attack stat by 1 stage if user is damaged",
-		"restrictions":"sleep,freeze,partial trapping,flinching pauses it",
-		"desc":"Is used every turn and increases active Pokémon's Attack by 1 stage everytime it sustains damage."
+		"stage_attack":1,
+		"desc":"Increases active Pokémon's Attack by 1 stage."
 	},
 	{
 		"index":13,
@@ -153,59 +142,127 @@
 	},
 	{
 		"index":14,
-		"name":"Flamethrower"
+		"name":"Flamethrower",
+		"type":"fire",		
+		"pp":15,
+		"power":95,
+		"accuracy":100,				
+		"desc":"The target is scorched with an intense blast of fire."
 	},
 	{
 		"index":15,
-		"name":"Fire Spin"
+		"name":"Fire Spin",
+		"type":"fire",		
+		"pp":15,
+		"power":70,
+		"accuracy":85,				
+		"desc":"The target becomes trapped within a fierce vortex of fire."
 	},
 	{
 		"index":16,
-		"name":"Tail Whip"
+		"name":"Tail Whip",
+		"type":"normal",		
+		"pp":30,		
+		"accuracy":100,				
+		"stage_defense":-1,
+		"desc":"The user wags its tail cutely, making opposing Pokémon less wary and lowering their Defense stat."
 	},
 	{
 		"index":17,
-		"name":"Bubble"
+		"name":"Bubble",
+		"type":"water",		
+		"pp":30,
+		"power":20,
+		"stage_speed":-1,
+		"accuracy":100,				
+		"desc":"A spray of countless bubbles is jetted at the opposing team, slowing ther targets speed."
 	},
 	{
 		"index":18,
-		"name":"Water Gun"
+		"name":"Water Gun",
+		"type":"water",		
+		"pp":25,
+		"power":40,		
+		"accuracy":100,				
+		"desc":"The target is blasted with a forcefull shot of water."
 	},
 	{
 		"index":19,
-		"name":"Bite"
+		"name":"Bite",
+		"type":"normal",		
+		"pp":25,
+		"power":60,		
+		"accuracy":100,				
+		"desc":"The target is bitten with viciously sharp fangs!"
 	},
 	{
 		"index":20,
-		"name":"Withdraw"
+		"name":"Withdraw",
+		"type":"water",		
+		"pp":40,		
+		"stage_defense":1,
+		"accuracy":100,				
+		"desc":"The user withdraws its body into its hard shell, raising its defense stat."
 	},
 	{
 		"index":21,
-		"name":"Skull Bash"
+		"name":"Skull Bash",
+		"type":"normal",		
+		"pp":15,
+		"power":80,		
+		"stage_defense":1,
+		"accuracy":100,				
+		"desc":"The user tucks in its head to raise its Defense, then rams the target."
 	},
 	{
 		"index":22,
-		"name":"Hydro Pump"
+		"name":"Hydro Pump",
+		"type":"water",		
+		"pp":5,
+		"power":120,		
+		"accuracy":80,				
+		"desc":"The target is blasted by a huge volume of water launched under great pressure."
 	},
 	{
 		"index":23,
-		"name":"String Shot"
+		"name":"String Shot",
+		"type":"bug",		
+		"pp":40,		
+		"stage_speed":-1,
+		"accuracy":95,				
+		"desc":"The target is bound with silk blown from the user's mouth. This silk reduces the targets' Speed stat."
 	},
 	{
 		"index":24,
-		"name":"Harden"
+		"name":"Harden",
+		"type":"normal",		
+		"pp":30,		
+		"stage_defense":1,
+		"accuracy":100,				
+		"desc":"The user stiffens all the muscles in its body to raise its Defense stat."
 	},
 	{
 		"index":25,
-		"name":"Confusion"
+		"name":"Confusion",
+		"type":"psychic",		
+		"pp":25,
+		"power":50,
+		"accuracy":100,				
+		"desc":"The target is hit by a weak telekinetic force"
 	},
 	{
 		"index":26,
 		"name":"Stun Spore"
+		
 	},
 	{
 		"index":27,
-		"name":"Supersonic"
+		"name":"Supersonic",
+		"type":"normal",		
+		"pp":20,		
+		"stage_special":-2,
+		"accuracy":55,				
+		"desc":"The user generates odd sound waves from its body, lowering the targets special resistance."
 	},
 	{
 		"index":28,
@@ -213,47 +270,104 @@
 	},
 	{
 		"index":29,
-		"name":"Psybeam"
+		"name":"Psybeam",
+		"type":"psychic",		
+		"pp":20,
+		"power":65,		
+		"accuracy":100,				
+		"desc":"The target is attacked with a peculiar ray."
 	},
 	{
 		"index":30,
-		"name":"Poison Sting"
+		"name":"Poison Sting",
+		"type":"poison",		
+		"pp":35,
+		"power":15,
+		"stage_hp":-1,
+		"accuracy":100,				
+		"desc":"The user stabs the target with a poisonous stinger."
 	},
 	{
 		"index":31,
-		"name":"Fury Attack"
+		"name":"Fury Attack",
+		"type":"normal",		
+		"pp":20,
+		"power":45,		
+		"accuracy":85,				
+		"desc":"The target is jabbed repeatedly with a horn or beak."
 	},
 	{
 		"index":32,
-		"name":"Focus Energy"
+		"name":"Focus Energy",
+		"type":"normal",		
+		"pp":30,		
+		"stage_attack":2,
+		"accuracy":100,				
+		"desc":"The user takes a deep breath and focuses so that attacks will be more powerfull."
 	},
 	{
 		"index":33,
-		"name":"Twineedle"
+		"name":"Twineedle",
+		"type":"bug",
+		"pp":20,
+		"power":40,		
+		"accuracy":100,				
+		"desc":"The user damages the target twice in succession by jabbing it with two spikes."
 	},
 	{
 		"index":34,
-		"name":"Pin Missile"
+		"name":"Pin Missile",
+		"type":"bug",		
+		"pp":20,
+		"power":42,		
+		"accuracy":85,				
+		"desc":"Sharp spikes are shot at the target in rapid succession."
 	},
 	{
 		"index":35,
-		"name":"Agility"
+		"name":"Agility",
+		"type":"psychic",		
+		"pp":30,		
+		"stage_speed":2,
+		"accuracy":100,				
+		"desc":"The user relaxes and lightens its body to move faster. It sharply boosts the Speed stat."
 	},
 	{
 		"index":36,
-		"name":"Gust"
+		"name":"Gust",
+		"type":"flying",		
+		"pp":35,
+		"power":40,		
+		"accuracy":100,				
+		"desc":"A gust of wind is whipped up by wings and launched at the target to inflict damage."
 	},
 	{
 		"index":37,
-		"name":"Sand Attack"
+		"name":"Sand Attack",
+		"type":"ground",		
+		"pp":15,		
+		"stage_attack":-1,
+		"accuracy":100,				
+		"desc":"Sand is hurled in the target's face, reducing its attack power."
 	},
 	{
 		"index":38,
-		"name":"Quick Attack"
+		"name":"Quick Attack",
+		"type":"normal",		
+		"pp":30,
+		"power":40,
+		"stage_speed":1,
+		"accuracy":100,				
+		"desc":"The user lunges at the target at a speed that makes it almost invisible. It increases in speed with this move."
 	},
 	{
 		"index":39,
-		"name":"Wing Attack"
+		"name":"Wing Attack",
+		"type":"flying",		
+		"pp":35,
+		"power":60,		
+		"accuracy":100,				
+		"desc":"The target is struck with alrge, imposing wings spread wide to inflict damage."
 	},
 	{
 		"index":40,
@@ -261,27 +375,53 @@
 	},
 	{
 		"index":41,
-		"name":"Screech"
+		"name":"Screech",
+		"type":"normal",		
+		"pp":40,		
+		"stage_defense":-2,
+		"accuracy":85,				
+		"desc":"An earsplitting screech harshly reduces the target's Defense stat."
 	},
 	{
 		"index":42,
-		"name":"Bind"
+		"name":"Bind",
+		"type":"normal",		
+		"pp":20,
+		"power":45,		
+		"accuracy":85,				
+		"desc":"Things such as long bodies or tentacles are used to bind and squeeze the foe."
 	},
 	{
 		"index":43,
-		"name":"Rock Throw"
+		"name":"Rock Throw",
+		"type":"rock",		
+		"pp":15,
+		"power":50,
+		"accuracy":90,				
+		"desc":"The user picks up and throws a small rock at the target to attack."
 	},
 	{
 		"index":44,
-		"name":"Slam"
+		"name":"Slam",
+		"type":"normal",		
+		"pp":20,
+		"power":80,		
+		"accuracy":75,				
+		"desc":"The target is slammed with a long tail, vines, etc., to inflict damage."
 	},
 	{
 		"index":45,
 		"name":"Sandstorm"
+		
 	},
 	{
 		"index":46,
-		"name":"Crunch"
+		"name":"Crunch",
+		"type":"normal",		
+		"pp":15,
+		"power":80,		
+		"accuracy":100,				
+		"desc":"The user crunches up the target with sharp fangs."
 	},
 	{
 		"index":47,
@@ -289,7 +429,12 @@
 	},
 	{
 		"index":48,
-		"name":"Disable"
+		"name":"Disable",
+		"type":"normal",		
+		"pp":20,		
+		"stage_attack":-2,
+		"accuracy":90,				
+		"desc":"The target is partially disabled, reducing its ability to attack."
 	},
 	{
 		"index":49,
@@ -297,58 +442,133 @@
 	},
 	{
 		"index":50,
-		"name":"Psychic"
+		"name":"Psychic",
+		"type":"psychic",		
+		"pp":10,
+		"power":90,		
+		"stage_special":-1,
+		"accuracy":100,				
+		"desc":"The target is hit by a strong telekinetic force."
 	},
 	{
 		"index":51,
-		"name":"Reflect"
+		"name":"Reflect",
+		"type":"psychic",		
+		"pp":20,		
+		"stage_defense":2,
+		"accuracy":100,				
+		"desc":"A wondrous wall of light is put up to suppress damage from attacks."
 	},
 	{
 		"index":52,
-		"name":"Wrap"
+		"name":"Wrap",
+		"type":"normal",		
+		"pp":20,
+		"power":45,		
+		"accuracy":90,				
+		"desc":"A long body or vines are used to wrap and squeeze the target."
 	},
 	{
 		"index":53,
-		"name":"Glare"
+		"name":"Glare",
+		"type":"normal",		
+		"pp":30,		
+		"stage_defense":-1,
+		"accuracy":90,				
+		"desc":"The user intimidates the target with the pattern on its belly, lowering its defense."
 	},
 	{
 		"index":54,
-		"name":"Acid"
+		"name":"Acid",
+		"type":"poison",		
+		"pp":30,
+		"power":40,		
+		"accuracy":100,				
+		"desc":"The opposing team is attacked with a spray of harsh acid."
 	},
 	{
 		"index":55,
-		"name":"Thunder Shock"
+		"name":"Thunder Shock",
+		"type":"electric",		
+		"pp":30,
+		"power":50,		
+		"accuracy":100,			
+		"critical":true,		
+		"desc":"A jolt of electricity is hurled at the target to inflict damage."
 	},
 	{
 		"index":56,
-		"name":"Charm"
+		"name":"Charm",
+		"type":"normal",		
+		"pp":20,		
+		"stage_attack":-2,
+		"accuracy":100,				
+		"desc":"The user gazes at the target rather charmingly, making it less wary. The target's Attack is harsly lowered."
 	},
 	{
 		"index":57,
-		"name":"Thunder Wave"
+		"name":"Thunder Wave",
+		"type":"electric",		
+		"pp":20,
+		"power":30,		
+		"stage_special":-1,
+		"accuracy":100,		
+		"critical":true,
+		"desc":"A weak electric charge is launched at the target, lowering its special defense."
 	},
 	{
 		"index":58,
-		"name":"Sweet Kiss"
+		"name":"Sweet Kiss",
+		"type":"normal",		
+		"pp":10,		
+		"stage_defense":-2,
+		"accuracy":75,
+		"desc":"The user kisses the target with a sweet angelic cuteness that causes a sharp loss in defense."
 	},
 	{
 		"index":59,
-		"name":"Swift"
+		"name":"Swift",
+		"type":"normal",		
+		"pp":20,
+		"power":60,		
+		"accuracy":100,				
+		"desc":"Star-shaped rays are shot at the opposing team. This attack rarely misses."
 	},
 	{
 		"index":60,
-		"name":"Thunder"
+		"name":"Thunder",
+		"type":"electric",		
+		"pp":10,
+		"power":120,		
+		"accuracy":70,				
+		"critical":true,
+		"desc":"A wicked thunderbolt is dropped on the target to inflict damage."
 	},
 	{
 		"index":61,
-		"name":"Fury Swipes"
+		"name":"Fury Swipes",
+		"type":"normal",		
+		"pp":15,
+		"power":54,		
+		"accuracy":80,				
+		"desc":"The target is raked with sharp claws or scythes in quick succession."
 	},
 	{
 		"index":62,
-		"name":"Double Kick"
+		"name":"Double Kick",
+		"type":"normal",		
+		"pp":30,
+		"power":60,		
+		"accuracy":100,				
+		"desc":"The target is quickly kicked twice in succession using both feet."
 	},
 	{
 		"index":63,
-		"name":"Body Slam"
+		"name":"Body Slam",
+		"type":"normal",		
+		"pp":15,
+		"power":85,		
+		"accuracy":100,				
+		"desc":"The user drops on to the target with its full body weight."
 	}
 ]

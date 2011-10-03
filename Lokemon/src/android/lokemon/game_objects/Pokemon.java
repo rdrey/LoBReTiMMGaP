@@ -156,6 +156,15 @@ public class Pokemon {
 	
 	public Regions getHabitat() {return base.habitat;}
 	
+	public void decreasePP (int moveIndex)
+	{
+		int i;
+		for (i = 0; i < base.moves.length; i+=2)
+			if (base.moves[i] == moveIndex)
+				break;
+		pp[i/2]--;
+	}
+	
 	public int[] getStats() {return new int[]{attack, defense, speed, special, hp_total};}
 	
 	public int[] getIVs() {return IV;}

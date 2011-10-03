@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.*;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 import android.location.Location;
 import android.lokemon.G.Action;
 import android.lokemon.G.BattleMove;
+import android.lokemon.G.BattleType;
 import android.lokemon.G.Gender;
 import android.lokemon.G.Mode;
 import android.lokemon.G.PlayerState;
@@ -37,6 +39,7 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Coordinate;
 
 import com.Lobretimgap.NetworkClient.*;
+import com.Lobretimgap.NetworkClient.Events.DirectCommunicationEvent;
 import com.Lobretimgap.NetworkClient.Events.NetworkEvent;
 import networkTransferObjects.*;
 import networkTransferObjects.Lokemon.*;
@@ -90,6 +93,22 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		
 		this.display = display;
 		
+		// check if the player has battle-ready Pokemon
+		boolean hasPoke = false;
+		for (Pokemon p:G.player.pokemon)
+		{
+			if (p.getHP() > 0)
+			{
+				hasPoke = true;
+				break;
+			}
+		}
+		if (!hasPoke)
+		{
+			G.player.playerState = PlayerState.BUSY;
+			display.showNoPokemonAlert(true);
+		}
+		
 		// create player list
 		players = new LinkedList<NetworkPlayer>();
 		
@@ -113,7 +132,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				{
 					if (networkBinder.isConnectedToServer())
 					{
-						if (G.player.playerState == PlayerState.AVAILABLE)
+						if (G.mode == Mode.MAP)
 						{
 							if (numUpdates >= 5 /*&& !waitingForItems*/)
 							{
@@ -133,7 +152,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 							// generate a Pokemon with probability based on catch rate if the player is in a special region
 							if (!waitingForAccept)
 							{
-								if (currentRegion.ordinal() < 7 && !foundPokeInRegion)
+								if (currentRegion != null && currentRegion.ordinal() < 7 && !foundPokeInRegion)
 								{
 									double prob = G.random.nextDouble();
 									double total = 0;
@@ -225,8 +244,11 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	// addition method for regions
 	private void addRegion(Region region)
 	{
-		regions.add(region);
-		display.addRegion(region);
+		if (region.getRegion() != Regions.POKEMART)
+		{
+			regions.add(region);
+			display.addRegion(region);
+		}
 	}
 	
 	// removal method for regions
@@ -239,8 +261,11 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	// insert regions to keep the list sorted according to id
 	private void insertRegion(Region region, int index)
 	{
-		regions.add(index, region);
-		display.addRegion(region);
+		if (region.getRegion() != Regions.POKEMART)
+		{
+			regions.add(index, region);
+			display.addRegion(region);
+		}
 	}
 	
 	public void requestItem(int itemID)
@@ -293,7 +318,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			{
 				if (selectedPlayer.getPlayerState() == PlayerState.BUSY)
 				{
-					display.showToast("Player is engaged in battle");
+					display.showToast("Player is currently busy");
 					rejectBattle(false);
 				}
 				else
@@ -367,6 +392,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		selectedPlayer = null;
 		if (G.battle.pokeCount > 0)
 		{
+			Log.i("Players", "Player set to available");
 			networkBinder.sendGameUpdate(new NetworkMessage("ExitedBattle"));
 			G.player.playerState = PlayerState.AVAILABLE;
 			display.updateCoins();
@@ -474,19 +500,28 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				// the settings for the fill
 				Paint fill = new Paint();
 				fill.setColor(G.region_colours[i]);
-				fill.setAlpha(128);
 				fill.setStyle(Style.FILL);
 				fill.setAntiAlias(true);
-				G.region_fill[i] = fill;
 				
 				// the settings for the outline
 				Paint outline = new Paint();
-				outline.setColor(G.region_colours[i]);
-				outline.setStrokeWidth(2);
+				if (i > 6)
+				{
+					outline.setColor(Color.BLACK);
+					outline.setStrokeWidth(3);
+					fill.setAlpha(192);
+				}
+				else
+				{
+					outline.setColor(G.region_colours[i]);
+					outline.setStrokeWidth(2);
+					fill.setAlpha(128);
+				}
 				outline.setStrokeJoin(Join.ROUND);
 				outline.setStyle(Style.STROKE);
 				outline.setAntiAlias(true);
 				G.region_outline[i] = outline;
+				G.region_fill[i] = fill;
 			}
 		}
 		catch (Exception e) {Log.e("Data load", e.toString());}
@@ -608,6 +643,9 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			{
 				// get player id
 				G.player.id = networkBinder.getPlayerId();
+				// send busy status update (if necessary)
+				if (G.player.playerState == PlayerState.BUSY)
+					networkBinder.sendGameUpdate(new NetworkMessage("EnteredBattle"));
 				// gets regions in a 2000km radius
 				if (regions.size() == 0)
 				{
@@ -954,7 +992,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 						{
 							battleInitMessage = (NetworkMessageMedium)nMsg;
 							opponentID = selectedPlayer.getID();
-							randomSeed = battleInitMessage.integers.get(10);
+							randomSeed = battleInitMessage.integers.get(11);
 							initiateBattle();
 						}
 						break;
@@ -974,7 +1012,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 						if (waitingForAccept)
 						{
 							display.cancelProgressDialog();
-							display.showBattleIncomingDialog(selectedPlayer.nickname + " is currently busy");
+							display.showToast(selectedPlayer.nickname + " is currently busy");
 							rejectBattle(false);
 						}
 						break;
@@ -1002,7 +1040,24 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				}
 				catch (IllegalArgumentException e)
 				{
-					
+					// either NOTIFICATION:PlayerDisconnected or ERROR: Direct communication target <targetPlayerId> is no longer connected!
+					DirectCommunicationEvent dce = (DirectCommunicationEvent)((NetworkEvent)msg.obj);
+					if ((waitingForAccept || networkReqLock) && dce.getSourcePlayerID() == selectedPlayer.getID())
+					{
+						display.cancelBattleAlert();
+						selectedPlayer = null;
+						waitingForAccept = false;
+						networkReqLock = false;
+						Log.i("Players", "Player disconnected during battle initiation");
+					}
+					else if (G.mode == Mode.BATTLE && G.battle.battleType == BattleType.TRAINER && dce.getSourcePlayerID() == opponentID)
+					{
+						if (G.battle != null)
+						{
+							G.battle.handleOpponentDisconnected();
+							Log.i("Players", "Player disconnected during battle");
+						}
+					}
 				}
 				break;
 			}
