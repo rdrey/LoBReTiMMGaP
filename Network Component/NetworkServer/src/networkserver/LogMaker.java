@@ -13,16 +13,16 @@ import java.util.Date;
  */
 public class LogMaker {
     
-    public static void println(String message)
+    public static void println(String message, int playerId)
     {
         Date current = new Date(System.currentTimeMillis());        
         SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM HH:mm:ss");
-        System.out.println(formatter.format(current)+": "+message);
+        System.out.println(formatter.format(current)+": ID "+playerId+": "+message);
     }
     
-    public static void errorPrintln(String message)
+    public static void errorPrintln(String message, int playerId)
     {
-        println("ERROR: "+message);
+        println("ERROR: "+message, playerId);
     }
     
 }

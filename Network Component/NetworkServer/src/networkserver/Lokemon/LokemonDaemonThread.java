@@ -49,7 +49,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
     
     @Override
     protected void registerPlayer(PlayerRegistrationMessage initialMessage) {
-        LogMaker.println("Player Registerd: ID:"+initialMessage.playerID+", name: "+initialMessage.playerName);
+        LogMaker.println("Player Registerd: ID:"+initialMessage.playerID+", name: "+initialMessage.playerName, playerID);
         player = new LokemonPlayer(initialMessage.playerID, initialMessage.playerName);
         LokemonServerVariables.playerList.add(player);
         player.setAvatar(initialMessage.integers.get(0));
@@ -160,7 +160,7 @@ public class LokemonDaemonThread extends ServerDaemonThread{
     TerminationRequestReceivedListener trrListen = new TerminationRequestReceivedListener() {
 
         public void EventOccured(NetworkEvent e) {
-            LogMaker.println("Termination requested: "+ ((NetworkMessage)e.getMessage()).getMessage());
+            LogMaker.println("Termination requested: "+ ((NetworkMessage)e.getMessage()).getMessage(), playerID);
             ServerVariables.playerThreadMap.get(player.getPlayerID()).shutdownThread();
             LokemonServerVariables.playerList.remove(player);            
         }

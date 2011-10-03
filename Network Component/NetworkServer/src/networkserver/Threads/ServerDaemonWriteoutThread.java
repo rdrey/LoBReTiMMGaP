@@ -31,6 +31,7 @@ public class ServerDaemonWriteoutThread extends Thread
     private boolean stopOperation = false;
     private LinkedBuffer buffer = LinkedBuffer.allocate(512);
     private ByteBuffer b = ByteBuffer.allocate(4);
+    private ServerDaemonThread mainThread;
 
     private static Schema<PlayerRegistrationMessage> playerRegSchema = RuntimeSchema.getSchema(PlayerRegistrationMessage.class);
     private static Schema<NetworkMessageMedium> mediumMsgSchema = RuntimeSchema.getSchema(NetworkMessageMedium.class);
@@ -39,12 +40,13 @@ public class ServerDaemonWriteoutThread extends Thread
 
     
 
-    public ServerDaemonWriteoutThread(Socket writeOutSocket) throws IOException
+    public ServerDaemonWriteoutThread(Socket writeOutSocket, ServerDaemonThread sdt) throws IOException
     {
         socket = writeOutSocket;
         os = socket.getOutputStream();        
         messageQueue = new ArrayBlockingQueue<NetworkMessage>(ServerCustomisation.threadWriteOutBufferSize);
         b.order(ByteOrder.BIG_ENDIAN);
+        mainThread = sdt;
         
     }
 
@@ -54,7 +56,7 @@ public class ServerDaemonWriteoutThread extends Thread
     {
         if(messageQueue.size() > 0.8 * ServerCustomisation.threadWriteOutBufferSize)
         {
-            LogMaker.println("WARNING: Output buffer is at "+messageQueue.size()+"/"+ServerCustomisation.threadWriteOutBufferSize);
+            LogMaker.println("WARNING: Output buffer is at "+messageQueue.size()+"/"+ServerCustomisation.threadWriteOutBufferSize, mainThread.playerID);
         }
         return messageQueue.offer(message);
     }
@@ -118,7 +120,7 @@ public class ServerDaemonWriteoutThread extends Thread
                 //If message is too big, split it into multiple pieces
                 if(message.length > 8000)
                 {
-                    LogMaker.println("Need to send "+message.length+" bytes");
+                    LogMaker.println("Need to send "+message.length+" bytes", mainThread.playerID);
                     int numMsgs = message.length /4096;
                     int remainder = message.length % 4096;
                     byte [][] msgs = new byte [numMsgs][4096];
@@ -135,7 +137,7 @@ public class ServerDaemonWriteoutThread extends Thread
                     {
                         lastMsg = Arrays.copyOfRange(message, numMsgs*4096, message.length);
                         os.write(lastMsg);
-                        LogMaker.println("Sent "+(lastMsg.length + numMsgs*4096)+"/"+message.length+" bytes");
+                        LogMaker.println("Sent "+(lastMsg.length + numMsgs*4096)+"/"+message.length+" bytes", mainThread.playerID);
                     }
 
 
@@ -148,7 +150,7 @@ public class ServerDaemonWriteoutThread extends Thread
             }
             catch(IOException e)
             {
-                LogMaker.errorPrintln("IOEXCEPTION: Failed to send object to client! \n"+e);
+                LogMaker.errorPrintln("IOEXCEPTION: Failed to send object to client! \n"+e, mainThread.playerID);
             }
             catch(InterruptedException e)
             {
@@ -158,7 +160,7 @@ public class ServerDaemonWriteoutThread extends Thread
             }
             catch(Exception e)
             {
-                LogMaker.errorPrintln("Unexpected error occured in network write thread!\n " );
+                LogMaker.errorPrintln("Unexpected error occured in network write thread!\n ", mainThread.playerID);
                 e.printStackTrace(System.err);
             }
             finally

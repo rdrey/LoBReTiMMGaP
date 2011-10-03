@@ -108,7 +108,7 @@ public class LokemonServerLogic extends Thread{
         msg.objectDict.put("SpatialObjects", gameObjects);
 
         long total = System.currentTimeMillis() - start;
-        LogMaker.println("Server served request for "+ gameObjects.size() + " spatial objects in "+total+"ms");
+        LogMaker.println("Server served request for "+ gameObjects.size() + " spatial objects in "+total+"ms", playerId);
         ServerVariables.playerThreadMap.get(playerId).sendGameStateUpdate(msg);
         
     }
@@ -367,7 +367,7 @@ public class LokemonServerLogic extends Thread{
             }
             catch(Exception e)
             {
-                LogMaker.errorPrintln("Unexpected error occuring in server logic! (Ignoring and continuing), Error:\n"+e);
+                LogMaker.errorPrintln("Unexpected error occuring in server logic! (Ignoring and continuing), Error:\n"+e, -1);
                 e.printStackTrace();
             }
         }
