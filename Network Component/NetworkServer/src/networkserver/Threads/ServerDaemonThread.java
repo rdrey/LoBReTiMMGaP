@@ -284,6 +284,10 @@ public abstract class ServerDaemonThread extends Thread{
             {
                 LogMaker.errorPrintln("Buffer has overflowed!", playerID);
             }
+            catch(java.lang.OutOfMemoryError e)
+            {
+                LogMaker.errorPrintln("Decompression of message failed! Perhaps an older client tried to connect?", playerID);
+            }
             catch(RuntimeException e)
             {
                 LogMaker.errorPrintln("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?\n"+e, playerID);
