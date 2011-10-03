@@ -134,23 +134,22 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					{
 						if (G.mode == Mode.MAP)
 						{
-							// 
-							if (!waitingForItems)
-							{
+							//if (!waitingForItems)
+							//{
 								networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
 								waitingForItems = true;
-							}
+							//}
 							
-							if (!waitingForPlayers)
-							{
+							//if (!waitingForPlayers)
+							//{
 								networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
 								waitingForPlayers = true;
-							}
+							//}
 							
 							// generate a Pokemon with probability based on catch rate if the player is in a special region
 							if (G.player.playerState == PlayerState.AVAILABLE && !waitingForAccept)
 							{
-								if (currentRegion != null && currentRegion.ordinal() < 7 && !foundPokeInRegion)
+								if (elapsedTime >= 1000 && currentRegion != null && currentRegion.ordinal() < 7 && !foundPokeInRegion)
 								{
 									double prob = G.random.nextDouble();
 									double total = 0;
@@ -169,8 +168,10 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 											break;
 										}
 									}
+									elapsedTime -= 1000;
 								}
-							}
+								elapsedTime += networkBinder.getGameClock().getLatency();
+							} 
 						}
 					}
 					else if (!busyConnecting)
@@ -185,7 +186,8 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					Log.i(NetworkVariables.TAG, "Trying to rebind network service");
 					createConnection();
 				}
-				networkUpdater.postDelayed(updater, 200);
+				Log.i(NetworkVariables.TAG, "Requested update after " + networkBinder.getGameClock().getLatency() + "ms");
+				networkUpdater.postDelayed(updater, networkBinder.getGameClock().getLatency());
 			}
 		};
 		display.showProgressDialog("Starting up...");
@@ -631,7 +633,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	
 	public boolean handleMessage(Message msg) 
 	{
-		Log.i(NetworkVariables.TAG, NetworkComBinder.EventType.values()[msg.what].toString());
 		switch (NetworkComBinder.EventType.values()[msg.what])
 		{
 			case CONNECTION_ESTABLISHED:
@@ -647,16 +648,22 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				// send busy status update (if necessary)
 				if (G.player.playerState == PlayerState.BUSY)
 					networkBinder.sendGameUpdate(new NetworkMessage("EnteredBattle"));
-				// gets regions in a 2000km radius
-				if (regions.size() == 0)
-				{
-					NetworkMessageMedium msg1 = new NetworkMessageMedium("MapDataRequest");
-					msg1.doubles.add(G.player.getLocation().getLatitude());
-					msg1.doubles.add(G.player.getLocation().getLongitude());
-					msg1.doubles.add(2000.0);
-					networkBinder.sendRequest(msg1);
-					Log.i("Regions", "Requesting regions");
-				}
+				// only get map data after 5 seconds to give lawrence's latency estimation time to converge
+				networkUpdater.postDelayed(new Runnable(){
+					public void run()
+					{
+						// gets regions in a 2000km radius
+						if (regions.size() == 0)
+						{
+							NetworkMessageMedium msg1 = new NetworkMessageMedium("MapDataRequest");
+							msg1.doubles.add(G.player.getLocation().getLatitude());
+							msg1.doubles.add(G.player.getLocation().getLongitude());
+							msg1.doubles.add(2000.0);
+							networkBinder.sendRequest(msg1);
+							Log.i("Regions", "Requesting regions");
+						}
+					}
+				}, 5000);
 				break;
 			}
 			case CONNECTION_LOST:
@@ -679,7 +686,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			{
 				NetworkMessageLarge nMsg = (NetworkMessageLarge)((NetworkEvent)msg.obj).getMessage();
 				String tag = nMsg.getMessage();
-				Log.i(NetworkVariables.TAG, tag);
 				if (tag.equals("Response:GetGameObjects"))
 				{
 					waitingForItems = false;
