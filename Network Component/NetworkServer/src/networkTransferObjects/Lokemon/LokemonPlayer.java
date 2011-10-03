@@ -67,4 +67,24 @@ public class LokemonPlayer {
        public Location getPosition() {
         return position;
     }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        if(other instanceof LokemonPlayer)
+        {
+            if(((LokemonPlayer)other).getPlayerID() == playerID)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 71 * hash + this.playerID;
+        return hash;
+    }
 }
