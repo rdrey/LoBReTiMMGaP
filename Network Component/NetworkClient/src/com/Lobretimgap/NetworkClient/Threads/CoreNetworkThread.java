@@ -162,7 +162,7 @@ public abstract class CoreNetworkThread extends Thread
 					requestNetworkLatency();
 				}
 			}
-		}, 1000, 1000);
+		}, 0, 1000);
 		
 		//and start listening for network events
 		manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
