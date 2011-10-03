@@ -134,7 +134,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					{
 						if (G.mode == Mode.MAP)
 						{
-							if (numUpdates >= 5 /*&& !waitingForItems*/)
+							if (numUpdates >= 5 && !waitingForItems)
 							{
 								networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
 								numUpdates = 0;
@@ -142,15 +142,15 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								Log.i("Items",  "Requesting game objects");
 							}
 							
-							//if (!waitingForPlayers)
-							//{
+							if (!waitingForPlayers)
+							{
 								networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
 								waitingForPlayers = true;
-							//}
+							}
 							numUpdates++;
 							
 							// generate a Pokemon with probability based on catch rate if the player is in a special region
-							if (!waitingForAccept)
+							if (!waitingForAccept && G.player.playerState == PlayerState.AVAILABLE)
 							{
 								if (currentRegion != null && currentRegion.ordinal() < 7 && !foundPokeInRegion)
 								{
