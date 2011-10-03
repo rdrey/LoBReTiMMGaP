@@ -108,7 +108,7 @@ public class LokemonServerLogic extends Thread{
         msg.objectDict.put("SpatialObjects", gameObjects);
 
         long total = System.currentTimeMillis() - start;
-        LogMaker.println("Server served request for "+ gameObjects.size() + " spatial objects in "+total+"ms");
+        LogMaker.println("Server served request for "+ gameObjects.size() + " spatial objects in "+total+"ms", playerId);
         ServerVariables.playerThreadMap.get(playerId).sendGameStateUpdate(msg);
         
     }
@@ -333,26 +333,43 @@ public class LokemonServerLogic extends Thread{
                                 if(pl.getPosition() != null)
                                 {
                                     Location center = pl.getPosition();
-                                    //Creates a random distance between itemSpawnRangeMin and itemSpawnRangeMax
-                                    double randomDist = (Math.random()
-                                            * (LokemonServerVariables.itemSpawnRangeMax - LokemonServerVariables.itemSpawnRangeMin))
-                                            + LokemonServerVariables.itemSpawnRangeMin;
-                                    //Create a random angle away from the play at which distance the point of the item will be.
-                                    double randomAngle = Math.random() * 360;
 
-                                    //Now determine a point randomDist away from center, at angle randomAngle.
-                                    //Formula (x?,y?)=(x+dcosα,y+dsinα)
-                                    //Obviously we convert from meters to units of latitude at the same time
-                                    double x = center.getX() + (randomDist*Math.cos(randomAngle) / LokemonDaemonThread.DEGREE_METER_HACK);
-                                    double y = center.getY() + (randomDist*Math.sin(randomAngle) / LokemonDaemonThread.DEGREE_METER_HACK);
+                                    //First check if there are any objects nearby. If there aren't, we can create a new one.
+                                    boolean itemNearby = false;
+                                    for(LokemonPotion pot : LokemonServerVariables.itemMap.values())
+                                    {
+                                        if(App.distFrom(pot.getPosition().getX(), pot.getPosition().getY(),
+                                                pl.getPosition().getX(), pl.getPosition().getY())
+                                                < LokemonServerVariables.noSpawnRange)
+                                        {
+                                            itemNearby = true;
+                                            break;
+                                        }
+                                    }
 
-                                    int type = (int)(Math.random()*LokemonPotion.PotionType.values().length);
-                                    LokemonPotion pot = new LokemonPotion(
-                                            LokemonPotion.PotionType.values()[type],
-                                            itemIDCounter);
-                                    pot.setPosition(new Location(x, y));
-                                    itemIDCounter++;
-                                    LokemonServerVariables.itemMap.put(pot.getId(), pot);                                    
+                                    if(!itemNearby)
+                                    {
+                                        //Creates a random distance between itemSpawnRangeMin and itemSpawnRangeMax
+                                        double randomDist = (Math.random()
+                                                * (LokemonServerVariables.itemSpawnRangeMax - LokemonServerVariables.itemSpawnRangeMin))
+                                                + LokemonServerVariables.itemSpawnRangeMin;
+                                        //Create a random angle away from the play at which distance the point of the item will be.
+                                        double randomAngle = Math.random() * 360;
+
+                                        //Now determine a point randomDist away from center, at angle randomAngle.
+                                        //Formula (x?,y?)=(x+dcosα,y+dsinα)
+                                        //Obviously we convert from meters to units of latitude at the same time
+                                        double x = center.getX() + (randomDist*Math.cos(randomAngle) / LokemonDaemonThread.DEGREE_METER_HACK);
+                                        double y = center.getY() + (randomDist*Math.sin(randomAngle) / LokemonDaemonThread.DEGREE_METER_HACK);
+
+                                        int type = (int)(Math.random()*LokemonPotion.PotionType.values().length);
+                                        LokemonPotion pot = new LokemonPotion(
+                                                LokemonPotion.PotionType.values()[type],
+                                                itemIDCounter);
+                                        pot.setPosition(new Location(x, y));
+                                        itemIDCounter++;
+                                        LokemonServerVariables.itemMap.put(pot.getId(), pot);
+                                    }
                                 }
                             }
                         }
@@ -367,7 +384,7 @@ public class LokemonServerLogic extends Thread{
             }
             catch(Exception e)
             {
-                LogMaker.errorPrintln("Unexpected error occuring in server logic! (Ignoring and continuing), Error:\n"+e);
+                LogMaker.errorPrintln("Unexpected error occuring in server logic! (Ignoring and continuing), Error:\n"+e, -1);
                 e.printStackTrace();
             }
         }

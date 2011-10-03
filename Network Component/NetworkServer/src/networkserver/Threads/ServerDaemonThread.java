@@ -12,7 +12,6 @@ import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Vector;
 import javax.swing.event.EventListenerList;
 import networkTransferObjects.NetworkMessage;
 import networkTransferObjects.NetworkMessageLarge;
@@ -22,7 +21,6 @@ import networkserver.EventListeners.*;
 import networkserver.Events.NetworkEvent;
 import networkserver.LogMaker;
 import networkserver.Lokemon.LokemonDaemonThread;
-import networkserver.Lokemon.LokemonServerVariables;
 import networkserver.Peer2Peer.ClientPeer;
 import networkserver.ServerVariables;
 
@@ -69,7 +67,7 @@ public abstract class ServerDaemonThread extends Thread{
     public void setSocket(Socket acceptedSocket) throws IOException
     {
         socket = acceptedSocket;
-        out = new ServerDaemonWriteoutThread(acceptedSocket);
+        out = new ServerDaemonWriteoutThread(acceptedSocket, this);
         in = new BufferedInputStream(socket.getInputStream());
         out.start();
     }
@@ -259,7 +257,7 @@ public abstract class ServerDaemonThread extends Thread{
                 {//Failed to read in length field properly
                     if(headerBytesRead == -1)
                     {//Stream closed
-                        LogMaker.errorPrintln("End of stream!");                        
+                        LogMaker.errorPrintln("End of stream!", playerID);                        
                         shutdownThread();
                     }
                 } 
@@ -271,17 +269,21 @@ public abstract class ServerDaemonThread extends Thread{
             }            
             catch(IOException e)
             {
-                LogMaker.errorPrintln("Error occured while reading from thread : "+e);
+                LogMaker.errorPrintln("Error occured while reading from thread : "+e, playerID);
                 this.shutdownThread();                                
             }
             catch(NullPointerException e)
             {
-                LogMaker.errorPrintln("Null Pointer Exception: +"+ e.getMessage());
+                LogMaker.errorPrintln("Null Pointer Exception: +"+ e.getMessage(), playerID);
                 this.shutdownThread();
+            }
+            catch(BufferOverflowException e)
+            {
+                LogMaker.errorPrintln("Buffer has overflowed!", playerID);
             }
             catch(RuntimeException e)
             {
-                LogMaker.errorPrintln("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?\n"+e);
+                LogMaker.errorPrintln("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?\n"+e, playerID);
             }
             finally
             {
@@ -296,7 +298,7 @@ public abstract class ServerDaemonThread extends Thread{
     {
         if(message.getTimeStamp() == 0)
         {
-            LogMaker.errorPrintln("Error: Timestamp on message was 0!");
+            LogMaker.errorPrintln("Error: Timestamp on message was 0!", playerID);
         }
         if(message instanceof PlayerRegistrationMessage)
         {            
@@ -328,7 +330,7 @@ public abstract class ServerDaemonThread extends Thread{
             NetworkMessage msg = (NetworkMessage)message;
             try
             {
-                LogMaker.println("Client "+playerID+":Received "+msg.getMessageType().toString());
+                LogMaker.println("Client "+playerID+":Received "+msg.getMessageType().toString(), playerID);
             }
             catch(NullPointerException e)
             {
@@ -380,23 +382,23 @@ public abstract class ServerDaemonThread extends Thread{
                 case DIRECT_COMMUNICATION_MESSAGE:
                     //We need to forward this to its destination (another client).
                     //We know its either a medium or large message.
-                    int targetPlayerId = 0;
+                    int targetPlayerId = -1;
                     if(msg instanceof NetworkMessageLarge)
                     {
                         targetPlayerId = ((NetworkMessageLarge)msg).integers.get(((NetworkMessageLarge)msg).integers.size()-2);
                          LogMaker.println("Sending Direct Communication from: "+ ((NetworkMessageLarge)msg).integers.get(((NetworkMessageLarge)msg).integers.size()-1)
-                                + " to: "+targetPlayerId); 
+                                + " to: "+targetPlayerId, playerID); 
                         
                     }else if (msg instanceof NetworkMessageMedium)
                     {
                         targetPlayerId = ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-2);
                         LogMaker.println("Sending Direct Communication from: "+ ((NetworkMessageMedium)msg).integers.get(((NetworkMessageMedium)msg).integers.size()-1)
-                                + " to: "+targetPlayerId);                        
+                                + " to: "+targetPlayerId, playerID);                        
                     }
                     else //Should never be anything other than NetworkMessage medium or large.
                     {//If you want to add your own types of direct communication, add special cases here
                         LogMaker.errorPrintln("PlayerID: "+playerID+" attempted direct peer " +
-                                "communication with an unrecognised object type");
+                                "communication with an unrecognised object type", playerID);
                         break;
                     }
                     
@@ -441,7 +443,7 @@ public abstract class ServerDaemonThread extends Thread{
         object.setTimeStamp(System.currentTimeMillis());
         try
         {
-            LogMaker.println("Client "+playerID+":Sending "+object.getMessageType().toString());
+            LogMaker.println("Client "+playerID+":Sending "+object.getMessageType().toString(), playerID);
         }
         catch(NullPointerException e)
         {
@@ -467,7 +469,7 @@ public abstract class ServerDaemonThread extends Thread{
         catch(IOException e)
         {
             //We dont really care if the socket failed to close correctly.
-            LogMaker.errorPrintln("Socket failed to close correctly. \n"+e);
+            LogMaker.errorPrintln("Socket failed to close correctly. \n"+e, playerID);
         }
         finally
         {
