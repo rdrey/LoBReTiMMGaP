@@ -41,11 +41,13 @@ public class App {
         System.out.println("Hello World!");
 
         SpatialProvider sp = new SpatialProvider();
-        //TODO interface for custom objects
-        sp.register(PubEntity.class, PubEntity.class);
-        sp.register(LibraryEntity.class, LibraryEntity.class);
-        sp.register(ATMEntity.class, ATMEntity.class);
-        sp.register(FastFoodEntity.class, FastFoodEntity.class);
+
+        //Because these points are indoors, we have decided to create custom
+        //points for our game
+        //sp.register(PubEntity.class, PubEntity.class);
+//        sp.register(LibraryEntity.class, LibraryEntity.class);
+//        sp.register(ATMEntity.class, ATMEntity.class);
+//        sp.register(FastFoodEntity.class, FastFoodEntity.class);
 
         sp.register(TunnelEntity.class, TunnelEntity.class);
         sp.register(StepsEntity.class, StepsEntity.class);
@@ -64,9 +66,16 @@ public class App {
         sp.addCustomAreaAroundPoint(FieldEntity.class, new Coordinate(18.461426, -33.958010));
         sp.addCustomAreaAroundPoint(FastFoodEntity.class, new Coordinate(18.460786, -33.956937));
         sp.addCustomAreaAroundPoint(FastFoodEntity.class, new Coordinate(18.460384, -33.959117));
+        sp.addCustomAreaAroundPoint(FastFoodEntity.class, new Coordinate(18.462149, -33.958294));
 
-        sp.addCustomAreaAroundPoint(ATMEntity.class, new Coordinate(18.46091, -33.956256));
+        sp.addCustomAreaAroundPoint(ReservoirEntity.class, new Coordinate(18.461272, -33.957613), 0.00005f);
+        sp.addCustomAreaAroundPoint(TunnelEntity.class, new Coordinate(18.461076, -33.956231), 0.00015f);
+        sp.addCustomAreaAroundPoint(NatureReserveEntity.class, new Coordinate(18.460051, -33.956948)); //Hoerikwaggo Mountain
+        sp.addCustomAreaAroundPoint(NatureReserveEntity.class, new Coordinate(18.460703, -33.956601)); //PD Hahn Mountain
+
+        sp.addCustomAreaAroundPoint(ATMEntity.class, new Coordinate(18.460768, -33.956267));
         sp.addCustomAreaAroundPoint(ATMEntity.class, new Coordinate(18.462299, -33.957524));
+        sp.addCustomAreaAroundPoint(ATMEntity.class, new Coordinate(18.460497, -33.959746));
 
 
 //        Session s = HibernateUtil.getSessionFactory().getCurrentSession();
