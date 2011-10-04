@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.lokemon.G;
 import android.lokemon.G.BattleType;
+import android.lokemon.G.Potions;
 import android.lokemon.R;
 import android.lokemon.G.Mode;
 import android.lokemon.game_objects.BagItem;
@@ -37,12 +38,9 @@ public class BagPopup extends FadePopup{
 
 	public void onListItemClick(ListView l, View v, int pos, long id)
 	{
-		if (G.mode == Mode.BATTLE)
-		{
-			// returns the index of the item in the player's inventory
-			setResult(RESULT_FIRST_USER + entries.get(pos).getIndex());
-			finish();
-		}
+		// returns the index of the item in the player's inventory
+		setResult(RESULT_FIRST_USER + entries.get(pos).getIndex());
+		finish();
 	}
 	
 	private class EntryAdapter extends ArrayAdapter<BagItem>{
@@ -74,8 +72,8 @@ public class BagPopup extends FadePopup{
         		count.setText(entry.getCount() + "");
         		icon.setImageResource(entry.getSprite());
         	}
-        	if (G.mode == Mode.MAP)
-				v.setEnabled(false);
+        	if (G.mode == Mode.MAP && entries.get(position).getIndex()-1 != Potions.HP.ordinal())
+        		v.setEnabled(false);
         	return v;
         }
         
@@ -83,7 +81,12 @@ public class BagPopup extends FadePopup{
         {
         	// if we are in map mode items should not be usable
         	if (G.mode == Mode.MAP)
-        		return false;
+        	{
+        		if (entries.get(position).getIndex()-1 == Potions.HP.ordinal())
+        			return true;
+        		else
+        			return false;
+        	}
         	else
         		return true;
         }

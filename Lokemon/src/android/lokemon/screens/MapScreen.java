@@ -18,6 +18,7 @@ import android.os.SystemClock;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.graphics.*;
 import android.graphics.Paint.Style;
@@ -50,6 +51,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
 	
 	// dialogs
 	private AlertDialog battleAlert;
+	private AlertDialog.Builder alertBuilder;
 	private ProgressDialog progressDialog;
 	private Toast toast;
 	
@@ -174,14 +176,13 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         
         hud = (ViewGroup)findViewById(R.id.hud);
         
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setCancelable(false);
-        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+        alertBuilder = new AlertDialog.Builder(this);
+        alertBuilder.setCancelable(false);
+        alertBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
 	           public void onClick(DialogInterface dialog, int id) {dialog.cancel();}});
-        battleAlert = builder.create();
         
         progressDialog = new ProgressDialog(this, ProgressDialog.STYLE_SPINNER);
-    	progressDialog.setCancelable(false);
+    	//progressDialog.setCancelable(false);
     	toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
         
     	playerIDs = new ArrayList<Integer>();
@@ -273,7 +274,26 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     
     protected void onActivityResult (int requestCode, int resultCode, Intent data)
     {
-    	G.game.finalizeBattle();
+    	if (requestCode == 1)
+    		G.game.finalizeBattle();
+    	else if (requestCode == 2)
+    	{
+    		if (resultCode != RESULT_CANCELED)
+        	{
+	    		Intent intent = new Intent(this, PokemonPopup.class);
+	    		intent.putExtra("return_index", true);
+	    		startActivityForResult(intent, 3);
+        	}
+    	}
+    	else if (requestCode == 3)
+    	{
+    		if (resultCode != RESULT_CANCELED)
+        	{
+	    		Pokemon p = G.player.pokemon.get(resultCode - RESULT_FIRST_USER);
+	    		p.setHP(p.getTotalHP());
+	    		showToast("Your " + p.getName() + " has been healed!");
+        	}
+    	}
     }
     
     public void switchToBattle(NetworkMessageMedium battleInitMessage, int seed)
@@ -303,24 +323,26 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     // create alert dialog to ask for outgoing battle confirmation
     public void showBattleOutgoingDialog(String playerName)
     {
-    	battleAlert.setMessage(Html.fromHtml("Do you want to ask <i>" + playerName + "</i> to battle?"));
-    	battleAlert.setButton("Send request", new DialogInterface.OnClickListener() 
+    	alertBuilder.setMessage(Html.fromHtml("Do you want to ask <i>" + playerName + "</i> to battle?"));
+    	alertBuilder.setPositiveButton("Send request", new DialogInterface.OnClickListener() 
 			{
 				public void onClick(DialogInterface dialog, int id){G.game.requestBattle();}});
-    	battleAlert.setButton2("Don't send", new DialogInterface.OnClickListener() 
+    	alertBuilder.setNegativeButton("Don't send", new DialogInterface.OnClickListener() 
 			{public void onClick(DialogInterface dialog, int id){G.game.rejectBattle(false);dialog.cancel();}});
+		battleAlert = alertBuilder.create();
 		battleAlert.show();
     }
     
     // create alert dialog to ask for incoming battle confirmation
     public void showBattleIncomingDialog(String playerName)
     {
-    	battleAlert.setMessage(Html.fromHtml("Do you want to battle <i>" + playerName + "</i>?"));
-		battleAlert.setButton("Battle!", new DialogInterface.OnClickListener() 
+    	alertBuilder.setMessage(Html.fromHtml("Do you want to battle <i>" + playerName + "</i>?"));
+    	alertBuilder.setPositiveButton("Battle!", new DialogInterface.OnClickListener() 
 			{
 				public void onClick(DialogInterface dialog, int id){G.game.acceptBattle();}});
-		battleAlert.setButton2("Don't battle", new DialogInterface.OnClickListener() 
+    	alertBuilder.setNegativeButton("Don't battle", new DialogInterface.OnClickListener() 
 		{public void onClick(DialogInterface dialog, int id){G.game.rejectBattle(true);dialog.cancel();}});
+    	battleAlert = alertBuilder.create();
 		battleAlert.show();
     }
     
@@ -334,11 +356,17 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     
     public void showProgressDialog(String message)
     {
-    	progressDialog = ProgressDialog.show(this, "", message, true, false);
+    	progressDialog = ProgressDialog.show(this, "", message, true, true, new OnCancelListener(){
+    		public void onCancel(DialogInterface dialog)
+    		{G.game.sendCancelMessage();
+    		G.game.rejectBattle(false);
+    		showToast("You canceled the battle request");
+    		progressDialog.dismiss();}
+    	});
     	progressDialog.show();
     }
     
-    public void cancelProgressDialog() {progressDialog.cancel();}
+    public void cancelProgressDialog() {progressDialog.dismiss();}
     
     public void cancelBattleAlert() {battleAlert.dismiss();}
     
@@ -347,7 +375,7 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     	if (v == bag_button)
     	{
     		Intent intent = new Intent(v.getContext(), BagPopup.class);
-	        startActivity(intent);
+	        startActivityForResult(intent,2);
     	}
     	else if (v == poke_button)
     	{

@@ -2,6 +2,7 @@ package android.lokemon.screens;
 
 import android.app.*;
 import android.content.*;
+import android.content.DialogInterface.OnCancelListener;
 import android.lokemon.Battle;
 import android.lokemon.G;
 import android.lokemon.G.BattleMove;
@@ -194,7 +195,13 @@ public class BattleScreen extends Activity implements View.OnClickListener{
 	
 	public void showProgressDialog(String message)
     {
-		progressDialog = ProgressDialog.show(this, "", message, true, false);
+		progressDialog = ProgressDialog.show(this, "", message, true, true, new OnCancelListener(){
+    		public void onCancel(DialogInterface dialog)
+    		{G.game.sendCancelMessage();
+    		showToast("You canceled the battle");
+    		endBattle();
+    		progressDialog.dismiss();}
+    	});
     	progressDialog.show();
     }
 	

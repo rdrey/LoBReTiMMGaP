@@ -114,7 +114,6 @@ public class Battle {
 		battleType = BattleType.TRAINER;
 		itemCount -= G.player.items[0].getCount();
 		random = new Random(seed);
-		Log.i("Battle", seed + "");
 	}
 	
 	public void switchPlayerPoke(int index)
@@ -190,20 +189,12 @@ public class Battle {
 	{
 		ArrayList<int[]> moves = poke_opp.getMovesAndPP();
 		opponent_move = BattleMove.ATTACK;
+		// use gaussian distribution to pick move (50% chance for strongest move - tapers off for weaker moves)
+		double gaussian = random.nextGaussian();
+		Log.i("Battle", "Moves: " + moves.size() + "; Gauss: " + gaussian);
+		int index = gaussian >= 0?moves.size()-1:(int)((Math.max(gaussian, -2.0)/2.0+1)*(moves.size()-1));
 		if (moves.size() > 0)
-		{
-			int index = 0;
-			int max = 0;
-			for (int i = 0; i < moves.size(); i+=2)
-			{
-				if (G.moves[moves.get(i)[0]].power > max)
-				{
-					index = i;
-					max = G.moves[moves.get(i)[0]].power;
-				}
-			}
 			opponent_move_index = moves.get(index)[0];
-		}
 		else opponent_move_index = -1;
 	}
 	
@@ -535,6 +526,7 @@ public class Battle {
 			
 			if (random.nextDouble() < move.accuracy/100.0)
 			{
+				Log.i("Battle", random.nextDouble()+"");
 				if (source == poke_player)
 					poke_player.decreasePP(moveIndex);
 				
@@ -580,6 +572,8 @@ public class Battle {
 					if (target.getType2() != null)
 						type_mod *= G.type_modifiers[move.type.ordinal][target.getType2().ordinal];
 					
+					Log.i("Battle", "Modifiers: " + critical_mod + ", " + stab_mod + ", " + type_mod);
+					Log.i("Battle", "Stats: " + attack + " " + defense + " " + specialSource + " " + specialTarget);
 					float modifier = critical_mod * stab_mod * type_mod * (float)(random.nextDouble() * 0.15 + 0.85);
 					
 					// THE DAMAGE FORMULA - awesome shit!

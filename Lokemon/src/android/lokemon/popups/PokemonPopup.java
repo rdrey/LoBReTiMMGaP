@@ -39,7 +39,7 @@ public class PokemonPopup extends FadePopup{
 
 	public void onListItemClick(ListView l, View v, int pos, long id)
 	{
-		if (G.mode == Mode.BATTLE)
+		if (G.mode == Mode.BATTLE || this.getIntent().getBooleanExtra("return_index", false))
 		{
 			Iterator<Pokemon> i = G.player.pokemon.iterator();
 			int index = 0;

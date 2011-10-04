@@ -50,6 +50,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	private List<NetworkPlayer> players;
 	// item list
 	private List<WorldPotion> items;
+	private LinkedList<Integer> ignored_item_ids;
 	// region list
 	private List<Region> regions;
 	private Regions currentRegion;
@@ -71,6 +72,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	// network objects
 	private boolean networkReqLock; // when true all battle requests from players are ignored
 	private boolean waitingForAccept; // when true all messages other than battle acceptance are ignored
+	private boolean waitingForItemAccept;
 	private boolean busyConnecting;
 	private boolean networkBound;
 	private boolean busyBinding;
@@ -114,6 +116,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		
 		// create item list
 		items = new LinkedList<WorldPotion>();
+		ignored_item_ids = new LinkedList<Integer>();
 		
 		// create region list
 		regions = new LinkedList<Region>();
@@ -121,6 +124,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		// network setup
 		networkReqLock = false;
 		waitingForAccept = false;
+		waitingForItemAccept = false;
 		elapsedTime = 0;
 		busyBinding = false;
 		busyConnecting = false;
@@ -151,26 +155,36 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 							{
 								if (elapsedTime >= 1000 && currentRegion != null && currentRegion.ordinal() < 7 && !foundPokeInRegion)
 								{
-									double prob = G.random.nextDouble();
-									double total = 0;
-									ArrayList<BasePokemon> pokes_in_region = G.pokemon_by_region[currentRegion.ordinal()];
-									for (int i = 0; i < pokes_in_region.size(); i++)
+									/*
+									 * generate a pokemon that is within 5 levels of your party's
+									 * strongest pokemon with 30% chance every 1 second
+									 */
+									if (G.random.nextDouble() < 0.3)
 									{
-										BasePokemon base = pokes_in_region.get(i);
-										total += base.catchrate/2.0;
-										if (prob < total)
-										{					
-											networkReqLock = true;
-											genPokemon = new Pokemon(base.index, base.baseLevel+G.random.nextInt(5));
-											foundPokeInRegion = true;
-											battleInitMessage = null;
-											initiateBattle();
-											break;
+										ArrayList<BasePokemon> pokes_in_region = G.pokemon_by_region[currentRegion.ordinal()];
+										ArrayList<BasePokemon> options = new ArrayList<BasePokemon>();
+										int levelSum = 0;
+										for (Pokemon p:G.player.pokemon)
+											levelSum += p.getLevel();
+										int level = levelSum/G.player.pokemon.size() + G.random.nextInt(11) - 5;
+										if (level <= 0)
+											level = 1;
+										for (BasePokemon p:pokes_in_region)
+										{
+											// if the level falls within the pokemon's normal range
+											if (p.baseLevel <= level && (p.evolution == null || p.evolution[1] > level))
+												options.add(p);
 										}
+										networkReqLock = true;
+										genPokemon = new Pokemon(options.get(G.random.nextInt(options.size())).index, level);
+										foundPokeInRegion = true;
+										battleInitMessage = null;
+										initiateBattle();
 									}
 									elapsedTime -= 1000;
 								}
-								elapsedTime += networkBinder.getGameClock().getLatency();
+								try{elapsedTime += networkBinder.getGameClock().getLatency();}
+								catch (RuntimeException e) {elapsedTime += 500;}
 							} 
 						}
 					}
@@ -186,8 +200,16 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					Log.i(NetworkVariables.TAG, "Trying to rebind network service");
 					createConnection();
 				}
-				Log.i(NetworkVariables.TAG, "Requested update after " + networkBinder.getGameClock().getLatency() + "ms");
-				networkUpdater.postDelayed(updater, networkBinder.getGameClock().getLatency());
+				try
+				{
+					Log.i(NetworkVariables.TAG, "Requested update after " + networkBinder.getGameClock().getLatency() + "ms");
+					networkUpdater.postDelayed(updater, networkBinder.getGameClock().getLatency());
+				}
+				catch (RuntimeException e)
+				{
+					Log.i(NetworkVariables.TAG, "Requested update after " + 500 + "ms");
+					networkUpdater.postDelayed(updater, 500);
+				}
 			}
 		};
 		display.showProgressDialog("Starting up...");
@@ -224,7 +246,8 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	private void addItem(WorldPotion item)
 	{
 		items.add(item);
-		display.addItem(item);
+		if (!ignored_item_ids.contains(item.getID()))
+			display.addItem(item);
 	}
 	
 	// removes it from the main item list and adds it to an old item list
@@ -238,7 +261,8 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	private void insertItem(WorldPotion item, int index)
 	{
 		items.add(index, item);
-		display.addItem(item);
+		if (!ignored_item_ids.contains(item.getID()))
+			display.addItem(item);
 	}
 	
 	// addition method for regions
@@ -272,7 +296,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	{
 		synchronized (items)
 		{
-			if (selectedItem == null)
+			if (!waitingForItemAccept)
 			{
 				selectedItem = items.get(Collections.binarySearch(items, new MapItem(null,itemID)));
 				if (G.player.getDistanceFrom(selectedItem.getAndroidLocation()) < 20)
@@ -285,12 +309,41 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					}
 					else
 					{
+						// check if there are any other players nearby
+						boolean all_clear = true;
+						synchronized (players)
+						{
+							for (NetworkPlayer pl:players)
+							{
+								if (selectedItem.getAndroidLocation().distanceTo(pl.getAndroidLocation()) < 50)
+								{
+									all_clear = false;
+									break;
+								}
+							}
+						}
+						
 						// send item request
 						NetworkMessageMedium msg = new NetworkMessageMedium("ItemPickupRequest");
 						msg.integers.add(itemID);
 						networkBinder.sendRequest(msg);
 						removeItem(selectedItem);
-						display.showToast("Trying to pick up item");
+						ignored_item_ids.addLast(selectedItem.getID());
+						if (ignored_item_ids.size() > 3)
+							ignored_item_ids.removeFirst();
+						
+						if (all_clear)
+						{
+							BagItem itm = G.player.items[selectedItem.potionType.ordinal()+1];
+							itm.increment();
+							display.showToast("You have picked up a " + itm.getName());
+							selectedItem = null;
+						}
+						else
+						{
+							waitingForItemAccept = true;
+							display.showToast("Getting permission to pick up item...");
+						}
 					}
 				}
 				else
@@ -390,7 +443,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	{
 		// send available status update
 		selectedPlayer = null;
-		if (G.battle.pokeCount > 0)
+		if (G.battle == null || G.battle.pokeCount > 0)
 		{
 			Log.i("Players", "Player set to available");
 			networkBinder.sendGameUpdate(new NetworkMessage("ExitedBattle"));
@@ -421,6 +474,15 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		for (int stat:new_poke.getStats())
 			nMsg.integers.add(stat);
 		networkBinder.sendDirectCommunication(nMsg, opponentID);
+	}
+	
+	public void sendCancelMessage()
+	{
+		NetworkMessageMedium nMsg = new NetworkMessageMedium(Action.CANCEL.toString());
+		if (G.mode == Mode.BATTLE)
+			networkBinder.sendDirectCommunication(nMsg, opponentID);
+		else
+			networkBinder.sendDirectCommunication(nMsg, selectedPlayer.getID());
 	}
 	
 	private NetworkMessageMedium getBattleInitiationMessage(Action action)
@@ -649,6 +711,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				if (G.player.playerState == PlayerState.BUSY)
 					networkBinder.sendGameUpdate(new NetworkMessage("EnteredBattle"));
 				// only get map data after 5 seconds to give lawrence's latency estimation time to converge
+				Log.i(NetworkVariables.TAG, "Requesting map data in 5 seconds...");
 				networkUpdater.postDelayed(new Runnable(){
 					public void run()
 					{
@@ -960,17 +1023,21 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			{
 				NetworkMessage nMsg = (NetworkMessage)((NetworkEvent)msg.obj).getMessage();
 				String tag = nMsg.getMessage();
-				if (tag.equals("Accept") && selectedItem != null)
+				if (waitingForItemAccept)
 				{
-					BagItem item = G.player.items[selectedItem.potionType.ordinal()+1];
-					item.increment();
-					display.showToast("You have picked up a " + item.getName());
-					selectedItem = null;
-				}
-				else
-				{
-					display.showToast("Someone picked it up before you");
-					selectedItem = null;
+					if (tag.equals("Accept") && selectedItem != null)
+					{
+						BagItem item = G.player.items[selectedItem.potionType.ordinal()+1];
+						item.increment();
+						display.showToast("You have picked up a " + item.getName());
+						selectedItem = null;
+					}
+					else
+					{
+						display.showToast("Someone picked up the item before you");
+						selectedItem = null;
+					}
+					waitingForItemAccept = false;
 				}
 				break;
 			}
@@ -980,7 +1047,8 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			}
 			case DIRECT_MESSAGE_RECEIVED:
 			{
-				NetworkMessage nMsg = (NetworkMessage)((NetworkEvent)msg.obj).getMessage();
+				DirectCommunicationEvent dce = (DirectCommunicationEvent)msg.obj;
+				NetworkMessage nMsg = (NetworkMessage)dce.getMessage();
 				try
 				{
 					Action action = Action.valueOf(nMsg.getMessage());
@@ -1005,15 +1073,29 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 						break;
 					case REQUEST_BATTLE:
 						NetworkMessageMedium req = (NetworkMessageMedium)nMsg;
-						if (G.mode == Mode.MAP && !networkReqLock)
+						if (G.mode == Mode.MAP)
 						{
-							networkReqLock = true;
-							battleInitMessage = (NetworkMessageMedium)nMsg;
-							selectedPlayer = new NetworkPlayer(req.integers.get(1), req.strings.get(0), Gender.values()[req.integers.get(2)], null);
-							display.showBattleIncomingDialog(req.strings.get(0));
+							if (!networkReqLock)
+							{
+								networkReqLock = true;
+								battleInitMessage = (NetworkMessageMedium)nMsg;
+								selectedPlayer = new NetworkPlayer(req.integers.get(1), req.strings.get(0), Gender.values()[req.integers.get(2)], null);
+								display.showBattleIncomingDialog(req.strings.get(0));
+							}
+							else if (waitingForAccept && selectedPlayer.getID() == dce.getSourcePlayerID())
+							{
+								// arbitrate based on IDs because the result will be consistent
+								if (G.player.id > selectedPlayer.getID())
+								{
+									battleInitMessage = (NetworkMessageMedium)nMsg;
+									display.cancelProgressDialog();
+									waitingForAccept = false;
+									display.showBattleIncomingDialog(req.strings.get(0));
+								}
+							}
+							else
+								networkBinder.sendDirectCommunication(new NetworkMessage(Action.REJECT_ALL.toString()), req.integers.get(1));
 						}
-						else
-							networkBinder.sendDirectCommunication(new NetworkMessage(Action.REJECT_ALL.toString()), req.integers.get(1));
 						break;
 					case REJECT_ALL:
 						if (waitingForAccept)
@@ -1043,27 +1125,42 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								G.battle.handleSwitchBattleMove(new_poke);
 							}
 						}
+						break;
+					case CANCEL:
+						if (G.mode == Mode.BATTLE)
+						{
+							if (G.battle != null && dce.getSourcePlayerID() == opponentID)
+							{
+								G.battle.handleOpponentDisconnected();
+								Log.i("Players", "Opponent canceled the battle");
+							}	
+						}
+						else if (selectedPlayer != null && selectedPlayer.getID() == dce.getSourcePlayerID())
+						{
+							display.cancelBattleAlert();
+							display.cancelProgressDialog();
+							Log.i("Players", "Opponent canceled the battle request");
+							display.showToast("The request was canceled");
+							rejectBattle(false);
+						}
+						break;
 					}
 				}
 				catch (IllegalArgumentException e)
 				{
 					// either NOTIFICATION:PlayerDisconnected or ERROR: Direct communication target <targetPlayerId> is no longer connected!
-					DirectCommunicationEvent dce = (DirectCommunicationEvent)((NetworkEvent)msg.obj);
 					if ((waitingForAccept || networkReqLock) && dce.getSourcePlayerID() == selectedPlayer.getID())
 					{
 						display.cancelBattleAlert();
 						selectedPlayer = null;
 						waitingForAccept = false;
 						networkReqLock = false;
-						Log.i("Players", "Player disconnected during battle initiation");
+						Log.i("Players", "Opponent disconnected during battle initiation");
 					}
-					else if (G.mode == Mode.BATTLE && G.battle.battleType == BattleType.TRAINER && dce.getSourcePlayerID() == opponentID)
+					else if (G.mode == Mode.BATTLE && G.battle != null && G.battle.battleType == BattleType.TRAINER && dce.getSourcePlayerID() == opponentID)
 					{
-						if (G.battle != null)
-						{
-							G.battle.handleOpponentDisconnected();
-							Log.i("Players", "Player disconnected during battle");
-						}
+						G.battle.handleOpponentDisconnected();
+						Log.i("Players", "Opponent disconnected during battle");
 					}
 				}
 				break;

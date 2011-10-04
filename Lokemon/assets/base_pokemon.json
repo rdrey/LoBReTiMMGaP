@@ -312,7 +312,7 @@
 		"speed":90,
 		"special":105,
 		"evolution":[21,16],
-		"moves": [50,1]
+		"moves": [47,1,25,1]
 	},
 	{
 		"index":21,
