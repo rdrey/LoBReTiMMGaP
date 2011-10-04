@@ -18,7 +18,7 @@ public class NetworkComService <T extends CoreNetworkThread> extends Service{
 
 	
 	private IBinder binder;
-	private Timer logSaver;
+	private Timer logSaver = new Timer();
 	
 	public void onCreate()
 	{	
@@ -62,7 +62,7 @@ public class NetworkComService <T extends CoreNetworkThread> extends Service{
 					}
 					catch(IOException e)
 					{
-						e.printStackTrace();
+						Log.e("LOG", "ERROR:" + e);
 					}
 				}
 			}, 1000, 60000);
