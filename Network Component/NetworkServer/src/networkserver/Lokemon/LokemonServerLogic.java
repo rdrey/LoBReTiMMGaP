@@ -336,6 +336,7 @@ public class LokemonServerLogic extends Thread{
 
                                     //First check if there are any objects nearby. If there aren't, we can create a new one.
                                     boolean itemNearby = false;
+                                    /*
                                     for(LokemonPotion pot : LokemonServerVariables.itemMap.values())
                                     {
                                         if(App.distFrom(pot.getPosition().getX(), pot.getPosition().getY(),
@@ -345,7 +346,7 @@ public class LokemonServerLogic extends Thread{
                                             itemNearby = true;
                                             break;
                                         }
-                                    }
+                                    }*/
 
                                     if(!itemNearby)
                                     {
