@@ -104,4 +104,17 @@ public class Util {
 		out.close();
 		in.close();
 	}
+	
+	public static String spaceToUnderscore(String in)
+	{
+		String out = "";
+		for (int i = 0; i < in.length(); i++)
+		{
+			char ch = in.charAt(i);
+			if (Character.isLetterOrDigit(ch))
+				out += ch;
+			else out += '_';
+		}
+		return out;
+	}
 }

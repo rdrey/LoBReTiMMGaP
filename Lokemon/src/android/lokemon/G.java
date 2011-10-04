@@ -22,12 +22,13 @@ public class G {
 	public static Trainer player;
 	public static Game game;
 	public static Mode mode;
-	public static TestMode testMode = TestMode.CONTROL;
+	public static TestMode testMode = TestMode.EXPERIMENT;
 	public static ElemType [] types;
 	public static Battle battle;
 	public static int [] region_colours;
 	public static Random random = new Random(System.currentTimeMillis());
 	public static float [][] type_modifiers;
+	public static boolean debug = true;
 	
 	// icons used by map
 	public static Drawable player_marker_busy;

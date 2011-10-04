@@ -12,6 +12,7 @@ import android.lokemon.G.Gender;
 import android.lokemon.G.PlayerState;
 import android.lokemon.G.Potions;
 import android.util.Log;
+import android.widget.Toast;
 import android.app.Activity;
 
 // class encapsulates player attributes - follows singleton pattern
@@ -44,6 +45,11 @@ public class Trainer {
 		items[4] = new Potion(Potions.SPECIAL);
 		items[5] = new Potion(Potions.SPEED);
 		// give a new player a starting gift
+		items[0].increment();
+		items[0].increment();
+		items[0].increment();
+		items[0].increment();
+		items[0].increment();
 		items[0].increment();
 		items[1].increment();
 		
@@ -99,7 +105,8 @@ public class Trainer {
 		try
 		{
 			BufferedReader input = new BufferedReader(new InputStreamReader(current.openFileInput("save_data")));
-			JSONObject object = (JSONObject)new JSONTokener(input.readLine()).nextValue();
+			String text = input.readLine();			
+			JSONObject object = (JSONObject)new JSONTokener(text).nextValue();
 			JSONArray array = object.getJSONArray("pokemon");
 			ArrayList<Pokemon> pokes = new ArrayList<Pokemon>();
 			for (int i = 0; i < array.length(); i++)

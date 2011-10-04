@@ -19,7 +19,9 @@ import android.lokemon.G.PlayerState;
 import android.lokemon.G.Potions;
 import android.lokemon.G.Regions;
 import android.lokemon.game_objects.*;
+import java.io.*;
 import android.lokemon.screens.MapScreen;
+import java.text.DateFormat;
 import android.util.Log;
 import android.app.Activity;
 import android.lbg.*;
@@ -84,7 +86,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	// periodically requests game state updates from server
 	private Handler networkUpdater;
 	private Runnable updater;
-	private double elapsedTime;
+	private long elapsedTime;
 	
 	private NetworkComBinder networkBinder;
 	private final Messenger networkEventMessenger;
@@ -183,7 +185,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 									}
 									elapsedTime -= 1000;
 								}
-								try{elapsedTime += networkBinder.getGameClock().getLatency();}
+								try{elapsedTime += networkBinder.getGameClock().getLatency()/2;}
 								catch (RuntimeException e) {elapsedTime += 500;}
 							} 
 						}
@@ -202,8 +204,8 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				}
 				try
 				{
-					Log.i(NetworkVariables.TAG, "Requested update after " + networkBinder.getGameClock().getLatency() + "ms");
-					networkUpdater.postDelayed(updater, networkBinder.getGameClock().getLatency());
+					Log.i(NetworkVariables.TAG, "Requested update after " + networkBinder.getGameClock().getLatency()/2 + "ms");
+					networkUpdater.postDelayed(updater, networkBinder.getGameClock().getLatency()/2);
 				}
 				catch (RuntimeException e)
 				{
@@ -445,7 +447,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		selectedPlayer = null;
 		if (G.battle == null || G.battle.pokeCount > 0)
 		{
-			Log.i("Players", "Player set to available");
 			networkBinder.sendGameUpdate(new NetworkMessage("ExitedBattle"));
 			G.player.playerState = PlayerState.AVAILABLE;
 			display.updateCoins();
@@ -454,6 +455,20 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			display.showNoPokemonAlert(true);
 		G.battle = null;
 		Trainer.saveTrainer(display);
+	}
+	
+	public void setAvailable(boolean available)
+	{
+		if (available)
+		{
+			networkBinder.sendGameUpdate(new NetworkMessage("ExitedBattle"));
+			G.player.playerState = PlayerState.AVAILABLE;
+		}
+		else
+		{
+			networkBinder.sendGameUpdate(new NetworkMessage("EnteredBattle"));
+			G.player.playerState = PlayerState.BUSY;
+		}
 	}
 	
 	public void sendSimpleBattleMessage(BattleMove move, int index)
@@ -513,6 +528,19 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	/*
 	 * Methods related to saving and loading game state
 	 */
+	
+	public static void saveGameData(Activity current)
+	{
+		try
+		{
+			if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
+			{
+				Log.i("Data save", "Saving game data to SD card");
+				Util.copyFile(current.openFileInput("save_data"), new FileOutputStream(G.mapDir + Util.spaceToUnderscore(DateFormat.getDateTimeInstance().format(new Date()))));
+			}
+		}
+		catch (IOException e){Log.i("Data save", e.getMessage());}
+	}
 	
 	public static void loadGameData(Activity current)
 	{
@@ -669,7 +697,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			public void onServiceDisconnected(ComponentName name) 
 			{
 				networkBound = false;
-				Log.i(NetworkVariables.TAG, "Service disconnected");
 				display.showToast("Disconnected from service");
 			}
 			
@@ -958,7 +985,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								}
 								else if (nr.getID() < id)
 								{
-									Log.i("Regions", "Keeping id=" + nr.getID());
 									display.removeRegion(nr);
 									i.remove();
 									if (i.hasNext())
@@ -967,7 +993,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								}
 								else
 								{
-									Log.i("Regions", "Inserting id=" + id);
 									newIndices.add(index);
 									newRegions.add(new Region(lr.getCoords(), Regions.values()[lr.getType().ordinal()], lr.getObjectId()));
 									if (it.hasNext())
@@ -982,25 +1007,21 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 							// remove or add tail of list
 							if (nr != null)
 							{
-								Log.i("Regions", "Removing id=" + nr.getID());
 								display.removeRegion(nr);
 								i.remove();
 								while (i.hasNext())
 								{
 									nr = i.next();
-									Log.i("Regions", "Removing id=" + nr.getID());
 									display.removeRegion(nr);
 									i.remove();
 								}
 							}
 							else if (lr != null)
 							{
-								Log.i("Regions", "Adding id=" + lr.getObjectId());
 								addRegion(new Region(lr.getCoords(), Regions.values()[lr.getType().ordinal()], lr.getObjectId()));
 								while (it.hasNext()) 
 								{
 									lr = it.next();
-									Log.i("Regions", "Adding id=" + lr.getObjectId());
 									addRegion(new Region(lr.getCoords(), Regions.values()[lr.getType().ordinal()], lr.getObjectId()));
 								}
 							}

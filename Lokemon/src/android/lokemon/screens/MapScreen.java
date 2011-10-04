@@ -1,5 +1,9 @@
 package android.lokemon.screens;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import android.location.Location;
 import android.lokemon.G;
@@ -13,10 +17,12 @@ import android.lokemon.game_objects.Region;
 import android.lokemon.popups.BagPopup;
 import android.lokemon.popups.PokemonPopup;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
@@ -269,6 +275,8 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     {
     	super.onStop();
     	Trainer.saveTrainer(this);
+    	if (G.debug)
+    		Game.saveGameData(this);
     	Log.i("Data save", "Map screen stopped and data saved.");
     }
     
@@ -291,6 +299,8 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         	{
 	    		Pokemon p = G.player.pokemon.get(resultCode - RESULT_FIRST_USER);
 	    		p.setHP(p.getTotalHP());
+	    		G.game.setAvailable(true);
+	    		showNoPokemonAlert(false);
 	    		showToast("Your " + p.getName() + " has been healed!");
         	}
     	}

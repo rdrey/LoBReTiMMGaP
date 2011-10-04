@@ -6,7 +6,7 @@ public class PokeBall extends BagItem {
 
 	public PokeBall(int count) 
 	{
-		super("Poké Ball (empty)", count, 3, "Select an empty Poké Ball to capture a wild Pokémon.");
+		super("Poké Ball (empty)", count, 6, "Select an empty Poké Ball to capture a wild Pokémon.");
 		this.spriteID = R.drawable.pokeball;
 	}
 	

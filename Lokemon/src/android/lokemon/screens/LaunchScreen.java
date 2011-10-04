@@ -68,6 +68,13 @@ public class LaunchScreen extends Activity implements View.OnClickListener{
     	super.onStart();
     } 
     
+    public void onStop()
+    {
+    	super.onStop();
+    	if (G.debug)
+    		Game.saveGameData(this);
+    }
+    
     public void onClick(View v)
     {
     	if (v == new_button)
