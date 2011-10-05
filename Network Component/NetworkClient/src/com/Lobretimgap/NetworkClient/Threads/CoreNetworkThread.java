@@ -381,14 +381,19 @@ public abstract class CoreNetworkThread extends Thread
 	            	NetworkMessage msg = null;
 	            	Schema schema = null;
 
-	                //Expecting 4 bytes of length info + 1 byte of type info
-	                byte [] messageHeader = new byte [5];
+	            	//Expecting 4 bytes of length info, 1 byte of class type
+	                //and 1 byte indicating if message is compressed
+	                byte [] messageHeader = new byte [6];
 	                int success = in.read(messageHeader);
-	                if(success == 5)
+	                if(success == 6)
 	                {
 	                    //Chop off message type modifier
-	                    byte classType = messageHeader[0];	                    
-	                  //set the message and schema to the correct type
+	                    byte classType = messageHeader[0];	            
+	                    boolean compressed = false;
+	                    if(messageHeader[1] == 1)
+	                        compressed = true;
+	                    
+	                    //set the message and schema to the correct type
 	                    switch(classType)
 	                    {
 	                        case -1:
@@ -415,7 +420,7 @@ public abstract class CoreNetworkThread extends Thread
 	                    {
 	                        //Determine message length
 	                        b.clear();
-	                        b.put(messageHeader, 1, 4);
+	                        b.put(messageHeader, 2, 4);
 	                        b.rewind();
 	                        int mSize = b.getInt();
 	                        
@@ -427,14 +432,22 @@ public abstract class CoreNetworkThread extends Thread
 	                            bytesRead += in.read(object, bytesRead, object.length - bytesRead);	                            
 	                        }
 	                        
-	                        Log.i("bandwidth", "RECEIVED: "+(mSize+5));
+	                        Log.i("bandwidth", "RECEIVED: "+(mSize+6));
 	    	                
-	                        byte [] decompressed = QuickLZ.decompress(object);
+	                        byte [] decompressed;
 	                        
-	                      //Logging
-	    	                Log.i("compression", "RECEIVING: Pre-compression: "+decompressed.length
-	    	                		+", Post-compression: " + mSize
-	    	                		+", Saved Bytes: " + (decompressed.length - mSize));
+	                        if(compressed)
+	                        {
+	                            decompressed = QuickLZ.decompress(object);	                            
+	                            Log.i("compression", "RECEIVING: Compressed: Pre-compression: "+decompressed.length
+	    		                		+": Post-compression: " + mSize
+	    		                		+": Saved Bytes: " + (decompressed.length - mSize));
+	                        }
+	                        else
+	                        {
+	                            decompressed = object;
+	                            Log.i("compression", "RECEIVING: Not_Compressed: size: "+decompressed.length);
+	                        }    	                
 
 	                        //System.out.println("Mid receive, byte buffer at "+bytesRead);
 	                        ProtostuffIOUtil.mergeFrom(decompressed, msg, schema);

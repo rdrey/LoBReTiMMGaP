@@ -101,21 +101,35 @@ public class ServerDaemonWriteoutThread extends Thread
                 byte [] serializedObject = ProtostuffIOUtil.toByteArray(msg, schema, buffer);
                 
                 //Compress the serialized bytes
+                boolean compressed = false;
                 byte [] tempArray = QuickLZ.compress(serializedObject, 3);
-                serializedObject = tempArray;
+                if(tempArray.length < serializedObject.length)
+                {
+                    serializedObject = tempArray;
+                    compressed = true;
+                }
+                
 
+                //Create the header. First class type, then whether source is compressed
+                //and finally source size.
                 //Calculate and create a leading length field (4 bytes of data, an integer)                
                 b.clear();
                 b.putInt(serializedObject.length);
                 byte [] lengthField = b.array();
                 //Stitch them together into one message
-                byte [] message = new byte[serializedObject.length + lengthField.length + 1];
+                byte [] message = new byte[serializedObject.length + lengthField.length + 2];
                 message[0] = classType;
-                System.arraycopy(lengthField, 0, message, 1, lengthField.length);
-                System.arraycopy(serializedObject, 0, message, lengthField.length + 1, serializedObject.length);
-
-                //Log.d(NetworkVariables.TAG, "Serialized Size: "+serializedObject.length);
-                //And then send it off.
+                if(compressed)
+                {
+                    message[1] = 1;
+                }
+                else
+                {
+                    message[1] = 0;
+                }
+                System.arraycopy(lengthField, 0, message, 2, lengthField.length);
+                System.arraycopy(serializedObject, 0, message, lengthField.length + 2, serializedObject.length);
+                
                 
                 //If message is too big, split it into multiple pieces
                 if(message.length > 8000)

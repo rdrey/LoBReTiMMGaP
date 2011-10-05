@@ -201,13 +201,18 @@ public abstract class ServerDaemonThread extends Thread{
             	Schema schema = null;
                 
 
-                //Expecting 4 bytes of length info
-                byte [] messageHeader = new byte [5];
+                //Expecting 4 bytes of length info, 1 byte of class type
+                //and 1 byte indicating if message is compressed
+                byte [] messageHeader = new byte [6];
                 int headerBytesRead = in.read(messageHeader);
-                if(headerBytesRead == 5)
+                if(headerBytesRead == 6)
                 {
                     //Chop off message type modifier
                     byte classType = messageHeader[0];
+                    //and compression flag
+                    boolean compressed = false;
+                    if(messageHeader[1] == 1)
+                        compressed = true;
 
                     //set the message and schema to the correct type
                     switch(classType)
@@ -236,7 +241,7 @@ public abstract class ServerDaemonThread extends Thread{
                     {
                         //Determine message length
                         b.clear();
-                        b.put(messageHeader, 1, 4);
+                        b.put(messageHeader, 2, 4);
                         b.rewind();
                         int mSize = b.getInt();
 
@@ -248,7 +253,17 @@ public abstract class ServerDaemonThread extends Thread{
                             bytesRead += in.read(object, bytesRead, object.length - bytesRead);
                         }
 
-                        byte [] decompressed = QuickLZ.decompress(object);
+
+                        byte [] decompressed;
+                        
+                        if(compressed)
+                        {
+                            decompressed = QuickLZ.decompress(object);
+                        }
+                        else
+                        {
+                            decompressed = object;
+                        }
 
                         //LogMaker.println("Mid receive, byte buffer at "+bytesRead);
                         ProtostuffIOUtil.mergeFrom(decompressed, msg, schema);
@@ -337,7 +352,7 @@ public abstract class ServerDaemonThread extends Thread{
             NetworkMessage msg = (NetworkMessage)message;
             try
             {
-                LogMaker.println("Client "+playerID+":Received "+msg.getMessageType().toString(), playerID);
+                //LogMaker.println("Client "+playerID+":Received "+msg.getMessageType().toString(), playerID);
             }
             catch(NullPointerException e)
             {
@@ -450,7 +465,7 @@ public abstract class ServerDaemonThread extends Thread{
         object.setTimeStamp(System.currentTimeMillis());
         try
         {
-            LogMaker.println("Client "+playerID+":Sending "+object.getMessageType().toString(), playerID);
+            //LogMaker.println("Client "+playerID+":Sending "+object.getMessageType().toString(), playerID);
         }
         catch(NullPointerException e)
         {
