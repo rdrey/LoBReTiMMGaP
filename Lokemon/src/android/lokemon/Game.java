@@ -695,12 +695,40 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				// get an instance of the binder for the service
 				networkBinder = (NetworkComBinder)service;
 				networkBinder.registerMessenger(networkEventMessenger);
-				networkBinder.ConnectToServer();
 				busyConnecting = true;
 				networkBound = true;
 				busyBinding = false;
 				display.showToast("Connected to service");
 				Log.i("Network_update", "Network service connected");
+				if (networkBinder.isConnectedToServer())
+				{
+					Log.i("Network_update", "Connected to game server (immediate)");
+					display.showToast("Connected to game server");
+					busyConnecting = false;
+					Log.i("Network_update", "Player registered on game server (immediate)");
+					G.player.id = networkBinder.getPlayerId();
+					// send busy status update (if necessary)
+					if (G.player.playerState == PlayerState.BUSY)
+						networkBinder.sendGameUpdate(new NetworkMessage("EnteredBattle"));
+					Log.i("Network_update", "Requesting map data in 0 seconds...");
+					networkUpdater.postDelayed(new Runnable(){
+						public void run()
+						{
+							// gets regions in a 2000km radius
+							if (regions.size() == 0)
+							{
+								NetworkMessageMedium msg1 = new NetworkMessageMedium("MapDataRequest");
+								msg1.doubles.add(G.player.getLocation().getLatitude());
+								msg1.doubles.add(G.player.getLocation().getLongitude());
+								msg1.doubles.add(2000.0);
+								networkBinder.sendRequest(msg1);
+								Log.i("Network_update", "Requesting map data");
+							}
+						}
+					}, 0);
+				}
+				else
+					networkBinder.ConnectToServer();
 			}
 		};
 		display.bindService(intent, ser, Context.BIND_AUTO_CREATE);
@@ -1183,7 +1211,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				}
 				catch (IllegalArgumentException e)
 				{
-					Log.i("Battle", "Incoming battle disconnection from ID: " + dce.getSourcePlayerID());
+					Log.i("Battle", "Incoming battle disconnection from ID: " + dce.getSourcePlayerID() + " (" + nMsg.getMessage() + ")");
 					// either NOTIFICATION:PlayerDisconnected or ERROR: Direct communication target <targetPlayerId> is no longer connected!
 					if ((waitingForAccept || networkReqLock) && dce.getSourcePlayerID() == selectedPlayer.getID())
 					{
