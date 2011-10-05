@@ -305,7 +305,11 @@ public abstract class ServerDaemonThread extends Thread{
             }
             catch(RuntimeException e)
             {
-                LogMaker.errorPrintln("Failed to deserialize object! Perhaps it had fields that could not be correctly serialized?\n"+e, playerID);
+                LogMaker.errorPrintln("Runtime Exception!\n"+e, playerID);
+            }
+            catch(Exception e)
+            {
+                LogMaker.errorPrintln("Unexpected Error!"+e, playerID);
             }
             finally
             {
