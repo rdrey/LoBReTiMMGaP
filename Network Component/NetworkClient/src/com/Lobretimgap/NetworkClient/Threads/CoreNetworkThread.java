@@ -6,6 +6,7 @@ import java.io.InterruptedIOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
@@ -451,7 +452,14 @@ public abstract class CoreNetworkThread extends Thread
 
 	                        //System.out.println("Mid receive, byte buffer at "+bytesRead);
 	                        ProtostuffIOUtil.mergeFrom(decompressed, msg, schema);
-	                        processNetworkMessage(msg);
+	                        try
+	                        {
+	                        	processNetworkMessage(msg);
+	                        }
+	                        catch(Exception e)
+	                        {
+	                        	Log.e(NetworkVariables.TAG,"Error occured while processing network message! "+e);
+	                        }
 	                    }  
 	                }
 	                else
@@ -473,7 +481,7 @@ public abstract class CoreNetworkThread extends Thread
 	            	Log.e(NetworkVariables.TAG,"Error occured while reading from thread : "+e);	                
 	                this.shutdownThread();                
 	                break;
-	            }            
+	            }   	            
 	            catch(NullPointerException e)
 	            {
 	            	Log.e(NetworkVariables.TAG, "Null Pointer Exception in run loop.", e);
