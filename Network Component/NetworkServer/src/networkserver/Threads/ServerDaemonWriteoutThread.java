@@ -69,7 +69,15 @@ public class ServerDaemonWriteoutThread extends Thread
             try
             {
                 //Get the message for processing
-            	NetworkMessage msg = messageQueue.take();
+                NetworkMessage msg;
+                try
+                {
+                     msg = messageQueue.take();
+                }
+                catch(InterruptedException e)
+                {
+                    break;
+                }
             	Schema schema;
             	//Used to flag what type of class this is in the message
             	byte classType;
@@ -165,13 +173,7 @@ public class ServerDaemonWriteoutThread extends Thread
             catch(IOException e)
             {
                 LogMaker.errorPrintln("IOEXCEPTION: Failed to send object to client! "+e, mainThread.playerID);
-            }
-            catch(InterruptedException e)
-            {
-                //We have been interrupted, so restart the loop.
-                //This is used in shutdownThread, after setting stopOperation to true
-                //To enforce an immediate thread shutdown.
-            }
+            }            
             catch(Exception e)
             {
                 LogMaker.errorPrintln("Unexpected error occured in network write thread! "+e, mainThread.playerID);

@@ -385,6 +385,7 @@ public class NetworkComBinder extends Binder {
 		addListener(ConnectionFailedListener.class, new ConnectionFailedListener() {			
 			public void EventOccured(NetworkEvent e) {
 				try {
+					isConnected = false;
 					eventMessenger.send(Message.obtain(null, EventType.CONNECTION_FAILED.ordinal(), e));
 				} catch (RemoteException e1) {					
 					Log.e(NetworkVariables.TAG, "Failed to send message...", e1);
