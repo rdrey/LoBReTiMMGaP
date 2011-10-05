@@ -267,7 +267,13 @@ public abstract class ServerDaemonThread extends Thread{
 
                         //LogMaker.println("Mid receive, byte buffer at "+bytesRead);
                         ProtostuffIOUtil.mergeFrom(decompressed, msg, schema);
-                        processNetworkMessage(msg);
+                        try
+                        {
+                            processNetworkMessage(msg);
+                        }catch(Exception e)
+                        {
+                            LogMaker.errorPrintln("Error occured while processing network message! "+e , playerID); 
+                        }
                     }
                     
                 }
