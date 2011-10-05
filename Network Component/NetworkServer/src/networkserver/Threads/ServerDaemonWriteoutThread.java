@@ -64,7 +64,7 @@ public class ServerDaemonWriteoutThread extends Thread
     @Override
     public void run()
     {
-        while(!stopOperation)
+        while(!(stopOperation && messageQueue.isEmpty()))
         {
             try
             {
