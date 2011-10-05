@@ -470,8 +470,7 @@ public abstract class CoreNetworkThread extends Thread
 	            }
 	            catch(IOException e)
 	            {
-	            	Log.e(NetworkVariables.TAG,"Error occured while reading from thread : "+e);
-	                fireEvent(new NetworkEvent(this, "Connection to Server lost!\n" + e),  ConnectionLostListener.class);
+	            	Log.e(NetworkVariables.TAG,"Error occured while reading from thread : "+e);	                
 	                this.shutdownThread();                
 	                break;
 	            }            
@@ -736,6 +735,7 @@ public abstract class CoreNetworkThread extends Thread
         finally
         {
         	hasCompletedOperation = true;
+        	fireEvent(new NetworkEvent(this, "Connection to Server lost!\n"),  ConnectionLostListener.class);
         }
     }
     
