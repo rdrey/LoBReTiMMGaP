@@ -422,6 +422,8 @@ public abstract class CoreNetworkThread extends Thread
 	                        default:
 	                            msg = new NetworkMessage();
 	                            schema = networkMsgSchema;
+	                            Log.i(NetworkVariables.TAG, "Received unexpected classType tag:  "+ classType);
+	                            break;
 	                    }
 	                    if(!keepAliveBreak)
 	                    {
@@ -429,10 +431,24 @@ public abstract class CoreNetworkThread extends Thread
 	                        b.clear();
 	                        b.put(messageHeader, 2, 4);
 	                        b.rewind();
-	                        int mSize = b.getInt();
+	                        int mSize = b.getInt();	                        
 	                        
 	                        //Read in the object bytes
-	                        byte [] object = new byte [mSize];
+	                        
+	                        byte [] object;
+	                        try
+	                        {
+	                        	object = new byte [mSize];
+	                        }
+	                        catch(RuntimeException e)
+	                        {
+	                        	Log.e(NetworkVariables.TAG, "Error allocating read buffer! " +
+	                        			"Expected Size was "+mSize+", classType was "+classType+
+	                        			" and compression was "+ compressed);
+	                        	Log.e(NetworkVariables.TAG, "Eror was: "+e);
+	                        	shutdownThread();
+	                        	break;
+	                        }
 	                        int bytesRead = 0;
 	                        while(bytesRead != mSize)
 	                        {
@@ -448,7 +464,7 @@ public abstract class CoreNetworkThread extends Thread
 	                            decompressed = QuickLZ.decompress(object);	                            
 	                            Log.i("compression", "RECEIVING: Compressed: Pre-compression: "+decompressed.length
 	    		                		+": Post-compression: " + mSize
-	    		                		+": Saved Bytes: " + (decompressed.length - mSize));
+	    		                		+": Saved Bytes: " + (decompressed.length - mSize));	                            
 	                        }
 	                        else
 	                        {
