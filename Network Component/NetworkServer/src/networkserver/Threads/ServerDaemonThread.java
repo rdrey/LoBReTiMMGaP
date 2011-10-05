@@ -246,7 +246,20 @@ public abstract class ServerDaemonThread extends Thread{
                         int mSize = b.getInt();
 
                         //Read in the object bytes
-                        byte [] object = new byte [mSize];
+                        byte [] object;
+                        try
+                        {
+                                object = new byte [mSize];
+                        }
+                        catch(RuntimeException e)
+                        {
+                                LogMaker.errorPrintln("Error allocating read buffer! " +
+                                                "Expected Size was "+mSize+", classType was "+classType+
+                                                " and compression was "+ compressed, playerID);
+                                LogMaker.errorPrintln("Eror was: "+e, playerID);
+                                shutdownThread();
+                                break;
+                        }
                         int bytesRead = 0;
                         while(bytesRead != mSize)
                         {

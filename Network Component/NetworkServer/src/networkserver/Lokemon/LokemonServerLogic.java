@@ -126,19 +126,22 @@ public class LokemonServerLogic extends Thread{
         {
             for(LokemonPlayer pl : LokemonServerVariables.playerList)
             {
-                //We dont want to compare to ourselves
-                if(pl.getPlayerID() != player.getPlayerID())
+                if(pl != null)
                 {
-                    //If this player is a valid, registered player in the networking component (just a consistency check)
-                    if(ServerVariables.playerThreadMap.containsKey(pl.getPlayerID()))
+                    //We dont want to compare to ourselves
+                    if(pl.getPlayerID() != player.getPlayerID())
                     {
-                        //If the player has a valid location
-                        if(pl.getPosition() != null)
+                        //If this player is a valid, registered player in the networking component (just a consistency check)
+                        if(ServerVariables.playerThreadMap.containsKey(pl.getPlayerID()))
                         {
-                            if(App.distFrom(pl.getPosition().getX(), pl.getPosition().getY(),
-                            player.getPosition().getX(), player.getPosition().getY()) < LokemonServerVariables.areaOfInterest)
-                            {                               
-                                players.add(pl);
+                            //If the player has a valid location
+                            if(pl.getPosition() != null)
+                            {
+                                if(App.distFrom(pl.getPosition().getX(), pl.getPosition().getY(),
+                                player.getPosition().getX(), player.getPosition().getY()) < LokemonServerVariables.areaOfInterest)
+                                {
+                                    players.add(pl);
+                                }
                             }
                         }
                     }

@@ -89,7 +89,7 @@ public abstract class CoreNetworkThread extends Thread
 	{
 		peers = new Vector<ClientPeer>();
 		b.order(ByteOrder.BIG_ENDIAN);		
-		gameClock = new GameClock();
+		gameClock = new GameClock();		
 	}
 	
 	public void setContext(Context appContext)
@@ -103,9 +103,9 @@ public abstract class CoreNetworkThread extends Thread
 	public void connectToServerAsync()
 	{		
 		if(!connected)
-		{			
-			startLatencyLogger();
-			this.start();
+		{	
+			if(!this.isAlive())
+				this.start();
 		}
 	}
 	
@@ -120,6 +120,8 @@ public abstract class CoreNetworkThread extends Thread
 			out = new NetworkWriteThread(socket);		
 			out.start();
 			
+			startLatencyLogger();
+			Looper.loop();
 			fireEvent(new NetworkEvent(this, "Connection successfully established!"), ConnectionEstablishedListener.class);
 		}
 		catch(UnknownHostException e)
@@ -135,11 +137,11 @@ public abstract class CoreNetworkThread extends Thread
 		finally
 		{
 			if(!success)
-			{
+			{				
 				fireEvent(new NetworkEvent(this, "Failed to connect to server... See log for details."), ConnectionFailedListener.class);				
 			}
 			else
-			{
+			{				
 				connected = true;
 			}
 		}
@@ -151,6 +153,10 @@ public abstract class CoreNetworkThread extends Thread
 	 */
 	private void startLatencyLogger()
 	{
+		//and start listening for network events
+		manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+		manager.listen(new DataNetworkListener(this), DataNetworkListener.LISTEN_DATA_CONNECTION_STATE);
+		
 		//start the actual latency loggers
 		Timer t = new Timer();
 		t.schedule(new TimerTask() {
@@ -163,11 +169,8 @@ public abstract class CoreNetworkThread extends Thread
 					requestNetworkLatency();
 				}
 			}
-		}, 0, 1000);
+		}, 0, 1000);		
 		
-		//and start listening for network events
-		manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-		manager.listen(new DataNetworkListener(this), DataNetworkListener.LISTEN_DATA_CONNECTION_STATE);
 	}
 	
 	
@@ -365,6 +368,9 @@ public abstract class CoreNetworkThread extends Thread
 	@Override
     public void run()
 	{
+		if(Looper.myLooper() == null){		
+			Looper.prepare();
+		}
 		if(!connected)
 		{
 			connectToServer();
@@ -376,7 +382,7 @@ public abstract class CoreNetworkThread extends Thread
 
 	        //Do running stuff        
 	        while(!stopOperation)
-	        {
+	        {	        	
 	            try
 	            {
 	            	NetworkMessage msg = null;
@@ -416,6 +422,8 @@ public abstract class CoreNetworkThread extends Thread
 	                        default:
 	                            msg = new NetworkMessage();
 	                            schema = networkMsgSchema;
+	                            Log.i(NetworkVariables.TAG, "Received unexpected classType tag:  "+ classType);
+	                            break;
 	                    }
 	                    if(!keepAliveBreak)
 	                    {
@@ -423,10 +431,24 @@ public abstract class CoreNetworkThread extends Thread
 	                        b.clear();
 	                        b.put(messageHeader, 2, 4);
 	                        b.rewind();
-	                        int mSize = b.getInt();
+	                        int mSize = b.getInt();	                        
 	                        
 	                        //Read in the object bytes
-	                        byte [] object = new byte [mSize];
+	                        
+	                        byte [] object;
+	                        try
+	                        {
+	                        	object = new byte [mSize];
+	                        }
+	                        catch(RuntimeException e)
+	                        {
+	                        	Log.e(NetworkVariables.TAG, "Error allocating read buffer! " +
+	                        			"Expected Size was "+mSize+", classType was "+classType+
+	                        			" and compression was "+ compressed);
+	                        	Log.e(NetworkVariables.TAG, "Eror was: "+e);
+	                        	shutdownThread();
+	                        	break;
+	                        }
 	                        int bytesRead = 0;
 	                        while(bytesRead != mSize)
 	                        {
@@ -442,7 +464,7 @@ public abstract class CoreNetworkThread extends Thread
 	                            decompressed = QuickLZ.decompress(object);	                            
 	                            Log.i("compression", "RECEIVING: Compressed: Pre-compression: "+decompressed.length
 	    		                		+": Post-compression: " + mSize
-	    		                		+": Saved Bytes: " + (decompressed.length - mSize));
+	    		                		+": Saved Bytes: " + (decompressed.length - mSize));	                            
 	                        }
 	                        else
 	                        {
@@ -743,6 +765,7 @@ public abstract class CoreNetworkThread extends Thread
         finally
         {
         	hasCompletedOperation = true;
+        	Looper.myLooper().quit();
         	fireEvent(new NetworkEvent(this, "Connection to Server lost!\n"),  ConnectionLostListener.class);
         }
     }

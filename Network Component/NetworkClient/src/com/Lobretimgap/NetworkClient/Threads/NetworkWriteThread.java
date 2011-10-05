@@ -101,7 +101,7 @@ public class NetworkWriteThread extends Thread
 	@Override
     public void run()
     {
-        while(!stopOperation)
+        while(!(stopOperation && messageQueue.isEmpty()))
         {
             try
             {   
@@ -202,6 +202,7 @@ public class NetworkWriteThread extends Thread
 	                //Log.d(NetworkVariables.TAG, "Serialised Size: "+serializedObject.length);
 	                //And then send it off.
 	                os.write(message);
+	                os.flush();
 	                
 	                Log.i("bandwidth", "SENT: "+message.length);
             	}
