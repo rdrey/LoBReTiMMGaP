@@ -1,9 +1,5 @@
 package android.lokemon.screens;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import android.location.Location;
 import android.lokemon.G;
@@ -17,12 +13,10 @@ import android.lokemon.game_objects.Region;
 import android.lokemon.popups.BagPopup;
 import android.lokemon.popups.PokemonPopup;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
@@ -371,7 +365,8 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
     		{G.game.sendCancelMessage();
     		G.game.rejectBattle(false);
     		showToast("You canceled the battle request");
-    		progressDialog.dismiss();}
+    		progressDialog.dismiss();
+    		Log.i("Battle", "Player canceled the battle request");}
     	});
     	progressDialog.show();
     }

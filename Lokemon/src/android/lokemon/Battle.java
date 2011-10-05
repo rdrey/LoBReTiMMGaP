@@ -147,15 +147,15 @@ public class Battle {
 	}
 	
 	private synchronized void finalizePlayerTurn()
-	{		
-		if (player_move == BattleMove.SWITCH_POKEMON)
-			G.game.sendSwitchBattleMessage(player_next_poke);
-		else
-			G.game.sendSimpleBattleMessage(player_move, player_move_index);
-		
+	{				
 		waitingForPlayer = false;
 		if (battleType == BattleType.TRAINER)
 		{
+			if (player_move == BattleMove.SWITCH_POKEMON)
+				G.game.sendSwitchBattleMessage(player_next_poke);
+			else
+				G.game.sendSimpleBattleMessage(player_move, player_move_index);
+			
 			if (!waitingForOpponent)
 				executeTurn();
 			else

@@ -66,6 +66,22 @@ public class NetworkComService <T extends CoreNetworkThread> extends Service{
 					    cmd = "logcat -d -v time -f "+filePrefix+"timesyncLog.log timesync:V *:S";					    
 					    Runtime.getRuntime().exec(cmd);
 					    
+					    // Riz's stuff
+					    cmd = "logcat -d -v time -f "+filePrefix+"Location.log Location:V *:S";					    
+					    Runtime.getRuntime().exec(cmd);
+					    
+					    cmd = "logcat -d -v time -f "+filePrefix+"Network_update.log Network_update:V *:S";					    
+					    Runtime.getRuntime().exec(cmd);
+					    
+					    cmd = "logcat -d -v time -f "+filePrefix+"Items.log Items:V *:S";					    
+					    Runtime.getRuntime().exec(cmd);
+					    
+					    cmd = "logcat -d -v time -f "+filePrefix+"Players.log Players:V *:S";					    
+					    Runtime.getRuntime().exec(cmd);
+					    
+					    cmd = "logcat -d -v time -f "+filePrefix+"Battle.log Battle:V *:S";					    
+					    Runtime.getRuntime().exec(cmd);
+					    
 					    //Wait until the full log save has finished. We expect this to take the longest, so we dont need to 
 					    //check if the others are finished
 					    mainRequest.waitFor();

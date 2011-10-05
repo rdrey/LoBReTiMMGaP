@@ -49,25 +49,6 @@ public class Move {
 				category = 2;
 		}
 		catch (Exception e){category = 2;}
-		/*category = Util.getIntFromJSON(object, "category");
-		if (category == -1) category = 2;
-		else
-		{
-			name = object.getString("name");
-			type = G.types[G.Types.valueOf(object.getString("type")).ordinal()];
-			pp = object.getInt("pp");
-			description = object.getString("desc");
-			if (category == 0)
-			{
-				power = object.getInt("power");
-				accuracy = object.getInt("accuracy");
-				critical = Util.getBoolFromJSON(object, "critical");
-			}
-			else
-			{
-				// load moves that apply status effects here
-			}
-		}*/
 	}
 	
 	public static void loadMoves(String moveJSON) throws JSONException

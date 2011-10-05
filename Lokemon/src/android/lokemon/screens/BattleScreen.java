@@ -200,7 +200,8 @@ public class BattleScreen extends Activity implements View.OnClickListener{
     		{G.game.sendCancelMessage();
     		showToast("You canceled the battle");
     		endBattle();
-    		progressDialog.dismiss();}
+    		progressDialog.dismiss();
+    		Log.i("Battle", "Player canceled the battle");}
     	});
     	progressDialog.show();
     }

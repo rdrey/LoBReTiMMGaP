@@ -79,14 +79,10 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	private boolean networkBound;
 	private boolean busyBinding;
 	
-	// we don't want to overwhelm the client with responses if there is a backlog
-	private boolean waitingForPlayers;
-	private boolean waitingForItems;
-	
 	// periodically requests game state updates from server
 	private Handler networkUpdater;
 	private Runnable updater;
-	private long elapsedTime;
+	private Runnable pokemon_generator;
 	
 	private NetworkComBinder networkBinder;
 	private final Messenger networkEventMessenger;
@@ -127,91 +123,88 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		networkReqLock = false;
 		waitingForAccept = false;
 		waitingForItemAccept = false;
-		elapsedTime = 0;
 		busyBinding = false;
 		busyConnecting = false;
 		networkEventMessenger = new Messenger(new Handler(this));
 		networkUpdater = new Handler();
 		updater = new Runnable(){
 			public void run() {
+				
+				float current_latency;
+				try {current_latency = networkBinder.getGameClock().getLatency()/4.0f;}
+				catch (RuntimeException e) {current_latency = 500;}
+				
 				if (networkBound)
 				{
 					if (networkBinder.isConnectedToServer())
 					{
 						if (G.mode == Mode.MAP)
 						{
-							//if (!waitingForItems)
-							//{
-								networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
-								waitingForItems = true;
-							//}
-							
-							//if (!waitingForPlayers)
-							//{
-								networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
-								waitingForPlayers = true;
-							//}
-							
-							// generate a Pokemon with probability based on catch rate if the player is in a special region
-							if (G.player.playerState == PlayerState.AVAILABLE && !waitingForAccept)
-							{
-								if (elapsedTime >= 1000 && currentRegion != null && currentRegion.ordinal() < 7 && !foundPokeInRegion)
-								{
-									/*
-									 * generate a pokemon that is within 5 levels of your party's
-									 * strongest pokemon with 30% chance every 1 second
-									 */
-									if (G.random.nextDouble() < 0.3)
-									{
-										ArrayList<BasePokemon> pokes_in_region = G.pokemon_by_region[currentRegion.ordinal()];
-										ArrayList<BasePokemon> options = new ArrayList<BasePokemon>();
-										int levelSum = 0;
-										for (Pokemon p:G.player.pokemon)
-											levelSum += p.getLevel();
-										int level = levelSum/G.player.pokemon.size() + G.random.nextInt(11) - 5;
-										if (level <= 0)
-											level = 1;
-										for (BasePokemon p:pokes_in_region)
-										{
-											// if the level falls within the pokemon's normal range
-											if (p.baseLevel <= level && (p.evolution == null || p.evolution[1] > level))
-												options.add(p);
-										}
-										networkReqLock = true;
-										genPokemon = new Pokemon(options.get(G.random.nextInt(options.size())).index, level);
-										foundPokeInRegion = true;
-										battleInitMessage = null;
-										initiateBattle();
-									}
-									elapsedTime -= 1000;
-								}
-								try{elapsedTime += networkBinder.getGameClock().getLatency()/2;}
-								catch (RuntimeException e) {elapsedTime += 500;}
-							} 
+							networkBinder.sendGameStateRequest(new NetworkMessage("GetGameObjects"));
+							Log.i("Items", "Requesting items");
+							networkBinder.sendGameStateRequest(new NetworkMessage("GetPlayers"));
+							Log.i("Players", "Requesting players");
 						}
 					}
 					else if (!busyConnecting)
 					{
-						Log.i(NetworkVariables.TAG, "Trying to connect to game server...");
+						Log.i("Network_update", "Trying to connect to game server...");
 						networkBinder.ConnectToServer();
 						busyConnecting = true;
 					}
 				}
 				else if (!busyBinding)
 				{
-					Log.i(NetworkVariables.TAG, "Trying to rebind network service");
+					Log.i("Network_update", "Trying to rebind network service");
 					createConnection();
 				}
-				try
+				
+				Log.i("Network_update", "Requested update after " + current_latency + "ms");
+				networkUpdater.postDelayed(updater, (int)current_latency);
+				
+			}
+		};
+		
+		pokemon_generator = new Runnable(){
+			public void run()
+			{			
+				// generate a Pokemon with probability based on catch rate if the player is in a special region
+				if (G.mode == Mode.MAP && G.player.playerState == PlayerState.AVAILABLE && !waitingForAccept)
 				{
-					Log.i(NetworkVariables.TAG, "Requested update after " + networkBinder.getGameClock().getLatency()/2 + "ms");
-					networkUpdater.postDelayed(updater, networkBinder.getGameClock().getLatency()/2);
-				}
-				catch (RuntimeException e)
-				{
-					Log.i(NetworkVariables.TAG, "Requested update after " + 500 + "ms");
-					networkUpdater.postDelayed(updater, 500);
-				}
+					if (currentRegion != null && currentRegion.ordinal() < 7 && !foundPokeInRegion)
+					{
+						/*
+						 * generate a pokemon that is within 5 levels of your party's
+						 * strongest pokemon with 30% chance every 1 second
+						 */
+						if (G.random.nextDouble() < 0.3)
+						{
+							ArrayList<BasePokemon> pokes_in_region = G.pokemon_by_region[currentRegion.ordinal()];
+							ArrayList<BasePokemon> options = new ArrayList<BasePokemon>();
+							int lowest_level = 100;
+							for (Pokemon p:G.player.pokemon)
+							{
+								if (p.getLevel() < lowest_level)
+									lowest_level = p.getLevel();
+							}
+							int level = lowest_level + G.random.nextInt(8) - 5;
+							if (level <= 0)
+								level = 1;
+							for (BasePokemon p:pokes_in_region)
+							{
+								// if the level falls within the pokemon's normal range
+								if (p.baseLevel <= level && (p.evolution == null || p.evolution[1] > level))
+									options.add(p);
+							}
+							networkReqLock = true;
+							genPokemon = new Pokemon(options.get(G.random.nextInt(options.size())).index, level);
+							foundPokeInRegion = true;
+							battleInitMessage = null;
+							initiateBattle();
+						}
+					}
+				} 
+				networkUpdater.postDelayed(pokemon_generator, 1000);
 			}
 		};
 		display.showProgressDialog("Starting up...");
@@ -310,23 +303,10 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 						selectedItem = null;
 					}
 					else
-					{
-						// check if there are any other players nearby
-						boolean all_clear = true;
-						synchronized (players)
-						{
-							for (NetworkPlayer pl:players)
-							{
-								if (selectedItem.getAndroidLocation().distanceTo(pl.getAndroidLocation()) < 50)
-								{
-									all_clear = false;
-									break;
-								}
-							}
-						}
-						
+					{				
 						// send item request
 						NetworkMessageMedium msg = new NetworkMessageMedium("ItemPickupRequest");
+						Log.i("Items", "Item pickup request");
 						msg.integers.add(itemID);
 						networkBinder.sendRequest(msg);
 						removeItem(selectedItem);
@@ -334,18 +314,8 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 						if (ignored_item_ids.size() > 3)
 							ignored_item_ids.removeFirst();
 						
-						if (all_clear)
-						{
-							BagItem itm = G.player.items[selectedItem.potionType.ordinal()+1];
-							itm.increment();
-							display.showToast("You have picked up a " + itm.getName());
-							selectedItem = null;
-						}
-						else
-						{
-							waitingForItemAccept = true;
-							display.showToast("Getting permission to pick up item...");
-						}
+						waitingForItemAccept = true;
+						display.showToast("Getting permission to pick up item...");
 					}
 				}
 				else
@@ -397,6 +367,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			{
 				// send Action.REQUEST_BATTLE
 				networkBinder.sendDirectCommunication(getBattleInitiationMessage(Action.REQUEST_BATTLE), selectedPlayer.getID());
+				Log.i("Battle", "Outgoing battle request to ID: " +  selectedPlayer.getID());
 				display.showProgressDialog("Waiting for player response...");
 				waitingForAccept = true;
 			}
@@ -408,7 +379,8 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		if (sendResponse)
 		{
 			// send Action.REJECT_BATTLE
-			networkBinder.sendDirectCommunication(new NetworkMessage(Action.REJECT_BATTLE.toString()), selectedPlayer.getID());
+			if (selectedPlayer != null)
+				networkBinder.sendDirectCommunication(new NetworkMessage(Action.REJECT_BATTLE.toString()), selectedPlayer.getID());
 		}
 		selectedPlayer = null;
 		waitingForAccept = false;
@@ -418,12 +390,21 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 	public void acceptBattle()
 	{
 		// send Action.ACCEPT_BATTLE
-		opponentID = selectedPlayer.getID();
-		randomSeed = G.random.nextInt();
-		NetworkMessageMedium battleInit = getBattleInitiationMessage(Action.ACCEPT_BATTLE);
-		battleInit.integers.add(randomSeed);
-		networkBinder.sendDirectCommunication(battleInit, opponentID);
-		initiateBattle();
+		if (selectedPlayer != null)
+		{
+			opponentID = selectedPlayer.getID();
+			randomSeed = G.random.nextInt();
+			NetworkMessageMedium battleInit = getBattleInitiationMessage(Action.ACCEPT_BATTLE);
+			battleInit.integers.add(randomSeed);
+			networkBinder.sendDirectCommunication(battleInit, opponentID);
+			Log.i("Battle", "Outgoing battle accept to ID: " + selectedPlayer.getID());
+			initiateBattle();
+		}
+		else
+		{
+			display.showToast("Something went wrong... Sorry!");
+			rejectBattle(false);
+		}
 	}
 	
 	private void initiateBattle()
@@ -477,6 +458,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		nMsg.integers.add(move.ordinal());
 		nMsg.integers.add(index);
 		networkBinder.sendDirectCommunication(nMsg, opponentID);
+		Log.i("Battle", "Outgoing battle move to ID: " + opponentID);
 	}
 	
 	public void sendSwitchBattleMessage(Pokemon new_poke)
@@ -489,15 +471,22 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		for (int stat:new_poke.getStats())
 			nMsg.integers.add(stat);
 		networkBinder.sendDirectCommunication(nMsg, opponentID);
+		Log.i("Battle", "Outgoing battle move to ID: " + opponentID);
 	}
 	
 	public void sendCancelMessage()
 	{
 		NetworkMessageMedium nMsg = new NetworkMessageMedium(Action.CANCEL.toString());
 		if (G.mode == Mode.BATTLE)
+		{
+			Log.i("Battle", "Outgoing battle cancel to ID: " + opponentID);
 			networkBinder.sendDirectCommunication(nMsg, opponentID);
+		}
 		else
+		{
+			Log.i("Battle", "Outgoing battle cancel to ID: " + selectedPlayer.getID());
 			networkBinder.sendDirectCommunication(nMsg, selectedPlayer.getID());
+		}
 	}
 	
 	private NetworkMessageMedium getBattleInitiationMessage(Action action)
@@ -698,6 +687,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			{
 				networkBound = false;
 				display.showToast("Disconnected from service");
+				Log.i("Network_update", "Network service disconnected");
 			}
 			
 			public void onServiceConnected(ComponentName name, IBinder service) 
@@ -710,6 +700,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				networkBound = true;
 				busyBinding = false;
 				display.showToast("Connected to service");
+				Log.i("Network_update", "Network service connected");
 			}
 		};
 		display.bindService(intent, ser, Context.BIND_AUTO_CREATE);
@@ -726,19 +717,21 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		{
 			case CONNECTION_ESTABLISHED:
 			{
+				Log.i("Network_update", "Connected to game server");
 				display.showToast("Connected to game server");
 				busyConnecting = false;
 				break;	
 			}
 			case PLAYER_REGISTERED:
 			{
+				Log.i("Network_update", "Player registered on game server");
 				// get player id
 				G.player.id = networkBinder.getPlayerId();
 				// send busy status update (if necessary)
 				if (G.player.playerState == PlayerState.BUSY)
 					networkBinder.sendGameUpdate(new NetworkMessage("EnteredBattle"));
 				// only get map data after 5 seconds to give lawrence's latency estimation time to converge
-				Log.i(NetworkVariables.TAG, "Requesting map data in 5 seconds...");
+				Log.i("Network_update", "Requesting map data in 5 seconds...");
 				networkUpdater.postDelayed(new Runnable(){
 					public void run()
 					{
@@ -750,7 +743,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 							msg1.doubles.add(G.player.getLocation().getLongitude());
 							msg1.doubles.add(2000.0);
 							networkBinder.sendRequest(msg1);
-							Log.i("Regions", "Requesting regions");
+							Log.i("Network_update", "Requesting map data");
 						}
 					}
 				}, 5000);
@@ -758,13 +751,20 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			}
 			case CONNECTION_LOST:
 			{
+				Log.i("Network_update", "Connection to game server lost");
 				display.showToast("Connection to game server lost");
 				if (G.mode == Mode.BATTLE)
 					G.battle.handlePlayerDisconnected();
+				else if (waitingForAccept)
+				{
+					display.cancelProgressDialog();
+					rejectBattle(false);				
+				}
 				break;
 			}
 			case CONNECTION_FAILED:
 			{
+				Log.i("Network_update", "Failed to connect to game server");
 				display.showToast("Could not connect to game server");
 				busyConnecting = false;
 				// if the connection fails without ever having been connected we need to start the updater
@@ -778,7 +778,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				String tag = nMsg.getMessage();
 				if (tag.equals("Response:GetGameObjects"))
 				{
-					waitingForItems = false;
+					Log.i("Items", "Received item update");
 					ArrayList<LokemonPotion> ilist = (ArrayList<LokemonPotion>)nMsg.objectDict.get("ItemList");
 					if (ilist != null)
 					{
@@ -862,7 +862,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				}
 				else if (tag.equals("Response:GetPlayers"))
 				{
-					waitingForPlayers = false;
+					Log.i("Players", "Received player update");
 					ArrayList<LokemonPlayer> plist = (ArrayList<LokemonPlayer>)nMsg.objectDict.get("PlayerList");
 					if (plist != null)
 					{
@@ -948,11 +948,13 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				}
 				else if (tag.equals("MapDataResponse"))
 				{
+					Log.i("Network_update", "Received map data");
 					display.cancelProgressDialog();
 					// tell the server where the player is
 					onLocationChanged(G.player.getLocation());			
 					// start requesting updates from server
 					networkUpdater.postDelayed(updater, 0);
+					networkUpdater.postDelayed(pokemon_generator, 1000);
 					
 					// add regions
 					ArrayList<LokemonSpatialObject> rlist = (ArrayList<LokemonSpatialObject>)nMsg.objectDict.get("SpatialObjects");
@@ -1048,6 +1050,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				{
 					if (tag.equals("Accept") && selectedItem != null)
 					{
+						Log.i("Items", "Item pickup accepted");
 						BagItem item = G.player.items[selectedItem.potionType.ordinal()+1];
 						item.increment();
 						display.showToast("You have picked up a " + item.getName());
@@ -1055,6 +1058,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					}
 					else
 					{
+						Log.i("Items", "Item pickup rejected");
 						display.showToast("Someone picked up the item before you");
 						selectedItem = null;
 					}
@@ -1076,6 +1080,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 					switch(action)
 					{
 					case REJECT_BATTLE:
+						Log.i("Battle", "Incoming battle reject from ID: " + dce.getSourcePlayerID());
 						if (waitingForAccept)
 						{
 							display.cancelProgressDialog();
@@ -1084,6 +1089,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 						}
 						break;
 					case ACCEPT_BATTLE:
+						Log.i("Battle", "Incoming battle accept from ID: " + dce.getSourcePlayerID());
 						if (waitingForAccept)
 						{
 							battleInitMessage = (NetworkMessageMedium)nMsg;
@@ -1093,6 +1099,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 						}
 						break;
 					case REQUEST_BATTLE:
+						Log.i("Battle", "Incoming battle request from ID: " + dce.getSourcePlayerID());
 						NetworkMessageMedium req = (NetworkMessageMedium)nMsg;
 						if (G.mode == Mode.MAP)
 						{
@@ -1105,6 +1112,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 							}
 							else if (waitingForAccept && selectedPlayer.getID() == dce.getSourcePlayerID())
 							{
+								Log.i("Battle", "Battle request arbitrated");
 								// arbitrate based on IDs because the result will be consistent
 								if (G.player.id > selectedPlayer.getID())
 								{
@@ -1115,10 +1123,14 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								}
 							}
 							else
+							{
+								Log.i("Battle", "Outgoing battle reject all to ID: " + dce.getSourcePlayerID());
 								networkBinder.sendDirectCommunication(new NetworkMessage(Action.REJECT_ALL.toString()), req.integers.get(1));
+							}
 						}
 						break;
 					case REJECT_ALL:
+						Log.i("Battle", "Incoming battle reject all from ID: " + dce.getSourcePlayerID());
 						if (waitingForAccept)
 						{
 							display.cancelProgressDialog();
@@ -1127,6 +1139,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 						}
 						break;
 					case BATTLE_MOVE:
+						Log.i("Battle", "Incoming battle move from ID: " + dce.getSourcePlayerID());
 						if (G.mode == Mode.BATTLE)
 						{
 							NetworkMessageMedium mMsg = (NetworkMessageMedium)nMsg;
@@ -1148,19 +1161,20 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 						}
 						break;
 					case CANCEL:
+						Log.i("Battle", "Incoming battle cancel from ID: " + dce.getSourcePlayerID());
 						if (G.mode == Mode.BATTLE)
 						{
 							if (G.battle != null && dce.getSourcePlayerID() == opponentID)
 							{
 								G.battle.handleOpponentDisconnected();
-								Log.i("Players", "Opponent canceled the battle");
+								Log.i("Battle", "Opponent canceled the battle");
 							}	
 						}
 						else if (selectedPlayer != null && selectedPlayer.getID() == dce.getSourcePlayerID())
 						{
 							display.cancelBattleAlert();
 							display.cancelProgressDialog();
-							Log.i("Players", "Opponent canceled the battle request");
+							Log.i("Battle", "Opponent canceled the battle request");
 							display.showToast("The request was canceled");
 							rejectBattle(false);
 						}
@@ -1169,6 +1183,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				}
 				catch (IllegalArgumentException e)
 				{
+					Log.i("Battle", "Incoming battle disconnection from ID: " + dce.getSourcePlayerID());
 					// either NOTIFICATION:PlayerDisconnected or ERROR: Direct communication target <targetPlayerId> is no longer connected!
 					if ((waitingForAccept || networkReqLock) && dce.getSourcePlayerID() == selectedPlayer.getID())
 					{
@@ -1176,12 +1191,12 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 						selectedPlayer = null;
 						waitingForAccept = false;
 						networkReqLock = false;
-						Log.i("Players", "Opponent disconnected during battle initiation");
+						Log.i("Battle", "Opponent disconnected during battle initiation");
 					}
 					else if (G.mode == Mode.BATTLE && G.battle != null && G.battle.battleType == BattleType.TRAINER && dce.getSourcePlayerID() == opponentID)
 					{
 						G.battle.handleOpponentDisconnected();
-						Log.i("Players", "Opponent disconnected during battle");
+						Log.i("Battle", "Opponent disconnected during battle");
 					}
 				}
 				break;

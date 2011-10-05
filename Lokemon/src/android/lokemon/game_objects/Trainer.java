@@ -12,7 +12,6 @@ import android.lokemon.G.Gender;
 import android.lokemon.G.PlayerState;
 import android.lokemon.G.Potions;
 import android.util.Log;
-import android.widget.Toast;
 import android.app.Activity;
 
 // class encapsulates player attributes - follows singleton pattern
