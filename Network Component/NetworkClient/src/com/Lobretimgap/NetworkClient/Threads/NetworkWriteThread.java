@@ -151,24 +151,45 @@ public class NetworkWriteThread extends Thread
 	            	//Serialize the message
 	                byte [] serializedObject = ProtostuffIOUtil.toByteArray(msg, schema, buffer);
 	                int startSize = serializedObject.length;
+	                
 	                //Compress the message
+	                boolean compressed = false;
 	                byte [] tempArray = QuickLZ.compress(serializedObject, 1);
-	                serializedObject = tempArray;
+	                if(tempArray.length < serializedObject.length)
+	                {
+	                    serializedObject = tempArray;
+	                    compressed = true;
+	                    //Loggin
+	                    Log.i("compression", "SENDING: Compressed: Pre-compression: "+startSize
+		                		+": Post-compression: " + serializedObject.length
+		                		+": Saved Bytes: " + (startSize - serializedObject.length));
+	                }
 	                
 	                //Logging
-	                Log.i("compression", "SENDING: Pre-compression: "+startSize
-	                		+", Post-compression: " + serializedObject.length
-	                		+", Saved Bytes: " + (startSize - serializedObject.length));
-	                                
+	                if(!compressed)
+	                {
+	                	Log.i("compression", "SENDING: Not_Compressed: size: "+serializedObject.length);
+	                }
+	                          
+	                //Create the header. First class type, then whether source is compressed
+	                //and finally source size.
 	                //Calculate and create a leading length field (4 bytes of data, an integer)
 	                b.clear();
 	                b.putInt(serializedObject.length);                
 	                byte [] lengthField = b.array();                
 	                //Stitch them together into one message
-	                byte [] message = new byte[serializedObject.length + lengthField.length + 1];
+	                byte [] message = new byte[serializedObject.length + lengthField.length + 2];
 	                message[0] = classType;
-	                System.arraycopy(lengthField, 0, message, 1, lengthField.length);
-	                System.arraycopy(serializedObject, 0, message, lengthField.length + 1, serializedObject.length);
+	                if(compressed)
+	                {
+	                    message[1] = 1;
+	                }
+	                else
+	                {
+	                    message[1] = 0;
+	                }
+	                System.arraycopy(lengthField, 0, message, 2, lengthField.length);
+	                System.arraycopy(serializedObject, 0, message, lengthField.length + 2, serializedObject.length);
 	                
 	                //Log.d(NetworkVariables.TAG, "Serialised Size: "+serializedObject.length);
 	                //And then send it off.

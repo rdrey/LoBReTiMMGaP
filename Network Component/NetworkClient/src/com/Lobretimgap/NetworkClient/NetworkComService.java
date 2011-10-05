@@ -1,6 +1,9 @@
 package com.Lobretimgap.NetworkClient;
 
+import java.io.File;
 import java.io.IOException;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -25,6 +28,7 @@ public class NetworkComService <T extends CoreNetworkThread> extends Service{
 		try {						
 			binder = new NetworkComBinder(getApplicationContext());
 			
+			logSaver = new Timer();
 			logSaver.schedule(new TimerTask() {
 				
 				@Override
@@ -32,40 +36,53 @@ public class NetworkComService <T extends CoreNetworkThread> extends Service{
 					
 					try
 					{
+						Log.w(NetworkVariables.TAG, "Writing logs to sd card...");
 						
-						String filePrefix = Environment.getExternalStorageDirectory()+"/";
+						Date current = new Date(System.currentTimeMillis());
+				        SimpleDateFormat formatter = new SimpleDateFormat("E-dd-MMM");
+				        
+						String filePrefix = Environment.getExternalStorageDirectory()+"/Logs/"+formatter.format(current)+"/";
+						File folder = new File(filePrefix);
+						folder.mkdirs();
 						
-						String cmd = "logcat -d -v time >> "+filePrefix+"fullLog.log";					
+						String cmd = "logcat -d -v time -f "+filePrefix+"fullLog.log *:D";					
+					    Process mainRequest = Runtime.getRuntime().exec(cmd);
+					    
+					    cmd = "logcat -d -v time -f "+filePrefix+"networkclientLog.log NetworkClient:V *:S";					    
 					    Runtime.getRuntime().exec(cmd);
 					    
-					    cmd = "logcat -d -v time -s NetworkClient >> "+filePrefix+"networkclientLog.log";
+					    cmd = "logcat -d -v time -f "+filePrefix+"bandwidthLog.log bandwidth:V *:S";					    
 					    Runtime.getRuntime().exec(cmd);
 					    
-					    cmd = "logcat -d -v time -s bandwidth >> "+filePrefix+"bandwidthLog.log";
+					    cmd = "logcat -d -v time -f "+filePrefix+"compressionLog.log compression:V *:S";					    
 					    Runtime.getRuntime().exec(cmd);
 					    
-					    cmd = "logcat -d -v time -s compression >> "+filePrefix+"compressionLog.log";
+					    cmd = "logcat -d -v time -f "+filePrefix+"latencyLog.log latency:V *:S";					    
 					    Runtime.getRuntime().exec(cmd);
 					    
-					    cmd = "logcat -d -v time -s latency >> "+filePrefix+"latencyLog.log";
+					    cmd = "logcat -d -v time -f "+filePrefix+"networksLog.log networks:V *:S";			    
 					    Runtime.getRuntime().exec(cmd);
 					    
-					    cmd = "logcat -d -v time -s networks >> "+filePrefix+"networksLog.log";
+					    cmd = "logcat -d -v time -f "+filePrefix+"timesyncLog.log timesync:V *:S";					    
 					    Runtime.getRuntime().exec(cmd);
 					    
-					    cmd = "logcat -d -v time -s timesync >> "+filePrefix+"timesyncLog.log";
-					    Runtime.getRuntime().exec(cmd);
-					    
+					    //Wait until the full log save has finished. We expect this to take the longest, so we dont need to 
+					    //check if the others are finished
+					    mainRequest.waitFor();
 					    cmd = "logcat -c";
 					    Runtime.getRuntime().exec(cmd);
+					    
+					    Log.w(NetworkVariables.TAG, "Writing of logs completed, system log flushed.");
 				    
 					}
 					catch(IOException e)
 					{
-						Log.e("LOG", "ERROR:" + e);
+						Log.e(NetworkVariables.TAG, "Failed to save logs to sd card!: " + e);
+					} catch (InterruptedException e) {						
+						e.printStackTrace();
 					}
 				}
-			}, 1000, 60000);
+			}, 1000, NetworkVariables.logSaveInterval);
 			
 		} catch (IllegalAccessException e) {
 			Log.e(NetworkVariables.TAG, "Error thrown in Network thread instantiation: " + e.getMessage(), e);			
