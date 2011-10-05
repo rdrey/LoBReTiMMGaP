@@ -449,6 +449,15 @@ public abstract class CoreNetworkThread extends Thread
 	                        	shutdownThread();
 	                        	break;
 	                        }
+	                        catch(OutOfMemoryError e)
+	                        {
+	                        	Log.e(NetworkVariables.TAG, "Error allocating read buffer! " +
+	                        			"Expected Size was "+mSize+", classType was "+classType+
+	                        			" and compression was "+ compressed);
+	                        	Log.e(NetworkVariables.TAG, "Eror was: "+e);
+	                        	shutdownThread();
+	                        	break;
+	                        }
 	                        int bytesRead = 0;
 	                        while(bytesRead != mSize)
 	                        {
