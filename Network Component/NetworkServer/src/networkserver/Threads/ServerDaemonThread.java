@@ -260,6 +260,15 @@ public abstract class ServerDaemonThread extends Thread{
                                 shutdownThread();
                                 break;
                         }
+                        catch(OutOfMemoryError e)
+                        {
+                                LogMaker.errorPrintln("Error allocating read buffer! " +
+                                                "Expected Size was "+mSize+", classType was "+classType+
+                                                " and compression was "+ compressed, playerID);
+                                LogMaker.errorPrintln("Eror was: "+e, playerID);
+                                shutdownThread();
+                                break;
+                        }
                         int bytesRead = 0;
                         while(bytesRead != mSize)
                         {
