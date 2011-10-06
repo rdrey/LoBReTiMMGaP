@@ -22,7 +22,7 @@ public class G {
 	public static Trainer player;
 	public static Game game;
 	public static Mode mode;
-	public static TestMode testMode = TestMode.CONTROL;
+	public static TestMode testMode = TestMode.EXPERIMENT;
 	public static ElemType [] types;
 	public static Battle battle;
 	public static int [] region_colours;

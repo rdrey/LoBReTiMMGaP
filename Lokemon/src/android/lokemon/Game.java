@@ -627,7 +627,8 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 		NetworkMessageMedium msg = new NetworkMessageMedium("LocationUpdate");
 		msg.doubles.add(location.getLatitude());
 		msg.doubles.add(location.getLongitude());
-		networkBinder.sendGameUpdate(msg);
+		if (networkBinder != null)
+			networkBinder.sendGameUpdate(msg);
 		
 		// check which region type the player is in
 		Regions newRegion = checkRegion(location);
@@ -652,7 +653,8 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				
 				// send available update
 				G.player.playerState = PlayerState.AVAILABLE;
-				networkBinder.sendGameUpdate(new NetworkMessage("ExitedBattle"));
+				if (networkBinder != null)
+					networkBinder.sendGameUpdate(new NetworkMessage("ExitedBattle"));
 			}
 		}
 		currentRegion = newRegion;

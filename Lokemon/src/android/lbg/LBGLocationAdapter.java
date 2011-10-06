@@ -71,7 +71,8 @@ public class LBGLocationAdapter implements LocationListener {
 	
 	public void onLocationChanged(Location location) 
 	{ 
-		listener.onLocationChanged(location);
+		if (listener != null)
+			listener.onLocationChanged(location);
 		Log.i("Location", location.toString());
 	}
 	
