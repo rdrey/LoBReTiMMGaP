@@ -3,6 +3,8 @@ package android.lokemon.popups;
 import android.app.ListActivity;
 import android.graphics.drawable.TransitionDrawable;
 import android.lokemon.R;
+import android.lokemon.R.id;
+import android.lokemon.R.layout;
 import android.os.Bundle;
 
 public class FadePopup extends ListActivity {
@@ -12,7 +14,7 @@ public class FadePopup extends ListActivity {
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.list_popup2);
+		setContentView(R.layout.list_popup);
 		background = (TransitionDrawable)(findViewById(R.id.list_parent).getBackground());
 	}
 	

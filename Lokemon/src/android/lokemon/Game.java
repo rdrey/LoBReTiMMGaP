@@ -711,8 +711,7 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				if (networkBinder.isConnectedToServer())
 					onPlayerRegistered(0);
 				else
-					startGame();
-					//networkBinder.ConnectToServer();
+					networkBinder.ConnectToServer();
 			}
 		};
 		display.bindService(intent, ser, Context.BIND_AUTO_CREATE);
