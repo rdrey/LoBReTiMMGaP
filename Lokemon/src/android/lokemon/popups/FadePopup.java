@@ -3,8 +3,6 @@ package android.lokemon.popups;
 import android.app.ListActivity;
 import android.graphics.drawable.TransitionDrawable;
 import android.lokemon.R;
-import android.lokemon.R.id;
-import android.lokemon.R.layout;
 import android.os.Bundle;
 
 public class FadePopup extends ListActivity {

@@ -14,7 +14,6 @@ import android.lokemon.screens.BattleScreen;
 import android.util.Log;
 
 public class Battle {
-	
 	private static float [] stage_mod = {0.25f,0.29f,0.33f,0.40f,0.50f,0.67f,1.0f,1.5f,2.0f,2.5f,3.0f,3.5f,4.0f};
 	private enum MoveResult {RAN_AWAY, VICTORY, NONE, CAUGHT_POKEMON};
 	public BattleType battleType;
@@ -451,7 +450,13 @@ public class Battle {
 					display.setPlayerPokeDetails(poke_player);
 				}
 				else
-					if (player_stages[index - 1] < 6) player_stages[index - 1]++;
+				{
+					if (player_stages[index - 1] < 6)
+					{
+						player_stages[index - 1]++;
+						Log.i("Battle", "Player stat " + (index-1) + " increased");
+					}
+				}
 			}
 			else
 			{
@@ -461,7 +466,11 @@ public class Battle {
 					display.setOppPokeDetails(poke_opp);
 				}
 				else
-					if (opp_stages[index - 1] < 6) opp_stages[index - 1]++;
+					if (opp_stages[index - 1] < 6) 
+					{
+						opp_stages[index - 1]++;
+						Log.i("Battle", "Opp stat " + (index - 1) + " increased");
+					}
 			}		
 			resultMessage += player + " used a " + G.player.items[index].getName() + ".\n";
 			return MoveResult.NONE;
@@ -542,6 +551,7 @@ public class Battle {
 						defense = target.getAttack() * stage_mod[opp_stages[2] + 6];
 						specialSource = source.getSpecial() * stage_mod[player_stages[3] + 6];
 						specialTarget = target.getSpecial() * stage_mod[opp_stages[3] + 6];
+						Log.i("Battle", "Player: attack = " + attack + "; defense = " + defense);
 					}
 					else
 					{
@@ -549,6 +559,7 @@ public class Battle {
 						defense = target.getAttack() * stage_mod[player_stages[2] + 6];
 						specialSource = source.getSpecial() * stage_mod[opp_stages[3] + 6];
 						specialTarget = target.getSpecial() * stage_mod[player_stages[3] + 6];
+						Log.i("Battle", "Opponent: attack = " + attack + "; defense = " + defense);
 					}
 					
 					// determine if critical hit was landed
@@ -625,16 +636,40 @@ public class Battle {
 						if (move.stages[i] < 0)
 						{
 							if (source == poke_player)
-								if (opp_stages[i] > -6) opp_stages[i]--;
+							{
+								if (opp_stages[i] > -6)
+								{
+									opp_stages[i]--;
+									Log.i("Battle", "Opp stat " + (i) + " decreased");
+								}
+							}
 							else
-								if (player_stages[i] > -6) player_stages[i]--;
+							{
+								if (player_stages[i] > -6) 
+								{
+									player_stages[i]--;
+									Log.i("Battle", "Player stat " + (i) + " decreased");
+								}
+							}
 						}
 						else
 						{
 							if (source == poke_player)
-								if (player_stages[i] < 6) player_stages[i]++;
+							{
+								if (player_stages[i] < 6) 
+								{
+									player_stages[i]++;
+									Log.i("Battle", "Player stat " + (i) + " increased");
+								}
+							}
 							else
-								if (opp_stages[i] < 6) opp_stages[i]++;
+							{
+								if (opp_stages[i] < 6) 
+								{
+									opp_stages[i]++;
+									Log.i("Battle", "Opp stat " + (i) + " increased");
+								}
+							}
 						}
 					}
 				}

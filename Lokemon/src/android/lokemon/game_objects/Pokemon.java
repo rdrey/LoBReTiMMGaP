@@ -98,6 +98,7 @@ public class Pokemon {
 	{
 		index = base.evolution[0];
 		base = G.base_pokemon[index];
+		pp = new int[base.moves.length/2];
 		restorePP();
 	}
 	

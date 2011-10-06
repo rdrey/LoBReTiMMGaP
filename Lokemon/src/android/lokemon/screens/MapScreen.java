@@ -223,13 +223,19 @@ public class MapScreen extends MapActivity implements View.OnClickListener{
         mapView.getOverlays().add(players);
         mapView.getOverlays().add(items);
         
-        new Game(this);
-        
-        // only use GPS for experimental group
-        if (G.testMode == TestMode.EXPERIMENT)
-        	location_adapter = new LBGLocationAdapter(this, LBGLocationAdapter.GPS_LOCATION_ONLY, 0, 2, G.game);
-        
-        G.game.createConnection();
+        if (G.game == null)
+        {
+	        new Game(this);
+	        
+	        // only use GPS for experimental group
+	        if (G.testMode == TestMode.EXPERIMENT)
+	        	location_adapter = new LBGLocationAdapter(this, LBGLocationAdapter.GPS_LOCATION_ONLY, 0, 2, G.game);
+	        
+	        G.game.createConnection();
+	        Log.i("Network_update", "Map screen created and first connection attempt");
+        }
+        else
+        	Log.i("Network_update", "Map screen recreated");
     }
     
     protected void onResume()
