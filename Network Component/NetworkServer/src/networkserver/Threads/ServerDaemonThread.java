@@ -221,6 +221,10 @@ public abstract class ServerDaemonThread extends Thread{
                             //Keep alive message, ignore and wait for a new message
                             keepAliveBreak = true;
                             break;
+                        case 0:
+                            msg = new NetworkMessage();
+                            schema = networkMsgSchema;
+                            break;
                         case 1:
                             msg = new PlayerRegistrationMessage();
                             schema = playerRegSchema;
@@ -233,9 +237,11 @@ public abstract class ServerDaemonThread extends Thread{
                             msg = new NetworkMessageLarge();
                             schema = largeMsgSchema;
                             break;
-                        default:
+                        default:                            
+                            LogMaker.errorPrintln("Received unrecognised class type of "+classType, playerID);
                             msg = new NetworkMessage();
                             schema = networkMsgSchema;
+                            break;
                     }
                     if(!keepAliveBreak)
                     {

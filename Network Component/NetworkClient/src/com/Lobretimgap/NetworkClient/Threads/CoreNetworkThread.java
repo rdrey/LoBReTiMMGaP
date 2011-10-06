@@ -405,6 +405,10 @@ public abstract class CoreNetworkThread extends Thread
 	                            //Keep alive message, ignore and wait for a new message
 	                            keepAliveBreak = true;
 	                            break;
+	                        case 0:
+	                        	msg = new NetworkMessage();
+	                            schema = networkMsgSchema;
+	                            break;
 	                        case 1:
 	                            msg = new PlayerRegistrationMessage();
 	                            schema = playerRegSchema;
