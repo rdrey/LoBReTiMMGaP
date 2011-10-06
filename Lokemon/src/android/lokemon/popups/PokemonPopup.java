@@ -3,38 +3,41 @@ package android.lokemon.popups;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.lokemon.G;
 import android.lokemon.R;
 import android.lokemon.Util;
 import android.lokemon.G.Mode;
-import android.lokemon.R.id;
-import android.lokemon.R.layout;
 import android.lokemon.game_objects.Pokemon;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
+import com.commonsware.cwac.tlv.*;
 
-public class PokemonPopup extends FadePopup{
+public class PokemonPopup extends DragPopup implements TouchListView.DropListener{
 	
 	private ArrayList<Pokemon> entries;
+	private EntryAdapter adapter;
 	
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		if (G.mode == Mode.MAP)
+		{
 			entries = G.player.pokemon;
+			TouchListView tlv = (TouchListView)this.getListView();
+			tlv.setDropListener(this);
+		}
 		else if (G.mode == Mode.BATTLE)
 		{
 			entries = new ArrayList<Pokemon>();
 			for (Pokemon p:G.player.pokemon)
 				if (p.getHP() > 0 && !p.inBattle) entries.add(p);
 		}
-		setListAdapter(new EntryAdapter(this, R.layout.pokemon_item, entries));
+		adapter = new EntryAdapter(this, R.layout.pokemon_item, entries);
+		setListAdapter(adapter);
 	}
 
 	public void onListItemClick(ListView l, View v, int pos, long id)
@@ -126,5 +129,15 @@ public class PokemonPopup extends FadePopup{
         	}
         	return v;
         }
+	}
+
+	// allow for dragging and dropping of pokemon
+	public void drop(int from, int to) 
+	{
+		Pokemon entry = adapter.getItem(from);
+		adapter.remove(entry);
+		adapter.insert(entry, to);
+		for (int i = 0; i < G.player.pokemon.size(); i++)
+			G.player.pokemon.set(i, adapter.getItem(i));
 	}
 }

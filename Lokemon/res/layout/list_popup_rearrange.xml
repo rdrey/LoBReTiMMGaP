@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent" android:background="@drawable/darken" android:id="@+id/list_parent">
+    <com.commonsware.cwac.tlv.TouchListView xmlns:tlv="http://schemas.android.com/apk/res/android.lokemon" 
+    tlv:normal_height="68dip"
+    tlv:grabber="@+id/icon"
+    android:layout_height="match_parent" 
+    android:id="@android:id/list" 
+    android:layout_width="match_parent" 
+    android:stackFromBottom="true"></com.commonsware.cwac.tlv.TouchListView>
+</RelativeLayout>

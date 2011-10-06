@@ -9,9 +9,56 @@ package android.lokemon;
 
 public final class R {
     public static final class array {
-        public static final int moves=0x7f060000;
+        public static final int moves=0x7f070000;
     }
     public static final class attr {
+        /** <p>Must be a color value, in the form of "<code>#<i>rgb</i></code>", "<code>#<i>argb</i></code>",
+"<code>#<i>rrggbb</i></code>", or "<code>#<i>aarrggbb</i></code>".
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+         */
+        public static final int dragndrop_background=0x7f010003;
+        /** <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+         */
+        public static final int expanded_height=0x7f010001;
+        /** <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
+or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
+         */
+        public static final int grabber=0x7f010002;
+        /** <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+         */
+        public static final int normal_height=0x7f010000;
+        /** <p>Must be one of the following constant values.</p>
+<table>
+<colgroup align="left" />
+<colgroup align="left" />
+<colgroup align="left" />
+<tr><th>Constant</th><th>Value</th><th>Description</th></tr>
+<tr><td><code>none</code></td><td>-1</td><td></td></tr>
+<tr><td><code>fling</code></td><td>0</td><td></td></tr>
+<tr><td><code>slide</code></td><td>1</td><td></td></tr>
+<tr><td><code>slideRight</code></td><td>1</td><td></td></tr>
+<tr><td><code>slideLeft</code></td><td>2</td><td></td></tr>
+</table>
+         */
+        public static final int remove_mode=0x7f010004;
     }
     public static final class color {
         public static final int black=0x7f040002;
@@ -145,95 +192,101 @@ public final class R {
         public static final int weedle_attack=0x7f02006d;
     }
     public static final class id {
-        public static final int a_label=0x7f070043;
-        public static final int absoluteLayout1=0x7f070019;
-        public static final int accuracy=0x7f070044;
-        public static final int attack=0x7f07004d;
-        public static final int attack_button=0x7f070015;
-        public static final int aura_view=0x7f070000;
-        public static final int avatar_label=0x7f07001e;
-        public static final int avatars=0x7f07001f;
-        public static final int back_button=0x7f070023;
-        public static final int bag_button=0x7f070014;
-        public static final int bottom=0x7f07003e;
-        public static final int bottom_left=0x7f070008;
-        public static final int bulbasaur=0x7f070026;
-        public static final int buttons=0x7f070013;
-        public static final int charmander=0x7f070027;
-        public static final int coins=0x7f070034;
-        public static final int coins_label=0x7f070035;
-        public static final int col_1=0x7f070049;
-        public static final int col_2=0x7f07004a;
-        public static final int colour_boxes=0x7f070048;
-        public static final int continue_button=0x7f07002d;
-        public static final int count=0x7f070003;
-        public static final int d_label=0x7f07004e;
-        public static final int defense=0x7f07004f;
-        public static final int description=0x7f070006;
-        public static final int effect=0x7f07003d;
-        public static final int health_bar=0x7f07004b;
-        public static final int health_row=0x7f070054;
-        public static final int hp=0x7f070056;
-        public static final int hp_label=0x7f070055;
-        public static final int hud=0x7f070030;
-        public static final int icon=0x7f070002;
-        public static final int icon_frame=0x7f070001;
-        public static final int info=0x7f070004;
-        public static final int leaf=0x7f070020;
-        public static final int level=0x7f070058;
-        public static final int list_parent=0x7f07002b;
-        public static final int lock=0x7f070046;
-        public static final int lock_overlay=0x7f070045;
-        public static final int lv_label=0x7f070057;
-        public static final int mapview=0x7f07002f;
-        public static final int moves_spinner=0x7f07001b;
-        public static final int my_health=0x7f070010;
-        public static final int my_health_num=0x7f070012;
-        public static final int my_level=0x7f070011;
-        public static final int my_name=0x7f07000f;
-        public static final int my_poke=0x7f07000e;
-        public static final int name=0x7f070005;
-        public static final int new_button=0x7f07002e;
-        public static final int next_button=0x7f070022;
-        public static final int nick_field=0x7f07001d;
-        public static final int nick_label=0x7f07001c;
-        public static final int opp_health=0x7f07000c;
-        public static final int opp_health_num=0x7f07000d;
-        public static final int opp_level=0x7f07000b;
-        public static final int opp_name=0x7f07000a;
-        public static final int opp_poke=0x7f070009;
-        public static final int overview=0x7f07003a;
-        public static final int p_label=0x7f070041;
-        public static final int persistent_alert=0x7f070039;
-        public static final int poke_button=0x7f070031;
-        public static final int poke_description=0x7f070029;
-        public static final int poke_label=0x7f070024;
-        public static final int poke_stats=0x7f07002a;
-        public static final int pokeballs=0x7f070018;
-        public static final int pokemon=0x7f070025;
-        public static final int power=0x7f070042;
-        public static final int pp=0x7f07003f;
-        public static final int rank=0x7f070037;
-        public static final int rank_label=0x7f070038;
-        public static final int red=0x7f070021;
-        public static final int relativeLayout1=0x7f070033;
-        public static final int relativeLayout2=0x7f070036;
-        public static final int right=0x7f070040;
-        public static final int run_button=0x7f070017;
-        public static final int sd_label=0x7f070050;
-        public static final int sp_label=0x7f070052;
-        public static final int special=0x7f070053;
-        public static final int speed=0x7f070051;
-        public static final int squirtle=0x7f070028;
-        public static final int stat_layout=0x7f070032;
-        public static final int stats=0x7f07004c;
-        public static final int status=0x7f07001a;
-        public static final int switch_button=0x7f070016;
-        public static final int top=0x7f07003b;
-        public static final int top_right=0x7f070007;
-        public static final int type=0x7f07003c;
-        public static final int type_box=0x7f070047;
-        public static final int welcome_text=0x7f07002c;
+        public static final int a_label=0x7f050048;
+        public static final int absoluteLayout1=0x7f05001e;
+        public static final int accuracy=0x7f050049;
+        public static final int attack=0x7f050053;
+        public static final int attack_button=0x7f05001a;
+        public static final int aura_view=0x7f050005;
+        public static final int avatar_label=0x7f050023;
+        public static final int avatars=0x7f050024;
+        public static final int back_button=0x7f050028;
+        public static final int bag_button=0x7f050019;
+        public static final int bottom=0x7f050043;
+        public static final int bottom_left=0x7f05000d;
+        public static final int bulbasaur=0x7f05002b;
+        public static final int buttons=0x7f050018;
+        public static final int charmander=0x7f05002c;
+        public static final int coins=0x7f050039;
+        public static final int coins_label=0x7f05003a;
+        public static final int col_1=0x7f05004f;
+        public static final int col_2=0x7f050050;
+        public static final int colour_boxes=0x7f05004e;
+        public static final int continue_button=0x7f050032;
+        public static final int count=0x7f050008;
+        public static final int d_label=0x7f050054;
+        public static final int defense=0x7f050055;
+        public static final int description=0x7f05000b;
+        public static final int effect=0x7f050042;
+        public static final int fling=0x7f050001;
+        public static final int health_bar=0x7f050051;
+        public static final int health_row=0x7f05005a;
+        public static final int hp=0x7f05005c;
+        public static final int hp_label=0x7f05005b;
+        public static final int hud=0x7f050035;
+        public static final int icon=0x7f050007;
+        public static final int icon_frame=0x7f050006;
+        public static final int info=0x7f050009;
+        public static final int leaf=0x7f050025;
+        public static final int level=0x7f05005e;
+        public static final int list_parent=0x7f050030;
+        public static final int lock=0x7f05004b;
+        public static final int lock_overlay=0x7f05004a;
+        public static final int lv_label=0x7f05005d;
+        public static final int mapview=0x7f050034;
+        public static final int moves_spinner=0x7f050020;
+        public static final int my_health=0x7f050015;
+        public static final int my_health_num=0x7f050017;
+        public static final int my_level=0x7f050016;
+        public static final int my_name=0x7f050014;
+        public static final int my_poke=0x7f050013;
+        public static final int name=0x7f05000a;
+        public static final int new_button=0x7f050033;
+        public static final int next_button=0x7f050027;
+        public static final int nick_field=0x7f050022;
+        public static final int nick_label=0x7f050021;
+        public static final int none=0x7f050000;
+        public static final int opp_health=0x7f050011;
+        public static final int opp_health_num=0x7f050012;
+        public static final int opp_level=0x7f050010;
+        public static final int opp_name=0x7f05000f;
+        public static final int opp_poke=0x7f05000e;
+        public static final int overview=0x7f05003f;
+        public static final int p_label=0x7f050046;
+        public static final int persistent_alert=0x7f05003e;
+        public static final int poke_button=0x7f050036;
+        public static final int poke_container=0x7f05004c;
+        public static final int poke_description=0x7f05002e;
+        public static final int poke_label=0x7f050029;
+        public static final int poke_stats=0x7f05002f;
+        public static final int pokeballs=0x7f05001d;
+        public static final int pokemon=0x7f05002a;
+        public static final int power=0x7f050047;
+        public static final int pp=0x7f050044;
+        public static final int rank=0x7f05003c;
+        public static final int rank_label=0x7f05003d;
+        public static final int red=0x7f050026;
+        public static final int relativeLayout1=0x7f050038;
+        public static final int relativeLayout2=0x7f05003b;
+        public static final int right=0x7f050045;
+        public static final int run_button=0x7f05001c;
+        public static final int sd_label=0x7f050056;
+        public static final int slide=0x7f050002;
+        public static final int slideLeft=0x7f050004;
+        public static final int slideRight=0x7f050003;
+        public static final int sp_label=0x7f050058;
+        public static final int special=0x7f050059;
+        public static final int speed=0x7f050057;
+        public static final int squirtle=0x7f05002d;
+        public static final int stat_layout=0x7f050037;
+        public static final int stats=0x7f050052;
+        public static final int status=0x7f05001f;
+        public static final int switch_button=0x7f05001b;
+        public static final int top=0x7f050040;
+        public static final int top_right=0x7f05000c;
+        public static final int type=0x7f050041;
+        public static final int type_box=0x7f05004d;
+        public static final int welcome_text=0x7f050031;
     }
     public static final class layout {
         public static final int animation_test=0x7f030000;
@@ -242,13 +295,115 @@ public final class R {
         public static final int game_old=0x7f030003;
         public static final int intro=0x7f030004;
         public static final int list_popup=0x7f030005;
-        public static final int main=0x7f030006;
-        public static final int map=0x7f030007;
-        public static final int move_item=0x7f030008;
-        public static final int pokemon_item=0x7f030009;
+        public static final int list_popup_rearrange=0x7f030006;
+        public static final int main=0x7f030007;
+        public static final int map=0x7f030008;
+        public static final int move_item=0x7f030009;
+        public static final int pokemon_item=0x7f03000a;
     }
     public static final class string {
-        public static final int app_name=0x7f050001;
-        public static final int hello=0x7f050000;
+        public static final int app_name=0x7f060001;
+        public static final int hello=0x7f060000;
     }
+    public static final class styleable {
+        /** Attributes that can be used with a TouchListView.
+           <p>Includes the following attributes:</p>
+           <table>
+           <colgroup align="left" />
+           <colgroup align="left" />
+           <tr><th>Attribute</th><th>Description</th></tr>
+           <tr><td><code>{@link #TouchListView_dragndrop_background android.lokemon:dragndrop_background}</code></td><td></td></tr>
+           <tr><td><code>{@link #TouchListView_expanded_height android.lokemon:expanded_height}</code></td><td></td></tr>
+           <tr><td><code>{@link #TouchListView_grabber android.lokemon:grabber}</code></td><td></td></tr>
+           <tr><td><code>{@link #TouchListView_normal_height android.lokemon:normal_height}</code></td><td></td></tr>
+           <tr><td><code>{@link #TouchListView_remove_mode android.lokemon:remove_mode}</code></td><td></td></tr>
+           </table>
+           @see #TouchListView_dragndrop_background
+           @see #TouchListView_expanded_height
+           @see #TouchListView_grabber
+           @see #TouchListView_normal_height
+           @see #TouchListView_remove_mode
+         */
+        public static final int[] TouchListView = {
+            0x7f010000, 0x7f010001, 0x7f010002, 0x7f010003,
+            0x7f010004
+        };
+        /**
+          <p>This symbol is the offset where the {@link android.lokemon.R.attr#dragndrop_background}
+          attribute's value can be found in the {@link #TouchListView} array.
+
+
+          <p>Must be a color value, in the form of "<code>#<i>rgb</i></code>", "<code>#<i>argb</i></code>",
+"<code>#<i>rrggbb</i></code>", or "<code>#<i>aarrggbb</i></code>".
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          @attr name android:dragndrop_background
+        */
+        public static final int TouchListView_dragndrop_background = 3;
+        /**
+          <p>This symbol is the offset where the {@link android.lokemon.R.attr#expanded_height}
+          attribute's value can be found in the {@link #TouchListView} array.
+
+
+          <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          @attr name android:expanded_height
+        */
+        public static final int TouchListView_expanded_height = 1;
+        /**
+          <p>This symbol is the offset where the {@link android.lokemon.R.attr#grabber}
+          attribute's value can be found in the {@link #TouchListView} array.
+
+
+          <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
+or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
+          @attr name android:grabber
+        */
+        public static final int TouchListView_grabber = 2;
+        /**
+          <p>This symbol is the offset where the {@link android.lokemon.R.attr#normal_height}
+          attribute's value can be found in the {@link #TouchListView} array.
+
+
+          <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          @attr name android:normal_height
+        */
+        public static final int TouchListView_normal_height = 0;
+        /**
+          <p>This symbol is the offset where the {@link android.lokemon.R.attr#remove_mode}
+          attribute's value can be found in the {@link #TouchListView} array.
+
+
+          <p>Must be one of the following constant values.</p>
+<table>
+<colgroup align="left" />
+<colgroup align="left" />
+<colgroup align="left" />
+<tr><th>Constant</th><th>Value</th><th>Description</th></tr>
+<tr><td><code>none</code></td><td>-1</td><td></td></tr>
+<tr><td><code>fling</code></td><td>0</td><td></td></tr>
+<tr><td><code>slide</code></td><td>1</td><td></td></tr>
+<tr><td><code>slideRight</code></td><td>1</td><td></td></tr>
+<tr><td><code>slideLeft</code></td><td>2</td><td></td></tr>
+</table>
+          @attr name android:remove_mode
+        */
+        public static final int TouchListView_remove_mode = 4;
+    };
 }

@@ -454,7 +454,6 @@ public class Battle {
 					if (player_stages[index - 1] < 6)
 					{
 						player_stages[index - 1]++;
-						Log.i("Battle", "Player stat " + (index-1) + " increased");
 					}
 				}
 			}
@@ -469,7 +468,6 @@ public class Battle {
 					if (opp_stages[index - 1] < 6) 
 					{
 						opp_stages[index - 1]++;
-						Log.i("Battle", "Opp stat " + (index - 1) + " increased");
 					}
 			}		
 			resultMessage += player + " used a " + G.player.items[index].getName() + ".\n";
@@ -551,7 +549,6 @@ public class Battle {
 						defense = target.getAttack() * stage_mod[opp_stages[2] + 6];
 						specialSource = source.getSpecial() * stage_mod[player_stages[3] + 6];
 						specialTarget = target.getSpecial() * stage_mod[opp_stages[3] + 6];
-						Log.i("Battle", "Player: attack = " + attack + "; defense = " + defense);
 					}
 					else
 					{
@@ -559,7 +556,6 @@ public class Battle {
 						defense = target.getAttack() * stage_mod[player_stages[2] + 6];
 						specialSource = source.getSpecial() * stage_mod[opp_stages[3] + 6];
 						specialTarget = target.getSpecial() * stage_mod[player_stages[3] + 6];
-						Log.i("Battle", "Opponent: attack = " + attack + "; defense = " + defense);
 					}
 					
 					// determine if critical hit was landed
@@ -640,7 +636,6 @@ public class Battle {
 								if (opp_stages[i] > -6)
 								{
 									opp_stages[i]--;
-									Log.i("Battle", "Opp stat " + (i) + " decreased");
 								}
 							}
 							else
@@ -648,7 +643,6 @@ public class Battle {
 								if (player_stages[i] > -6) 
 								{
 									player_stages[i]--;
-									Log.i("Battle", "Player stat " + (i) + " decreased");
 								}
 							}
 						}
@@ -659,7 +653,6 @@ public class Battle {
 								if (player_stages[i] < 6) 
 								{
 									player_stages[i]++;
-									Log.i("Battle", "Player stat " + (i) + " increased");
 								}
 							}
 							else
@@ -667,7 +660,6 @@ public class Battle {
 								if (opp_stages[i] < 6) 
 								{
 									opp_stages[i]++;
-									Log.i("Battle", "Opp stat " + (i) + " increased");
 								}
 							}
 						}
