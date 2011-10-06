@@ -6,7 +6,6 @@ import java.io.InterruptedIOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
@@ -21,7 +20,6 @@ import networkTransferObjects.NetworkMessageMedium;
 import networkTransferObjects.PlayerRegistrationMessage;
 import networkTransferObjects.UtilityObjects.QuickLZ;
 import android.content.Context;
-import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -102,11 +100,19 @@ public abstract class CoreNetworkThread extends Thread
 	 */
 	public void connectToServerAsync()
 	{		
+		connectToManager();
 		if(!connected)
 		{	
 			if(!this.isAlive())
 				this.start();
 		}
+	}
+	
+	private void connectToManager()
+	{
+		//and start listening for network events
+		manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+		manager.listen(new DataNetworkListener(this), DataNetworkListener.LISTEN_DATA_CONNECTION_STATE);
 	}
 	
 	private void connectToServer()
@@ -120,8 +126,7 @@ public abstract class CoreNetworkThread extends Thread
 			out = new NetworkWriteThread(socket);		
 			out.start();
 			
-			startLatencyLogger();
-			Looper.loop();
+			startLatencyLogger();			
 			fireEvent(new NetworkEvent(this, "Connection successfully established!"), ConnectionEstablishedListener.class);
 		}
 		catch(UnknownHostException e)
@@ -152,11 +157,7 @@ public abstract class CoreNetworkThread extends Thread
 	 * Starts the latency logging as well as the data networks logging.
 	 */
 	private void startLatencyLogger()
-	{
-		//and start listening for network events
-		manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-		manager.listen(new DataNetworkListener(this), DataNetworkListener.LISTEN_DATA_CONNECTION_STATE);
-		
+	{		
 		//start the actual latency loggers
 		Timer t = new Timer();
 		t.schedule(new TimerTask() {
@@ -367,10 +368,7 @@ public abstract class CoreNetworkThread extends Thread
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
     public void run()
-	{
-		if(Looper.myLooper() == null){		
-			Looper.prepare();
-		}
+	{		
 		if(!connected)
 		{
 			connectToServer();
@@ -461,6 +459,8 @@ public abstract class CoreNetworkThread extends Thread
 	                        int bytesRead = 0;
 	                        while(bytesRead != mSize)
 	                        {
+	                        	if(mSize > 4000)
+	                        		Log.i("bandwidth", "RECEIVING: "+bytesRead+"/"+mSize);
 	                            bytesRead += in.read(object, bytesRead, object.length - bytesRead);	                            
 	                        }
 	                        
@@ -773,8 +773,7 @@ public abstract class CoreNetworkThread extends Thread
         }  
         finally
         {
-        	hasCompletedOperation = true;
-        	Looper.myLooper().quit();
+        	hasCompletedOperation = true;        	
         	fireEvent(new NetworkEvent(this, "Connection to Server lost!\n"),  ConnectionLostListener.class);
         }
     }
