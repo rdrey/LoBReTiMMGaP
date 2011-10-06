@@ -12,7 +12,7 @@ public class FadePopup extends ListActivity {
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.list_popup);
+		setContentView(R.layout.list_popup2);
 		background = (TransitionDrawable)(findViewById(R.id.list_parent).getBackground());
 	}
 	

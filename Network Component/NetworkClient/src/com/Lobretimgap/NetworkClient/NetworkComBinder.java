@@ -66,13 +66,11 @@ public class NetworkComBinder extends Binder {
 							isConnected = true;							 			
 						}
 					});
-					
 					addListener(ConnectionLostListener.class, new ConnectionLostListener() {			
 						public void EventOccured(NetworkEvent e) {			
 							isConnected = false;									
 						}
 					});
-					
 					networkThread.connectToServerAsync();
 				} catch (IllegalAccessException e) {					
 					Log.e(NetworkVariables.TAG, "Failed to recreate network thread!\n"+e);

@@ -3,9 +3,6 @@ package com.Lobretimgap.NetworkClient.Lokemon;
 import networkTransferObjects.NetworkMessage;
 import networkTransferObjects.PlayerRegistrationMessage;
 import android.lokemon.*;
-import android.util.Log;
-
-import com.Lobretimgap.NetworkClient.NetworkVariables;
 import com.Lobretimgap.NetworkClient.Threads.CoreNetworkThread;
 
 public class CoreNetworkThreadLokemon extends CoreNetworkThread {

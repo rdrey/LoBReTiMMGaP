@@ -711,7 +711,8 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				if (networkBinder.isConnectedToServer())
 					onPlayerRegistered(0);
 				else
-					networkBinder.ConnectToServer();
+					startGame();
+					//networkBinder.ConnectToServer();
 			}
 		};
 		display.bindService(intent, ser, Context.BIND_AUTO_CREATE);
@@ -1220,5 +1221,15 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 				}
 			}
 		}, sec_delay * 1000);
+	}
+	
+	public void startGame()
+	{
+		display.cancelProgressDialog();
+		// tell the server where the player is
+		onLocationChanged(G.player.getLocation());			
+		// start requesting updates from server
+		networkUpdater.postDelayed(updater, 0);
+		networkUpdater.postDelayed(pokemon_generator, 1000);
 	}
 }
