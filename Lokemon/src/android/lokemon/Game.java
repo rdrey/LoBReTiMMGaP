@@ -191,7 +191,9 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 								if (p.getLevel() > max_level)
 									max_level = p.getLevel();
 							}
-							int level = min_level + G.random.nextInt(max_level - min_level + 5);
+							int level = min_level + G.random.nextInt(max_level - min_level + 4) - 2;
+							if (level < 1)
+								level = 1;
 							for (BasePokemon p:pokes_in_region)
 							{
 								// if the level falls within the pokemon's normal range
