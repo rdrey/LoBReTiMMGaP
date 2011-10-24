@@ -30,11 +30,11 @@ import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.*;
-import android.lbg.*;
 import networkTransferObjects.NetworkMessageMedium;
 
 import org.mapsforge.android.maps.*;
 import com.example.android.apis.graphics.AnimateDrawable;
+import com.lbg.location.*;
 
 public class MapScreen extends MapActivity implements View.OnClickListener{
     

@@ -24,7 +24,6 @@ import android.lokemon.screens.MapScreen;
 import java.text.DateFormat;
 import android.util.Log;
 import android.app.Activity;
-import android.lbg.*;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -37,6 +36,7 @@ import java.util.*;
 
 import org.mapsforge.android.maps.GeoPoint;
 
+import com.lbg.location.*;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Coordinate;
 
@@ -660,11 +660,6 @@ public class Game implements LBGLocationAdapter.LocationListener, Handler.Callba
 			}
 		}
 		currentRegion = newRegion;
-	}
-
-	public void onLocationError(int errorCode) 
-	{
-		// do nothing for now
 	}
 	
 	private Regions checkRegion(Location location)
